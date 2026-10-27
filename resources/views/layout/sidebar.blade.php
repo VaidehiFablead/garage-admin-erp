@@ -8,43 +8,157 @@
 
         <div id="sidebar-menu" class="sidebar-menu">
             <ul>
+                @php
+                    $subAdminId = session('selectedSubAdminId');
+                    $user = Auth::user();
+                    $role = $user ? $user->role : '';
+                    $isStaff = Auth::check() && strtolower($role) === 'staff';
+
+                    // Dashboard
+                    $showDashboard = tenant_has_module('Dashboard') && (
+                        in_array($role, ['admin', 'sub-admin']) || $isStaff
+                    );
+
+                    // ERP Submodules
+                    $canAllItems = tenant_has_sub_module('All Items', 'All Masters') && app('hasPermission')(1, 'view');
+                    $canAllCategories = tenant_has_sub_module('All Categories', 'All Masters') && app('hasPermission')(18, 'view');
+                    $canAllBrands = tenant_has_sub_module('All Brands', 'All Masters') && app('hasPermission')(19, 'view');
+                    $canAllLabourServices = tenant_has_sub_module('All Labour Services', 'All Masters') && app('hasPermission')(20, 'view');
+                    $canAllServiceCategory = tenant_has_sub_module('All Service Category', 'All Masters') && app('hasPermission')(21, 'view');
+                    $canMakeModel = tenant_has_sub_module('Make Model', 'All Masters') && app('hasPermission')(22, 'view');
+                    $canAllUnits = tenant_has_sub_module('All Units', 'All Masters') && app('hasPermission')(22, 'view');
+                    $canImportItems = tenant_has_sub_module('Import Items', 'All Masters') && app('hasPermission')(22, 'view');
+
+                    $canAllMasters = tenant_has_module(['All Masters', 'ERP']) && (
+                        $canAllItems || $canAllCategories || $canAllBrands || $canAllLabourServices ||
+                        $canAllServiceCategory || $canMakeModel || $canAllUnits || $canImportItems
+                    );
+
+                    $canAllJobCards = tenant_has_sub_module('All Job Cards', 'Job Card') && app('hasPermission')(16, 'view');
+                    $canNewJobCard = tenant_has_sub_module('New Job Card', 'Job Card') && app('hasPermission')(16, 'add');
+                    $canJobCard = tenant_has_module(['Job Card', 'ERP']) && ($canAllJobCards || $canNewJobCard);
+
+                    $canAllDailyRegister = tenant_has_sub_module('All Daily Register', 'Daily Register') && app('hasPermission')(24, 'view');
+                    $canNewDailyRegister = tenant_has_sub_module('New Daily Register', 'Daily Register') && app('hasPermission')(24, 'add');
+                    $canDailyRegister = tenant_has_module(['Daily Register', 'ERP']) && ($canAllDailyRegister || $canNewDailyRegister);
+
+                    $canAllPurchases = tenant_has_sub_module('All Purchases', 'Purchase') && app('hasPermission')(3, 'view');
+                    $canNewPurchase = tenant_has_sub_module('New Purchase', 'Purchase') && app('hasPermission')(3, 'add');
+                    $canPurchase = tenant_has_module(['Purchase', 'ERP']) && ($canAllPurchases || $canNewPurchase);
+
+                    $canAllVendors = tenant_has_sub_module('All Vendors', 'Vendor') && app('hasPermission')(5, 'view');
+                    $canNewVendor = tenant_has_sub_module('New Vendor', 'Vendor') && app('hasPermission')(5, 'add');
+                    $canVendor = tenant_has_module(['Vendor', 'ERP']) && ($canAllVendors || $canNewVendor);
+
+                    $canInventory = tenant_has_module(['Inventory', 'ERP']) && tenant_has_sub_module('Inventory', 'Inventory') && app('hasPermission')(15, 'view');
+
+                    $showErpSection = tenant_has_module(['ERP', 'All Masters', 'Job Card', 'Daily Register', 'Purchase', 'Vendor', 'Inventory']) && (
+                        $canAllMasters || $canJobCard || $canDailyRegister || $canPurchase || $canVendor || $canInventory
+                    );
+
+                    // CRM Submodules
+                    $canAllAppointment = tenant_has_sub_module('All Appointment', 'Appointment') && app('hasPermission')(12, 'view');
+                    $canNewAppointment = tenant_has_sub_module('New Appointment', 'Appointment') && app('hasPermission')(12, 'add');
+                    $canAppointment = tenant_has_module(['Appointment', 'CRM']) && ($canAllAppointment || $canNewAppointment);
+
+                    $canAllCustomer = tenant_has_sub_module('All Customers', 'Customer') && app('hasPermission')(4, 'view');
+                    $canNewCustomer = tenant_has_sub_module('New Customer', 'Customer') && app('hasPermission')(4, 'add');
+                    $canCustomer = tenant_has_module(['Customer', 'CRM']) && ($canAllCustomer || $canNewCustomer);
+
+                    $showCrmSection = tenant_has_module(['CRM', 'Appointment', 'Customer']) && ($canAppointment || $canCustomer);
+
+                    // Accounting Submodules
+                    $canAccountLedger = tenant_has_module(['Account Ledger', 'Accounting']) && tenant_has_sub_module('Account Ledger', 'Account Ledger') && app('hasPermission')(13, 'view');
+
+                    $canCreditNotes = tenant_has_sub_module('Credit Notes', 'Credit/Debit Notes') && app('hasPermission')(25, 'list');
+                    $canDebitNotes = tenant_has_sub_module('Debit Notes', 'Credit/Debit Notes') && app('hasPermission')(26, 'list');
+                    $canCreditDebitNotesType = tenant_has_sub_module('Credit/Debit Notes Type', 'Credit/Debit Notes') && app('hasPermission')(25, 'list');
+                    $canCreditDebitNotes = tenant_has_module(['Credit/Debit Notes', 'Accounting']) && app('hasPermission')(25, 'view') && (
+                        $canCreditNotes || $canDebitNotes || $canCreditDebitNotesType
+                    );
+
+                    $canGstReport = tenant_has_sub_module('GST Report', 'GST Reports') && app('hasPermission')(30, 'view');
+                    $canGstReports = tenant_has_module(['GST Reports', 'Accounting']) && app('hasPermission')(30, 'view') && $canGstReport;
+
+                    $canAllExpense = tenant_has_sub_module('All Expenses', 'Expense') && app('hasPermission')(6, 'view');
+                    $canNewExpense = tenant_has_sub_module('New Expense', 'Expense') && app('hasPermission')(6, 'add');
+                    $canAllExpenseType = tenant_has_sub_module('All Expense Type', 'Expense') && app('hasPermission')(6, 'view');
+                    $canExpense = tenant_has_module(['Expense', 'Accounting']) && app('hasPermission')(6, 'view') && (
+                        $canAllExpense || $canNewExpense || $canAllExpenseType
+                    );
+
+                    $showAccountingSection = tenant_has_module(['Accounting', 'Account Ledger', 'Credit/Debit Notes', 'GST Reports', 'Expense']) && (
+                        $canAccountLedger || $canCreditDebitNotes || $canGstReports || $canExpense
+                    );
+
+                    // HR Submodules
+                    $canViewStaff = app('hasPermission')(8, 'view');
+                    $canAddStaff = app('hasPermission')(8, 'add');
+                    $canAllStaff = tenant_has_sub_module('All Staff', 'Staff') && $canViewStaff;
+                    $canNewStaff = tenant_has_sub_module('New Staff', 'Staff') && $canAddStaff;
+                    $canStaff = tenant_has_module(['Staff', 'HR']) && ($canAllStaff || $canNewStaff);
+
+                    $canManageAttendance = tenant_has_sub_module('Manage Attendance', 'Attendance') && (app('hasPermission')(9, 'add') || app('hasPermission')(9, 'view') || $isStaff);
+                    $canAttendanceSummary = tenant_has_sub_module('Attendance', 'Attendance') && (app('hasPermission')(9, 'add') || app('hasPermission')(9, 'view') || $isStaff);
+                    $canAttendance = tenant_has_module(['Attendance', 'HR']) && (app('hasPermission')(9, 'view') || app('hasPermission')(9, 'add') || $isStaff) && (
+                        $canManageAttendance || $canAttendanceSummary
+                    );
+
+                    $canPayrollView = tenant_has_sub_module('Payroll View', 'Payroll') && (app('hasPermission')(10, 'view') || $isStaff);
+                    $canAddPayroll = tenant_has_sub_module('Add Payroll', 'Payroll') && app('hasPermission')(10, 'add');
+                    $canGroupSalary = tenant_has_sub_module('Group Salary', 'Payroll') && app('hasPermission')(10, 'view');
+                    $canPayroll = tenant_has_module(['Payroll', 'HR']) && (app('hasPermission')(10, 'view') || app('hasPermission')(10, 'add') || $isStaff) && (
+                        $canPayrollView || $canAddPayroll || $canGroupSalary
+                    );
+
+                    $canAllAdvancePay = tenant_has_sub_module('All Advance Pay', 'Advance Pay') && (app('hasPermission')(23, 'view') || $isStaff);
+                    $canNewAdvancePay = tenant_has_sub_module('New Advance Pay', 'Advance Pay') && app('hasPermission')(23, 'add');
+                    $canAdvancePay = tenant_has_module(['Advance Pay', 'HR']) && (app('hasPermission')(23, 'view') || $isStaff) && (
+                        $canAllAdvancePay || $canNewAdvancePay
+                    );
+
+                    $canAllLeave = tenant_has_sub_module('All Leave', 'Leave') && app('hasPermission')(11, 'view');
+                    $canLeaveRequest = tenant_has_sub_module('Leave Request', 'Leave') && (app('hasPermission')(11, 'view') || $isStaff);
+                    $canAddLeave = tenant_has_sub_module('Add Leave', 'Leave') && (app('hasPermission')(11, 'add') || $isStaff);
+                    $canLeave = tenant_has_module(['Leave', 'HR']) && (app('hasPermission')(11, 'view') || app('hasPermission')(11, 'add') || $isStaff) && (
+                        $canAllLeave || $canLeaveRequest || $canAddLeave
+                    );
+
+                    $showHrSection = tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && (
+                        $canStaff || $canAttendance || $canPayroll || $canAdvancePay || $canLeave
+                    );
+
+                    // Settings Submodules
+                    $canMyPlanDetails = in_array($role, ['admin', 'sub-admin']) && tenant_has_module(['My Plan Details', 'Settings']) && tenant_has_sub_module('My Plan Details', 'My Plan Details');
+                    $canShopSettings = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings']) && tenant_has_sub_module('Shop Settings', 'Shop Settings');
+                    $canTaxRates = tenant_has_module(['Tax Rates', 'Settings']) && tenant_has_sub_module('Tax Rates', 'Tax Rates');
+                    $canDepartments = tenant_has_module(['Departments', 'Settings']) && tenant_has_sub_module('Departments', 'Departments');
+                    $canDesignations = tenant_has_module(['Designations', 'Settings']) && tenant_has_sub_module('Designations', 'Designations');
+
+                    $showSettingsSection = tenant_has_module(['Settings', 'My Plan Details', 'Shop Settings', 'Tax Rates', 'Departments', 'Designations']) && (
+                        $canMyPlanDetails || $canShopSettings || $canTaxRates || $canDepartments || $canDesignations
+                    );
+                @endphp
+
                 <!-- Dashboard -->
-                @if (in_array(auth()->user()->role, ['admin', 'sub-admin']))
+                @if ($showDashboard)
                     <li class="menu-dashboard">
-                        <a href="{{ route('auth.dashboard') }}">
-                            <i class="fa fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                @elseif (Auth::check() && strtolower(Auth::user()->role) === 'staff')
-                    <li class="menu-dashboard">
-                        <a href="{{ route('auth.staff-dashboard') }}">
-                            <i class="fa fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
+                        @if (in_array($role, ['admin', 'sub-admin']))
+                            <a href="{{ route('auth.dashboard') }}">
+                                <i class="fa fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        @else
+                            <a href="{{ route('auth.staff-dashboard') }}">
+                                <i class="fa fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        @endif
                     </li>
                 @endif
 
-                @php
-                    $subAdminId = session('selectedSubAdminId');
-                    $role = Auth::user()->role;
-                    $canViewStaff = app('hasPermission')(8, 'view');
-                    $canAddStaff = app('hasPermission')(8, 'add');
-                @endphp
-
                 <!-- ERP -->
-                @if (app('hasPermission')(18, 'view') ||
-                        app('hasPermission')(1, 'view') ||
-                        app('hasPermission')(19, 'view') ||
-                        app('hasPermission')(20, 'view') ||
-                        app('hasPermission')(21, 'view') ||
-                        app('hasPermission')(22, 'view') ||
-                        app('hasPermission')(16, 'view') ||
-                        app('hasPermission')(24, 'view') ||
-                        app('hasPermission')(3, 'view') ||
-                        app('hasPermission')(15, 'view') ||
-                        app('hasPermission')(13, 'view') ||
-                        app('hasPermission')(5, 'view'))
+                @if ($showErpSection)
                     <li class="submenu menu-erp">
                         <a href="javascript:void(0);">
                             <i class="fa fa-database"></i>
@@ -53,12 +167,7 @@
                         </a>
                         <ul>
                             <!-- All Masters Submenu -->
-                            @if (app('hasPermission')(18, 'view') ||
-                                    app('hasPermission')(1, 'view') ||
-                                    app('hasPermission')(19, 'view') ||
-                                    app('hasPermission')(20, 'view') ||
-                                    app('hasPermission')(21, 'view') ||
-                                    app('hasPermission')(22, 'view'))
+                            @if ($canAllMasters)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-folder-open"></i>
@@ -66,37 +175,37 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(1, 'view'))
+                                        @if ($canAllItems)
                                             <li><a href="{{ route('product.list') }}"><i class="fa fa-box"></i><span>All
                                                         Items</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(18, 'view'))
+                                        @if ($canAllCategories)
                                             <li><a href="{{ route('category.list') }}"><i
                                                         class="fa fa-tags"></i><span>All Categories</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(19, 'view'))
+                                        @if ($canAllBrands)
                                             <li><a href="{{ route('brand.list') }}"><i
                                                         class="fa fa-copyright"></i><span>All Brands</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(20, 'view'))
+                                        @if ($canAllLabourServices)
                                             <li><a href="{{ route('labour.list') }}"><i
                                                         class="fa fa-wrench"></i><span>All Labour Services</span></a>
                                             </li>
                                         @endif
-                                        @if (app('hasPermission')(21, 'view'))
+                                        @if ($canAllServiceCategory)
                                             <li><a href="{{ route('autocar.category.list') }}"><i
                                                         class="fa fa-cogs"></i><span>All Service Category</span></a>
                                             </li>
                                         @endif
-                                        @if (app('hasPermission')(22, 'view'))
+                                        @if ($canMakeModel)
                                             <li><a href="{{ route('autocar.model.list') }}"><i
                                                         class="fa fa-car"></i><span>Make Model</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(22, 'view'))
+                                        @if ($canAllUnits)
                                             <li><a href="{{ route('unit.list') }}"><i
                                                         class="fa fa-balance-scale"></i><span>All Units</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(22, 'view'))
+                                        @if ($canImportItems)
                                             <li><a href="{{ route('product.import') }}"><i
                                                         class="fa fa-file-import"></i><span>Import Items</span></a></li>
                                         @endif
@@ -105,7 +214,7 @@
                             @endif
 
                             <!-- Job Card -->
-                            @if (app('hasPermission')(16, 'view'))
+                            @if ($canJobCard)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-file-invoice"></i>
@@ -113,11 +222,11 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(16, 'view'))
+                                        @if ($canAllJobCards)
                                             <li><a href="{{ route('job_card.index') }}"><i
                                                         class="fa fa-list"></i><span>All Job Cards</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(16, 'add'))
+                                        @if ($canNewJobCard)
                                             <li><a href="{{ route('job_card.create') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Job Card</span></a></li>
                                         @endif
@@ -126,7 +235,7 @@
                             @endif
 
                             <!-- Daily Register -->
-                            @if (app('hasPermission')(24, 'view'))
+                            @if ($canDailyRegister)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-book-open"></i>
@@ -134,11 +243,11 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(24, 'view'))
+                                        @if ($canAllDailyRegister)
                                             <li><a href="{{ route('daily_data.index') }}"><i
                                                         class="fa fa-list"></i><span>All Daily Register</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(24, 'add'))
+                                        @if ($canNewDailyRegister)
                                             <li><a href="{{ route('daily_data.add-daily-data') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Daily
                                                         Register</span></a></li>
@@ -148,7 +257,7 @@
                             @endif
 
                             <!-- Purchases -->
-                            @if (app('hasPermission')(3, 'view'))
+                            @if ($canPurchase)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-shopping-cart"></i>
@@ -156,19 +265,20 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(3, 'view'))
+                                        @if ($canAllPurchases)
                                             <li><a href="{{ route('purchase.lists') }}"><i
                                                         class="fa fa-list"></i><span>All Purchases</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(3, 'add'))
+                                        @if ($canNewPurchase)
                                             <li><a href="{{ route('purchase.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Purchase</span></a></li>
                                         @endif
                                     </ul>
                                 </li>
                             @endif
- <!-- Vendor -->
-                            @if (app('hasPermission')(5, 'view'))
+
+                            <!-- Vendor -->
+                            @if ($canVendor)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-truck"></i>
@@ -176,19 +286,20 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(5, 'view'))
+                                        @if ($canAllVendors)
                                             <li><a href="{{ route('vendor.list') }}"><i
                                                         class="fa fa-list"></i><span>All Vendors</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(5, 'add'))
+                                        @if ($canNewVendor)
                                             <li><a href="{{ route('vendor.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Vendor</span></a></li>
                                         @endif
                                     </ul>
                                 </li>
                             @endif
+
                             <!-- Inventory -->
-                            @if (app('hasPermission')(15, 'view'))
+                            @if ($canInventory)
                                 <li>
                                     <a href="{{ route('inventory.list') }}">
                                         <i class="fa fa-warehouse"></i>
@@ -202,7 +313,7 @@
                 @endif
 
                 <!-- CRM -->
-                @if (app('hasPermission')(12, 'view') || app('hasPermission')(4, 'view') || app('hasPermission')(5, 'view'))
+                @if ($showCrmSection)
                     <li class="submenu menu-crm">
                         <a href="javascript:void(0);">
                             <i class="fa fa-users"></i>
@@ -211,7 +322,7 @@
                         </a>
                         <ul>
                             <!-- Appointment -->
-                            @if (app('hasPermission')(12, 'view'))
+                            @if ($canAppointment)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-calendar-check"></i>
@@ -219,11 +330,11 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(12, 'view'))
+                                        @if ($canAllAppointment)
                                             <li><a href="{{ route('appointments.index') }}"><i
                                                         class="fa fa-list"></i><span>All Appointment</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(12, 'add'))
+                                        @if ($canNewAppointment)
                                             <li><a href="{{ route('appointments.create') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Appointment</span></a>
                                             </li>
@@ -233,7 +344,7 @@
                             @endif
 
                             <!-- Customer -->
-                            @if (app('hasPermission')(4, 'view'))
+                            @if ($canCustomer)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-user"></i>
@@ -241,29 +352,23 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(4, 'view'))
+                                        @if ($canAllCustomer)
                                             <li><a href="{{ route('customer.list') }}"><i
                                                         class="fa fa-list"></i><span>All Customers</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(4, 'add'))
+                                        @if ($canNewCustomer)
                                             <li><a href="{{ route('customer.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Customer</span></a></li>
                                         @endif
                                     </ul>
                                 </li>
                             @endif
-
-                           
                         </ul>
                     </li>
                 @endif
 
                 <!-- Accounting -->
-                @if (app('hasPermission')(23, 'view') ||
-                        (Auth::check() && strtolower(Auth::user()->role) === 'staff') ||
-                        app('hasPermission')(25, 'view') ||
-                        app('hasPermission')(30, 'view') ||
-                        app('hasPermission')(6, 'view'))
+                @if ($showAccountingSection)
                     <li class="submenu menu-accounting">
                         <a href="javascript:void(0);">
                             <i class="fa fa-calculator"></i>
@@ -271,22 +376,18 @@
                             <span class="menu-arrow"></span>
                         </a>
                         <ul>
-                            <!-- Advance Pay -->
-
+                            <!-- Account Ledger -->
+                            @if ($canAccountLedger)
+                                <li>
+                                    <a href="{{ route('account_ledger.add') }}">
+                                        <i class="fa fa-book"></i>
+                                        <span>Account Ledger</span>
+                                    </a>
+                                </li>
+                            @endif
 
                             <!-- Credit/Debit Notes -->
-                            @if (app('hasPermission')(25, 'view'))
-
-
-                                <!-- Account Ledger -->
-                                @if (app('hasPermission')(13, 'view'))
-                                    <li>
-                                        <a href="{{ route('account_ledger.add') }}">
-                                            <i class="fa fa-book"></i>
-                                            <span>Account Ledger</span>
-                                        </a>
-                                    </li>
-                                @endif
+                            @if ($canCreditDebitNotes)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-credit-card"></i>
@@ -294,15 +395,15 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(25, 'list'))
+                                        @if ($canCreditNotes)
                                             <li><a href="{{ route('credit-notes-items.index') }}"><i
                                                         class="fa fa-arrow-down"></i><span>Credit Notes</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(26, 'list'))
+                                        @if ($canDebitNotes)
                                             <li><a href="{{ route('debit-notes-items.index') }}"><i
                                                         class="fa fa-arrow-up"></i><span>Debit Notes</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(25, 'list'))
+                                        @if ($canCreditDebitNotesType)
                                             <li><a href="{{ route('credit-notes.index') }}"><i
                                                         class="fa fa-cog"></i><span>Credit/Debit Notes Type</span></a>
                                             </li>
@@ -312,7 +413,7 @@
                             @endif
 
                             <!-- GST Reports -->
-                            @if (app('hasPermission')(30, 'view'))
+                            @if ($canGstReports)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-chart-line"></i>
@@ -320,7 +421,7 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(30, 'view'))
+                                        @if ($canGstReport)
                                             <li><a href="{{ route('gst.sales_list') }}"><i
                                                         class="fa fa-file-excel"></i><span>GST Report</span></a></li>
                                         @endif
@@ -329,7 +430,7 @@
                             @endif
 
                             <!-- Expense -->
-                            @if (app('hasPermission')(6, 'view'))
+                            @if ($canExpense)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-receipt"></i>
@@ -337,15 +438,15 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(6, 'view'))
+                                        @if ($canAllExpense)
                                             <li><a href="{{ route('expense.list') }}"><i
                                                         class="fa fa-list"></i><span>All Expenses</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(6, 'add'))
+                                        @if ($canNewExpense)
                                             <li><a href="{{ route('expense.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Expense</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(6, 'view'))
+                                        @if ($canAllExpenseType)
                                             <li><a href="{{ route('expensetype.list') }}"><i
                                                         class="fa fa-cog"></i><span>All Expense Type</span></a></li>
                                         @endif
@@ -357,16 +458,7 @@
                 @endif
 
                 <!-- HR -->
-                @if (
-                    $canViewStaff ||
-                        $canAddStaff ||
-                        app('hasPermission')(9, 'view') ||
-                        app('hasPermission')(9, 'add') ||
-                        (Auth::check() && strtolower(Auth::user()->role) === 'staff') ||
-                        app('hasPermission')(10, 'view') ||
-                        app('hasPermission')(10, 'add') ||
-                        app('hasPermission')(11, 'view') ||
-                        app('hasPermission')(11, 'add'))
+                @if ($showHrSection)
                     <li class="submenu menu-hr">
                         <a href="javascript:void(0);">
                             <i class="fa fa-id-card"></i>
@@ -375,7 +467,7 @@
                         </a>
                         <ul>
                             <!-- Staff -->
-                            @if ($canViewStaff || $canAddStaff)
+                            @if ($canStaff)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-users"></i>
@@ -383,11 +475,11 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if ($canViewStaff)
+                                        @if ($canAllStaff)
                                             <li><a href="{{ route('staff.list') }}"><i
                                                         class="fa fa-list"></i><span>All Staff</span></a></li>
                                         @endif
-                                        @if ($canAddStaff)
+                                        @if ($canNewStaff)
                                             <li><a href="{{ route('staff.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Staff</span></a></li>
                                         @endif
@@ -396,9 +488,7 @@
                             @endif
 
                             <!-- Attendance -->
-                            @if (app('hasPermission')(9, 'view') ||
-                                    app('hasPermission')(9, 'add') ||
-                                    (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                            @if ($canAttendance)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-clock"></i>
@@ -406,12 +496,12 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(9, 'add') ||
-                                                app('hasPermission')(9, 'view') ||
-                                                (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                                        @if ($canManageAttendance)
                                             <li><a href="{{ route('attendence.calendar') }}"><i
                                                         class="fa fa-calendar-alt"></i><span>Manage
                                                         Attendance</span></a></li>
+                                        @endif
+                                        @if ($canAttendanceSummary)
                                             <li><a href="{{ route('attendence.summary') }}"><i
                                                         class="fa fa-list"></i><span>Attendance</span></a></li>
                                         @endif
@@ -420,9 +510,7 @@
                             @endif
 
                             <!-- Payroll -->
-                            @if (app('hasPermission')(10, 'view') ||
-                                    app('hasPermission')(10, 'add') ||
-                                    (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                            @if ($canPayroll)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-money-check-alt"></i>
@@ -430,23 +518,24 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(10, 'view') || (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                                        @if ($canPayrollView)
                                             <li><a href="{{ route('payroll.list') }}"><i
                                                         class="fa fa-eye"></i><span>Payroll View</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(10, 'add'))
+                                        @if ($canAddPayroll)
                                             <li><a href="{{ route('payroll.list') }}"><i
                                                         class="fa fa-plus-circle"></i><span>Add Payroll</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(10, 'view'))
+                                        @if ($canGroupSalary)
                                             <li><a href="{{ route('payroll.salary-details') }}"><i
                                                         class="fa fa-users-cog"></i><span>Group Salary</span></a></li>
                                         @endif
                                     </ul>
                                 </li>
                             @endif
-                            <!-- advance pay -->
-                            @if (app('hasPermission')(23, 'view') || (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+
+                            <!-- Advance Pay -->
+                            @if ($canAdvancePay)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-money-bill-wave"></i>
@@ -454,11 +543,11 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(23, 'view') || (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                                        @if ($canAllAdvancePay)
                                             <li><a href="{{ route('advance_pay.index') }}"><i
                                                         class="fa fa-list"></i><span>All Advance Pay</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(23, 'add'))
+                                        @if ($canNewAdvancePay)
                                             <li><a href="{{ route('advance_pay.create') }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Advance Pay</span></a>
                                             </li>
@@ -466,10 +555,9 @@
                                     </ul>
                                 </li>
                             @endif
+
                             <!-- Leave -->
-                            @if (app('hasPermission')(11, 'view') ||
-                                    app('hasPermission')(11, 'add') ||
-                                    (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                            @if ($canLeave)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-calendar-times"></i>
@@ -477,16 +565,16 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        @if (app('hasPermission')(11, 'view'))
+                                        @if ($canAllLeave)
                                             <li><a href="{{ route('leave.view') }}"><i
                                                         class="fa fa-list"></i><span>All Leave</span></a></li>
                                         @endif
-                                        @if (app('hasPermission')(11, 'view') || (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                                        @if ($canLeaveRequest)
                                             <li><a href="{{ route('leave.request') }}"><i
                                                         class="fa fa-paper-plane"></i><span>Leave Request</span></a>
                                             </li>
                                         @endif
-                                        @if (app('hasPermission')(11, 'add') || (Auth::check() && strtolower(Auth::user()->role) === 'staff'))
+                                        @if ($canAddLeave)
                                             <li><a href="{{ route('leave.add') }}"><i
                                                         class="fa fa-plus-circle"></i><span>Add Leave</span></a></li>
                                         @endif
@@ -498,7 +586,7 @@
                 @endif
 
                 <!-- Settings -->
-                @if (app('hasPermission')(14, 'view'))
+                @if ($showSettingsSection)
                     <li class="submenu menu-settings">
                         <a href="javascript:void(0);">
                             <i class="fa fa-cog"></i>
@@ -506,24 +594,25 @@
                             <span class="menu-arrow"></span>
                         </a>
                         <ul>
-                            {{-- @if (in_array(auth()->user()->role, ['admin', 'sub-admin']))
-                                <li><a href="{{ route('plans.planlist') }}"
-                                        class="{{ request()->routeIs('plans.planlist') ? 'active' : '' }}">Plans</a>
-                                </li>
-                                <!-- <li><a href="{{ route('plans.details') }}" class="{{ request()->routeIs('plans.details') ? 'active' : '' }}">Plan Details</a></li> -->
-                            @endif --}}
-                            @if (in_array(auth()->user()->role, ['admin', 'sub-admin']))
+                            @if ($canMyPlanDetails)
                                 <li><a href="{{ route('plans.myplan') }}"><i class="fa fa-list-alt"></i> My Plan Details</a></li>
-                                @endif @if (app('hasPermission')(14, 'view'))
-                                    <li><a href="{{ route('setting.generalsettings') }}"><i
-                                                class="fa fa-store"></i><span>Shop Settings</span></a></li>
-                                @endif
+                            @endif
+                            @if ($canShopSettings)
+                                <li><a href="{{ route('setting.generalsettings') }}"><i
+                                            class="fa fa-store"></i><span>Shop Settings</span></a></li>
+                            @endif
+                            @if ($canTaxRates)
                                 <li><a href="{{ route('auth.taxrates') }}"><i class="fa fa-percent"></i><span>Tax
                                             Rates</span></a></li>
+                            @endif
+                            @if ($canDepartments)
                                 <li><a href="{{ route('department.view') }}"><i
                                             class="fa fa-building"></i><span>Departments</span></a></li>
+                            @endif
+                            @if ($canDesignations)
                                 <li><a href="{{ route('designation.view') }}"><i
                                             class="fa fa-id-badge"></i><span>Designations</span></a></li>
+                            @endif
                         </ul>
                     </li>
                 @endif

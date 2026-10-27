@@ -628,13 +628,13 @@
                         </div>
                         <form id="loginForm">
                             <div class="form-login">
-                                <label>Email</label>
+                                <label>Username</label>
                                 <div class="form-addons">
-                                    <input type="text" id="email" placeholder="Enter your email address">
+                                    <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username">
                                     <img src="{{ env('ImagePath') . 'admin/assets/img/icons/mail.svg' }}"
                                         alt="img">
                                 </div>
-                                <small id="emailError" class="text-danger"></small>
+                                <small id="usernameError" class="text-danger"></small>
                             </div>
 
                             <div class="form-login">
@@ -754,24 +754,24 @@
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     {{-- Face login handler --}}
     <script src="{{ env('ImagePath') . 'admin/assets/js/face-login.js' }}"></script>
-
     <script>
         $(document).ready(function() {
             $("#loginForm").submit(function(e) {
                 e.preventDefault(); // Prevent default form submission
 
                 // Get input values
-                let email = $("#email").val().trim();
+                let username = ($("#username").val() || $("#email").val() || "").trim();
                 let password = $("#password").val().trim();
 
                 // Reset error messages
+                $("#usernameError").text("");
                 $("#emailError").text("");
                 $("#passwordError").text("");
                 $("#loginMessage").text("");
 
                 // Basic validation
-                if (email === "") {
-                    $("#emailError").text("Email is required.");
+                if (username === "") {
+                    $("#usernameError").text("Username is required.");
                     return;
                 }
                 if (password === "") {
@@ -793,37 +793,39 @@
                 $.ajax({
                     url: "/", // Laravel API route
                     type: "POST",
+                    dataType: "json",
                     data: {
-                        email: email,
+                        username: username,
+                        email: username,
                         password: password,
                         _token: $('meta[name="csrf-token"]').attr('content'),
                     },
-                    // success: function(response) {
-                    //     if (response.token) {
-                    //         // Store token in local storage or cookies
-                    //         localStorage.setItem("authToken", response.token);
-
-                    //         // Redirect to dashboard
-                    //         location.reload();
-                    //         // window.location.href = "/dashboard";
-                    //         window.location.href = response.redirect; // Go to dashboard
-                    //     }
-                    // },
                     success: function(response) {
                         if (response.token) {
                             localStorage.setItem("authToken", response.token);
+                            localStorage.setItem("token", response.token);
+
+                            if (response.user) {
+                                let selectedId = response.user.id;
+                                if (response.user.role === 'sub-admin') {
+                                    selectedId = response.user.id;
+                                } else if (response.user.branch_id != null) {
+                                    selectedId = response.user.branch_id;
+                                }
+                                localStorage.setItem('selectedSubAdminId', selectedId);
+                            }
 
                             // Store flag for one-time popup
                             sessionStorage.setItem("showAppointments", "1");
 
                             window.location.href = response.redirect;
+                        } else if (response.error) {
+                            $("#loginMessage").text(response.error);
                         }
                     },
                     error: function(xhr) {
-                        let errorMessage = "Invalid credentials. Please try again.";
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            errorMessage = xhr.responseJSON.error;
-                        }
+                        let res = xhr.responseJSON;
+                        let errorMessage = res?.error || res?.message || "Invalid credentials. Please try again.";
                         $("#loginMessage").text(errorMessage);
                     },
                     complete: function() {

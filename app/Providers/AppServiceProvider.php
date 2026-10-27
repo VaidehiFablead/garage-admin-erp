@@ -14,6 +14,9 @@ use App\Models\Appointment;
 use App\Models\PaymentStore;
 use App\Models\JobCard;
 use App\Models\User;
+use App\Services\Tenancy\TenantManager;
+use App\Support\AppViewData;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +25,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TenantManager::class);
+
+        if (file_exists($helper = app_path('helpers.php'))) {
+            require_once $helper;
+        }
+
+        if (config('database.connections.mysql.host') === '127.0.0.1' && ! in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+            config(['database.connections.mysql.host' => 'localhost']);
+        }
     }
 
     /**
@@ -30,6 +41,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Passport::loadKeysFrom(storage_path());
+
+        $tenancy = $this->app->make(TenantManager::class);
+
+        if ($tenancy->enabled() && $this->app->runningInConsole() && ($tenantId = (int) getenv('TENANT_ID')) > 0) {
+            $tenancy->activateById($tenantId);
+        }
+
+        // Over HTTP with tenancy on, IdentifyTenant shares this after the client DB is selected.
+        if (! $tenancy->enabled() || $this->app->runningInConsole()) {
+            AppViewData::share();
+        }
+
         if (!File::exists(public_path('storage'))) {
             try {
                 Artisan::call('storage:link');
