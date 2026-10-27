@@ -26,32 +26,28 @@ class ProfileController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $user = Auth::guard('api')->user();
-        // dd($request->all());
+        $user = Auth::guard('api')->user() ?? Auth::guard('web')->user() ?? auth()->user();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized - No user found'], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:15|unique:users,phone,' . $user->id,
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'profile_image' => 'nullable|image',
-            'password' => [
-                'nullable',
-                'string',
-                'min:8',
-                'max:255',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/'
-            ],
-        ],[
-            // ✅ CUSTOM ERROR MESSAGE HERE
-            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character (@$!%*?&).',
+            'password' => 'nullable|string|min:6|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $user->name = $request->name;
-        $user->phone = $request->phone;
-        $user->email = $request->email; // updated email
+        $oldEmail = $user->email;
+        if ($request->has('name')) $user->name = $request->name;
+        if ($request->has('phone')) $user->phone = $request->phone;
+        if ($request->has('email')) $user->email = $request->email;
 
         if ($request->hasFile('profile_image')) {
             $imagePath = $request->file('profile_image')->store('profile_images', 'public');
@@ -63,6 +59,28 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        // If updating admin user profile, also synchronize changes to master admin_erp
+        if ($user->role === 'admin' || (int) ($user->role_id ?? 0) === 1 || (int) $user->id === 1) {
+            try {
+                $tenantManager = app(\App\Services\Tenancy\TenantManager::class);
+                if ($tenantManager->enabled()) {
+                    $tenant = $tenantManager->current();
+                    $tenantManager->syncProfileToAdmin([
+                        'client_id' => $tenant['client_id'] ?? null,
+                        'tenant_id' => $tenant['id'] ?? null,
+                        'domain' => request()->getHost(),
+                        'current_email' => $oldEmail,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'password' => $request->filled('password') ? $request->password : null,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Profile update sync to admin_erp failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json(['status' => true, 'message' => 'Profile updated successfully'], 200);
     }
