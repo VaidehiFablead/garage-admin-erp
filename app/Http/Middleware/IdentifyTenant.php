@@ -145,11 +145,32 @@ class IdentifyTenant
         $host = strtolower(trim($host));
         $host = preg_replace('#:\d+$#', '', $host);
 
-        return in_array($host, [
+        $centralDomains = [
             'localhost',
             '127.0.0.1',
             'garage.fableadtech.com',
             'devgarage.fableadtech.com',
-        ], true);
+            'garage-erp.fableadtech.com',
+            'devgarage-erp.fableadtech.com',
+        ];
+
+        if ($appUrl = config('app.url')) {
+            $appHost = parse_url($appUrl, PHP_URL_HOST);
+            if ($appHost) {
+                $centralDomains[] = strtolower(trim($appHost));
+            }
+        }
+
+        if ($configured = config('tenant.central_domains', env('TENANT_CENTRAL_DOMAINS'))) {
+            $extra = is_array($configured) ? $configured : explode(',', (string) $configured);
+            foreach ($extra as $item) {
+                $item = strtolower(trim($item));
+                if ($item !== '') {
+                    $centralDomains[] = $item;
+                }
+            }
+        }
+
+        return in_array($host, array_unique($centralDomains), true);
     }
 }

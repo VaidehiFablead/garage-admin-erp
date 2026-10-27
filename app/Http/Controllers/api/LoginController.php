@@ -217,7 +217,7 @@ class LoginController extends Controller
             $tenancy->resolveByHost($request->getHost(), true);
             return null;
         } catch (TenantResolutionException $e) {
-            if ($e->reason === 'NOT_FOUND' && !empty($login)) {
+            if (!empty($login)) {
                 try {
                     $tenant = $tenancy->resolveByEmail($login, true);
                     if ($request->hasSession()) {
