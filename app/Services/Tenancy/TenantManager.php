@@ -433,10 +433,30 @@ class TenantManager
         $tProduct = strtoupper((string) ($tenant['product_code'] ?? ''));
         $tProject = strtoupper((string) ($tenant['project_code'] ?? ''));
 
-        $productMatches = ($tProduct === '' || $product === '' || $tProduct === $product);
-        $projectMatches = ($tProject === '' || $project === '' || $tProject === $project);
+        $productMatches = ($tProduct === '' || $product === '' || $this->codesMatch($tProduct, $product));
+        $projectMatches = ($tProject === '' || $project === '' || $this->codesMatch($tProject, $project));
 
         return $productMatches && $projectMatches;
+    }
+
+    private function codesMatch(?string $codeA, ?string $codeB): bool
+    {
+        if (empty($codeA) || empty($codeB)) {
+            return true;
+        }
+        $a = strtoupper(trim($codeA));
+        $b = strtoupper(trim($codeB));
+        if ($a === $b) {
+            return true;
+        }
+        $cleanA = str_replace(['_', '-'], '', $a);
+        $cleanB = str_replace(['_', '-'], '', $b);
+        if ($cleanA === $cleanB) {
+            return true;
+        }
+        $rootA = preg_replace('/(_|-)?ERP$/', '', $a);
+        $rootB = preg_replace('/(_|-)?ERP$/', '', $b);
+        return (!empty($rootA) && !empty($rootB) && $rootA === $rootB);
     }
 
     private function activateStaleOrFail(string $key, string $reason): array
