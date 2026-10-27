@@ -433,8 +433,27 @@ class TenantManager
         $tProduct = strtoupper((string) ($tenant['product_code'] ?? ''));
         $tProject = strtoupper((string) ($tenant['project_code'] ?? ''));
 
-        $productMatches = ($tProduct === '' || $product === '' || $this->codesMatch($tProduct, $product));
-        $projectMatches = ($tProject === '' || $project === '' || $this->codesMatch($tProject, $project));
+        // If this app is Garage ERP, allow if tenant belongs to GARAGE (by project or product)
+        $isGarageApp = str_contains($product, 'GARAGE') || str_contains($project, 'GARAGE');
+        $isGarageTenant = str_contains($tProject, 'GARAGE') || str_contains($tProduct, 'GARAGE');
+        if ($isGarageApp && $isGarageTenant) {
+            return true;
+        }
+
+        // If this app is Hotel ERP, allow if tenant belongs to HOTEL (by project or product)
+        $isHotelApp = str_contains($product, 'HOTEL') || str_contains($project, 'HOTEL');
+        $isHotelTenant = str_contains($tProject, 'HOTEL') || str_contains($tProduct, 'HOTEL');
+        if ($isHotelApp && $isHotelTenant) {
+            return true;
+        }
+
+        $targetProject = $project ?: $product;
+        if (!empty($targetProject) && !empty($tProject) && $this->codesMatch($tProject, $targetProject)) {
+            return true;
+        }
+
+        $productMatches = ($tProduct === '' || $product === '' || $this->codesMatch($tProduct, $product) || ($tProduct === 'ERP' && str_contains($product, 'ERP')));
+        $projectMatches = ($tProject === '' || $project === '' || $this->codesMatch($tProject, $project) || $this->codesMatch($tProject, $product));
 
         return $productMatches && $projectMatches;
     }
@@ -452,6 +471,12 @@ class TenantManager
         $cleanA = str_replace(['_', '-'], '', $a);
         $cleanB = str_replace(['_', '-'], '', $b);
         if ($cleanA === $cleanB) {
+            return true;
+        }
+        if (str_contains($a, 'GARAGE') && str_contains($b, 'GARAGE')) {
+            return true;
+        }
+        if (str_contains($a, 'HOTEL') && str_contains($b, 'HOTEL')) {
             return true;
         }
         $rootA = preg_replace('/(_|-)?ERP$/', '', $a);
