@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sub-Admin Filter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .result {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sub-Admin Filter Test</h1>
+    
+    <div class="test-section">
+        <h3>Current localStorage Status:</h3>
+        <div id="currentStatus">Loading...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Functions:</h3>
+        <button class="button" onclick="testSetSubAdmin('123')">Set Sub-Admin 123</button>
+        <button class="button" onclick="testSetSubAdmin('456')">Set Sub-Admin 456</button>
+        <button class="button danger" onclick="testClearSubAdmin()">Clear Filter</button>
+        <button class="button success" onclick="testCheckStatus()">Check Status</button>
+    </div>
+
+    <div class="test-section">
+        <h3>API Test:</h3>
+        <button class="button" onclick="testAPI()">Test API Call</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Usage Examples:</h3>
+        <div class="code">
+// Set sub-admin filter
+localStorage.setItem('selectedSubAdminId', '123');
+
+// Clear filter
+localStorage.removeItem('selectedSubAdminId');
+
+// Check current filter
+const selectedId = localStorage.getItem('selectedSubAdminId');
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Available Routes:</h3>
+        <ul>
+            <li><code>GET /api/get_orders</code> - Get all orders (with query parameter)</li>
+            <li><code>GET /api/sales/{selectedSubAdminId?}</code> - Get orders with URL parameter</li>
+        </ul>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            const statusDiv = document.getElementById('currentStatus');
+            
+            if (selectedId) {
+                statusDiv.innerHTML = `<strong>✅ Filter Active:</strong> Sub-Admin ID: ${selectedId}`;
+                statusDiv.style.color = '#28a745';
+            } else {
+                statusDiv.innerHTML = '<strong>❌ No Filter:</strong> Showing all data';
+                statusDiv.style.color = '#6c757d';
+            }
+        }
+
+        function testSetSubAdmin(id) {
+            localStorage.setItem('selectedSubAdminId', id);
+            updateStatus();
+            alert(`Sub-admin filter set to: ${id}`);
+        }
+
+        function testClearSubAdmin() {
+            localStorage.removeItem('selectedSubAdminId');
+            updateStatus();
+            alert('Filter cleared');
+        }
+
+        function testCheckStatus() {
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            if (selectedId) {
+                alert(`Current filter: Sub-Admin ID ${selectedId}`);
+            } else {
+                alert('No filter is currently set');
+            }
+        }
+
+        function testAPI() {
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            const resultDiv = document.getElementById('apiResult');
+            
+            let url = '/api/get_orders';
+            let data = {};
+            
+            if (selectedId) {
+                data.selectedSubAdminId = selectedId;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <strong>API Call:</strong><br>
+                    URL: ${url}<br>
+                    Method: GET<br>
+                    Data: ${JSON.stringify(data)}<br>
+                    <small>Note: This is a simulation. Actual API call would require authentication.</small>
+                </div>
+            `;
+        }
+
+        // Initialize status on page load
+        updateStatus();
+    </script>
+</body>
+</html> 

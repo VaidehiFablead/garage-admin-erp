@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub-Admin Filter Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .example {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .code {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.clear {
+            background: #dc3545;
+        }
+        .button.clear:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sub-Admin Data Filtering Example</h1>
+    
+    <p>This example demonstrates how to use localStorage to filter data for specific sub-admins.</p>
+
+    <div class="example">
+        <h3>How to Use:</h3>
+        <p>1. Set a sub-admin ID to filter data for that specific sub-admin:</p>
+        <div class="code">
+            localStorage.setItem('selectedSubAdminId', '123');
+        </div>
+        
+        <p>2. Clear the filter to show all data (admin only):</p>
+        <div class="code">
+            localStorage.removeItem('selectedSubAdminId');
+        </div>
+        
+        <p>3. Check if a sub-admin is selected:</p>
+        <div class="code">
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            if (selectedId) {
+                console.log('Filtering for sub-admin ID:', selectedId);
+            }
+        </div>
+    </div>
+
+    <div class="example">
+        <h3>Test the Functionality:</h3>
+        <button class="button" onclick="setSubAdmin('123')">Filter for Sub-Admin 123</button>
+        <button class="button" onclick="setSubAdmin('456')">Filter for Sub-Admin 456</button>
+        <button class="button clear" onclick="clearSubAdmin()">Show All Data</button>
+        <button class="button" onclick="checkCurrentFilter()">Check Current Filter</button>
+    </div>
+
+    <div class="example">
+        <h3>Current Status:</h3>
+        <div id="status">No sub-admin selected</div>
+    </div>
+
+    <div class="example">
+        <h3>Implementation Details:</h3>
+        <ul>
+            <li><strong>Backend Changes:</strong> All API endpoints now accept a <code>selectedSubAdminId</code> parameter</li>
+            <li><strong>Frontend Changes:</strong> All AJAX calls now include the selected sub-admin ID from localStorage</li>
+            <li><strong>Role-based Access:</strong> 
+                <ul>
+                    <li>Sub-admins can only see their own data (regardless of localStorage)</li>
+                    <li>Admins can see all data or filter by specific sub-admin</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        function setSubAdmin(id) {
+            localStorage.setItem('selectedSubAdminId', id);
+            updateStatus();
+            alert(`Filter set for sub-admin ID: ${id}`);
+        }
+
+        function clearSubAdmin() {
+            localStorage.removeItem('selectedSubAdminId');
+            updateStatus();
+            alert('Filter cleared - showing all data');
+        }
+
+        function checkCurrentFilter() {
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            if (selectedId) {
+                alert(`Currently filtering for sub-admin ID: ${selectedId}`);
+            } else {
+                alert('No sub-admin filter is currently set');
+            }
+        }
+
+        function updateStatus() {
+            const selectedId = localStorage.getItem('selectedSubAdminId');
+            const statusDiv = document.getElementById('status');
+            if (selectedId) {
+                statusDiv.innerHTML = `<strong>Filtering for sub-admin ID:</strong> ${selectedId}`;
+                statusDiv.style.color = '#007bff';
+            } else {
+                statusDiv.innerHTML = '<strong>No sub-admin selected</strong> - showing all data';
+                statusDiv.style.color = '#28a745';
+            }
+        }
+
+        // Initialize status on page load
+        updateStatus();
+    </script>
+</body>
+</html> 
