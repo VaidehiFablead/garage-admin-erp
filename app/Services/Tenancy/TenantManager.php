@@ -432,10 +432,15 @@ class TenantManager
 
         $tProduct = strtoupper((string) ($tenant['product_code'] ?? ''));
         $tProject = strtoupper((string) ($tenant['project_code'] ?? ''));
+        $tDomain = strtoupper((string) ($tenant['domain'] ?? ''));
+        $tDatabase = strtoupper((string) ($tenant['db']['database'] ?? ($tenant['database_name'] ?? '')));
 
-        // If this app is Garage ERP, allow if tenant belongs to GARAGE (by project or product)
+        // If this app is Garage ERP, allow if tenant belongs to GARAGE (by project, product, domain, or db)
         $isGarageApp = str_contains($product, 'GARAGE') || str_contains($project, 'GARAGE');
-        $isGarageTenant = str_contains($tProject, 'GARAGE') || str_contains($tProduct, 'GARAGE');
+        $isGarageTenant = str_contains($tProject, 'GARAGE') 
+            || str_contains($tProduct, 'GARAGE')
+            || str_contains($tDomain, 'GARAGE')
+            || str_contains($tDatabase, 'GARAGE');
         if ($isGarageApp && $isGarageTenant) {
             return true;
         }
