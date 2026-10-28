@@ -78,6 +78,7 @@ if (! function_exists('tenant_has_module')) {
             ['advancepay', 'advancepayment'],
             ['leave', 'leaves', 'leaverequest'],
             ['myplandetails', 'plan', 'plans'],
+            ['mybranch', 'branch', 'branches', 'subbranch'],
             ['shopsettings', 'shopsetting', 'settings', 'setting', 'generalsettings'],
             ['taxrates', 'tax', 'taxrate'],
             ['dashboard'],

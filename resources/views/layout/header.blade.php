@@ -156,13 +156,9 @@
     $admin = App\Models\User::where('role', 'admin')->first();
 
     $user = auth()->user();
-    $plan = \App\Models\Plan::find($user->plan_id);
+    $plan = $user && $user->plan_id ? \App\Models\Plan::find($user->plan_id) : null;
 
-    $showBranch = true;
-
-    if ($plan && $plan->branch_limit == 1) {
-        $showBranch = false;
-    }
+    $showBranch = tenant_has_module(['My Branch', 'Branch', 'Branches']);
 @endphp
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="header">
