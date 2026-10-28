@@ -674,13 +674,13 @@
                         </div>
 
                         {{-- Login with Face button --}}
-                        <button id="faceLoginBtn" type="button" style="
+                        <!-- <button id="faceLoginBtn" type="button" style="
                             width:100%; padding:12px; border:2px solid #ff9f43; background:#fff;
                             color:#ff9f43; font-weight:600; font-size:15px; border-radius:6px;
                             cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
                             transition:background 0.2s, color 0.2s;">
                             <i class="fa fa-camera"></i> Login with Face
-                        </button>
+                        </button> -->
 
                     </div>
                 <!-- </div> -->
