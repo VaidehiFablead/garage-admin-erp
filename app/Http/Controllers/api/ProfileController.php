@@ -87,30 +87,41 @@ class ProfileController extends Controller
 
     public function get_subadmin(Request $request)
     {
-        $user = Auth::guard('api')->user();
-        $role = $user->role ?? '';
+        $user = null;
+        try {
+            $user = Auth::guard('api')->user();
+        } catch (\Throwable $e) {
+            $user = null;
+        }
 
-        // dd($user, $role);
+        if (!$user) {
+            try {
+                $user = Auth::guard('web')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+        }
+
+        $role = $user->role ?? '';
 
         if (!$user || $role !== 'admin') {
             return response()->json(['status' => false, 'message' => 'Unauthorized - Only admin allowed'], 403);
         }
 
-        $subadmin = User::where('role', 'sub-admin')
-            ->where('isDeleted', 0)
-            ->select('id', 'name', 'profile_image')
-            ->get();
+        try {
+            $subadmin = User::where('role', 'sub-admin')
+                ->where('isDeleted', 0)
+                ->select('id', 'name', 'profile_image')
+                ->get();
 
-        // dd($subadmin);
-
-        if ($subadmin->isEmpty()) {
-            return response()->json(['status' => false, 'message' => 'No subadmin found'], 404);
+            return response()->json([
+                'status' => true,
+                'data' => $subadmin,
+                'role' => $role
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'data' => $subadmin,
-            'role' => $role
-        ], 200);
     }
 }
+

@@ -94,12 +94,16 @@
         let urlParts = window.location.pathname.split('/');
         let userId = urlParts[urlParts.length - 1];
 
+        var headers = {};
+        if (authToken && authToken !== "null" && authToken !== "undefined") {
+            headers["Authorization"] = "Bearer " + authToken;
+        }
+
         $.ajax({
             url: `/api/getSubbranch/${userId}`,
             method: 'GET',
-            headers: {
-                "Authorization": "Bearer " + authToken,
-            },
+            headers: headers,
+
             success: function(res) {
                 const user = res.data;
                 const userDetail = user.user_detail ?? {};

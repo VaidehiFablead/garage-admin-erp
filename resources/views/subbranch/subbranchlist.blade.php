@@ -285,6 +285,11 @@
         });
 
         function fetchCustomers() {
+            var headers = {};
+            if (authToken && authToken !== "null" && authToken !== "undefined") {
+                headers["Authorization"] = "Bearer " + authToken;
+            }
+
             $.ajax({
                 url: "/api/getAllSubbranch",
                 type: "GET",
@@ -292,11 +297,9 @@
                 beforeSend: function() {
                     $("#subbranchTable tbody").html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
                 },
-                headers: {
-                    "Authorization": "Bearer " + authToken,
-                },
+                headers: headers,
                 success: function(response) {
-                    if (response.status && response.data.length > 0) {
+                    if (response.status && response.data && response.data.length > 0) {
                         allCustomers = response.data;
                         filteredCustomers = [...allCustomers];
 
@@ -325,11 +328,17 @@
                             .removeAttr('title');
                     }
                 },
-                error: function() {
-                    $("#subbranchTable tbody").html('<tr><td colspan="8" class="text-center text-danger">Error loading data.</td></tr>');
+                error: function(xhr) {
+                    console.error("Failed to load branches:", xhr);
+                    let msg = "Error loading data.";
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        msg = xhr.responseJSON.error;
+                    }
+                    $("#subbranchTable tbody").html('<tr><td colspan="8" class="text-center text-danger">' + msg + '</td></tr>');
                 },
             });
         }
+
 
         function renderTable() {
             if (filteredCustomers.length === 0) {
@@ -470,14 +479,18 @@
                 cancelButtonColor: "#6c757d", // Cancel button color (gray)
                 confirmButtonText: "Yes, delete it!"
             }).then((result) => {
-                if (result.isConfirmed) {
+                    var delHeaders = {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    };
+                    if (authToken && authToken !== "null" && authToken !== "undefined") {
+                        delHeaders["Authorization"] = "Bearer " + authToken;
+                    }
+
                     $.ajax({
                         url: `/api/deleteSubbranch/${customerId}`,
                         type: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                            "Authorization": "Bearer " + authToken,
-                        },
+                        headers: delHeaders,
+
                         success: function(response) {
                             // Swal.fire("Deleted!", response.message, "success");
                             Swal.fire({

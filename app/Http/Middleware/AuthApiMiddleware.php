@@ -10,12 +10,27 @@ class AuthApiMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
+        // Accept either a valid Passport Bearer token (API guard)
+        // or an active web session — so web pages work seamlessly.
+        $isApi = false;
+        try {
+            $isApi = Auth::guard('api')->check();
+        } catch (\Throwable $e) {
+            $isApi = false;
+        }
 
-        if (!Auth::guard('api')->check()) {
+        $isWeb = false;
+        try {
+            $isWeb = Auth::guard('web')->check();
+        } catch (\Throwable $e) {
+            $isWeb = false;
+        }
+
+        if (! ($isApi || $isWeb)) {
             return response()->json(['status' => false, 'error' => 'Unauthorized'], 401);
         }
-        $user = Auth::guard('api')->user();
 
         return $next($request);
     }
 }
+
