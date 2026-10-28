@@ -310,15 +310,16 @@
                         allCustomers = response.data;
                         filteredCustomers = [...allCustomers];
 
-                        // ✅ Check dynamic sub-admin limit with isDeleted = 0
-                        let activeSubAdmins = allCustomers.filter(c => c.role === 'sub-admin' && (c.isDeleted === 0 || c.isDeleted === '0' || !c.isDeleted));
-                        let subAdminCount = activeSubAdmins.length;
+                        // ✅ Check dynamic total branch limit (admin + sub-admins with isDeleted = 0)
+                        let activeBranches = allCustomers.filter(c => ['admin', 'sub-admin'].includes(c.role) && (c.isDeleted === 0 || c.isDeleted === '0' || !c.isDeleted));
+                        let totalBranchCount = activeBranches.length;
 
-                        if (branchLimit !== null && branchLimit > 0 && subAdminCount >= branchLimit) {
+                        if (branchLimit !== null && branchLimit > 0 && totalBranchCount >= branchLimit) {
+                            let allowedSub = Math.max(0, branchLimit - 1);
                             $('#new-branch-btn')
                                 .attr('href', 'javascript:void(0);')
                                 .css({'opacity': '0.5', 'cursor': 'not-allowed', 'pointer-events': 'none'})
-                                .attr('title', `Maximum ${branchLimit} sub-branches limit reached`);
+                                .attr('title', `Maximum ${branchLimit} branches limit reached (1 Main Branch + ${allowedSub} Sub-branch)`);
                         } else {
                             $('#new-branch-btn')
                                 .attr('href', "{{ route('subbranch.add') }}")

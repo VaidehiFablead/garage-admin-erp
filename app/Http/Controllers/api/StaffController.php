@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\Plan;
+use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
@@ -180,8 +181,20 @@ class StaffController extends Controller
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s.,\'-]+$/u'
             ],
-            'email'            => 'nullable|email|unique:users,email',
-            'phone'            => 'required|numeric',
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->where(function ($query) {
+                    return $query->where('isDeleted', 0);
+                }),
+            ],
+            'phone' => [
+                'required',
+                'numeric',
+                Rule::unique('users', 'phone')->where(function ($query) {
+                    return $query->where('isDeleted', 0);
+                }),
+            ],
             'country'          => 'nullable|string|max:100',
             'password'         => 'required|string|min:8|max:255',
             // 'password'         => [
@@ -564,8 +577,25 @@ class StaffController extends Controller
             // Validate input data
         $validator = Validator::make($request->all(), [
             'staff_name'       => 'required|string|max:255',
-            'email'            => "required|email|unique:users,email,$id",
-            'phone'            => "required|numeric|digits_between:10,15|unique:users,phone,$id",
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')
+                    ->ignore($id)
+                    ->where(function ($query) {
+                        return $query->where('isDeleted', 0);
+                    }),
+            ],
+            'phone' => [
+                'required',
+                'numeric',
+                'digits_between:10,15',
+                Rule::unique('users', 'phone')
+                    ->ignore($id)
+                    ->where(function ($query) {
+                        return $query->where('isDeleted', 0);
+                    }),
+            ],
             'country'          => 'nullable|string|max:100',
             'city'             => 'nullable|string|max:100',
             'address'          => 'nullable|string|max:500',
