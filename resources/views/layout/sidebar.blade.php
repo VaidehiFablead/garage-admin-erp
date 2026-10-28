@@ -124,9 +124,13 @@
                         $canAllLeave || $canLeaveRequest || $canAddLeave
                     );
 
-                    $showHrSection = tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && (
-                        $canStaff || $canAttendance || $canPayroll || $canAdvancePay || $canLeave
+                    $hasMoreHr = tenant_has_module(['HR', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && (
+                        $canAttendance || $canPayroll || $canAdvancePay || $canLeave
                     );
+                    $staffInErp = $canStaff && !$hasMoreHr;
+                    $staffInHr = $canStaff && $hasMoreHr;
+                    $showHrSection = $hasMoreHr;
+                    $showErpSection = $showErpSection || $staffInErp;
 
                     // Settings Submodules
                     $canMyPlanDetails = in_array($role, ['admin', 'sub-admin']) && tenant_has_module(['My Plan Details', 'Settings']) && tenant_has_sub_module('My Plan Details', 'My Plan Details');
@@ -308,6 +312,26 @@
                                 </li>
                             @endif
 
+                            <!-- Staff (moved to ERP when only Staff permission is assigned) -->
+                            @if ($staffInErp)
+                                <li class="submenu">
+                                    <a href="javascript:void(0);">
+                                        <i class="fa fa-users"></i>
+                                        <span>Staff</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if ($canAllStaff)
+                                            <li><a href="{{ route('staff.list') }}"><i
+                                                        class="fa fa-list"></i><span>All Staff</span></a></li>
+                                        @endif
+                                        @if ($canNewStaff)
+                                            <li><a href="{{ route('staff.add') }}"><i
+                                                        class="fa fa-plus-circle"></i><span>New Staff</span></a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -467,7 +491,7 @@
                         </a>
                         <ul>
                             <!-- Staff -->
-                            @if ($canStaff)
+                            @if ($staffInHr)
                                 <li class="submenu">
                                     <a href="javascript:void(0);">
                                         <i class="fa fa-users"></i>

@@ -1315,7 +1315,7 @@
              HR WORKFORCE OVERVIEW SECTION
         ═══════════════════════════════════════════════════════════════ --}}
         @endif
-        @if ($showHrDashboardSection && tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
+        @if ($showHrDashboardSection && tenant_has_module(['HR', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
         <style>
             .hr-metric { min-height: 118px; }
             .hr-metric-label { color: #667085; font-size: 12px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; }
@@ -1841,7 +1841,7 @@
         });
     </script> --}}
 
-    @if ($showHrDashboardSection && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
+    @if ($showHrDashboardSection && tenant_has_module(['HR', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
     <script>
         const hrAttendanceLabels   = @json($hrAttendanceLabels ?? []);
         const hrAttendancePresent  = @json($hrAttendancePresent ?? []);
