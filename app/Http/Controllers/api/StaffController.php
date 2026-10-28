@@ -145,6 +145,8 @@ class StaffController extends Controller
         return response()->json([
             'status' => true,
             'data' => $data->values(),
+            'active_staff_count' => User::whereIn('role', ['staff', 'Staff'])->where('isDeleted', 0)->count(),
+            'user_limit' => tenant_user_limit(),
             'pagination' => [
                 'current_page' => $staff->currentPage(),
                 'last_page' => $staff->lastPage(),
@@ -226,20 +228,18 @@ class StaffController extends Controller
             $userBranchId = $request->sub_admin_id;
         }
         // dd($userBranchId);
-        // Get admin's plan
-        $plan = Plan::find($user->plan_id);
-
-        if ($plan) {
-
-            // Count existing staff of this admin
-            $staffCount = User::where('branch_id', $user->id)
-                            ->where('role', 'staff')
+        // ✅ Enforce dynamic user/staff limit based on tenant plan with isDeleted = 0
+        $userLimit = tenant_user_limit();
+        if ($userLimit !== null && $userLimit > 0) {
+            $staffCount = User::whereIn('role', ['staff', 'Staff'])
+                            ->where('isDeleted', 0)
                             ->count();
 
-            if ($staffCount >= $plan->user_limit) {
+            if ($staffCount >= $userLimit) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Staff limit exceeded. Your plan allows only '.$plan->user_limit.' staff members.'
+                    'error' => "Staff limit exceeded. Your plan allows only {$userLimit} staff members.",
+                    'message' => "Staff limit exceeded. Your plan allows only {$userLimit} staff members."
                 ], 422);
             }
         }

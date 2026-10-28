@@ -15,6 +15,14 @@ class SubBranchController extends Controller
     }
     public function add_subbranch(Request $request)
     {
+        $branchLimit = tenant_branch_limit();
+        if ($branchLimit !== null && $branchLimit > 0) {
+            $subAdminCount = \App\Models\User::where('role', 'sub-admin')->where('isDeleted', 0)->count();
+            if ($subAdminCount >= $branchLimit) {
+                return redirect()->route('subbranch.list')->with('error', "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches.");
+            }
+        }
+
         return view('subbranch/addsubbranch');
     }
     public function edit_subbranch(Request $request, $id)
