@@ -148,6 +148,7 @@ class IdentifyTenant
         $centralDomains = [
             'localhost',
             '127.0.0.1',
+            'garage-erp.fableadtech.com',
             'garage.fableadtech.com',
             'devgarage.fableadtech.com',
             'garage-erp.fableadtech.com',
