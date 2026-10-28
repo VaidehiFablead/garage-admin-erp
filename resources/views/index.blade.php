@@ -1,4 +1,4 @@
-﻿@extends('layout.app')
+@extends('layout.app')
 
 @section('title', 'Dashboard')
 
@@ -898,7 +898,19 @@
     </div> --}}
 
     <div class="content">
-        @if ($showErpDashboardSection)
+        @php
+            $canShowJobCard = tenant_has_module(['Job Card', 'ERP']);
+            $canShowSales = tenant_has_module(['Job Card', 'ERP', 'Sales & Orders', 'Sales']);
+            $canShowPurchase = tenant_has_module(['Purchase', 'ERP']);
+            $canShowExpense = tenant_has_module(['Expense', 'Accounting']);
+            $canShowQuotation = tenant_has_module(['Job Card', 'Quotations', 'Sales & Orders', 'ERP']);
+            $canShowCustomer = tenant_has_module(['Customer', 'CRM']);
+            $canShowVendor = tenant_has_module(['Vendor', 'ERP']);
+            $canShowDailyRegister = tenant_has_module(['Daily Register', 'ERP']);
+            $hasAnyTopWidget = $canShowSales || $canShowPurchase || $canShowExpense || $canShowQuotation || $canShowCustomer || $canShowVendor;
+        @endphp
+
+        @if ($showErpDashboardSection && tenant_has_module('Dashboard'))
         <div class="mb-3 d-flex justify-content-end">
             <select id="dateFilter" class="form-select form-select-sm filterclass">
                 <option value="today" {{ request('filter') == 'today' ? 'selected' : '' }}>Today</option>
@@ -906,8 +918,11 @@
                 <option value="this_month" {{ request('filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
             </select>
         </div>
+
+        @if ($hasAnyTopWidget)
         <div class="row dashboard-widgets-row">
 
+            @if ($canShowSales)
             <!-- Sales -->
             <div class="col-lg-4 col-sm-6 col-4">
                 <a href="{{ route('sales.list') }}">
@@ -932,7 +947,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowPurchase)
             <!-- Purchase -->
             <div class="col-lg-4 col-sm-6 col-4">
                 <a href="{{ route('purchase.lists') }}">
@@ -957,7 +974,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowExpense)
             <!-- Expense -->
             <div class="col-lg-4 col-sm-6 col-4">
                 <a href="{{ route('expense.list') }}">
@@ -982,7 +1001,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowSales)
             <!-- Mini Cards -->
             <div class="col-lg col-sm-6 col-6 d-flex">
                 <a href="{{ route('sales.list') }}" class="color_box box1">
@@ -997,7 +1018,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowPurchase)
             <div class="col-lg col-sm-6 col-6 d-flex">
                 <a href="{{ route('purchase.lists') }}" class="color_box box2">
                     <div class="dash-count das2">
@@ -1011,7 +1034,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowQuotation)
             <div class="col-lg col-sm-6 col-6 d-flex">
                 <a href="{{ route('sales.list') }}" class="color_box box3">
                     <div class="dash-count das3">
@@ -1025,7 +1050,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowCustomer)
             <div class="col-lg col-sm-6 col-6 d-flex">
                 <a href="{{ route('customer.list') }}" class="color_box box3">
                     <div class="dash-count">
@@ -1039,7 +1066,9 @@
                     </div>
                 </a>
             </div>
+            @endif
 
+            @if ($canShowVendor)
             <div class="col-lg col-sm-6 col-6 d-flex">
                 <a href="{{ route('vendor.list') }}" class="color_box box4">
                     <div class="dash-count das1">
@@ -1053,11 +1082,13 @@
                     </div>
                 </a>
             </div>
+            @endif
 
         </div>
+        @endif
 
         <div class="row">
-            @if ($showErpJobCardChart && in_array($role, ['inventory-manager', 'sales-manager', 'admin', 'sub-admin', 'Staff']))
+            @if ($showErpJobCardChart && $canShowJobCard && in_array($role, ['inventory-manager', 'sales-manager', 'admin', 'sub-admin', 'Staff']))
                 <div class="col-lg-6 col-sm-12 col-12 d-flex">
                     <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1076,7 +1107,7 @@
                     </div>
                 </div>
             @endif
-            @if ($showErpDailyDataChart && in_array($role, ['inventory-manager', 'purchase-manager', 'admin', 'sub-admin', 'Staff']))
+            @if ($showErpDailyDataChart && $canShowDailyRegister && in_array($role, ['inventory-manager', 'purchase-manager', 'admin', 'sub-admin', 'Staff']))
                 <div class="col-lg-6 col-sm-12 col-12 d-flex">
                     <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1097,7 +1128,7 @@
             @endif
 
 
-            @if ($showErpLatestJobCard && in_array($role, ['inventory-manager', 'sales-manager', 'admin', 'sub-admin', 'Staff']))
+            @if ($showErpLatestJobCard && $canShowJobCard && in_array($role, ['inventory-manager', 'sales-manager', 'admin', 'sub-admin', 'Staff']))
                 <!-- Latest Sales -->
                 <div class="col-md-6">
                     <div class="card mb-0" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -1188,7 +1219,7 @@
                 </div>
             @endif
 
-            @if ($showErpLatestDailyData && in_array($role, ['inventory-manager', 'purchase-manager', 'admin', 'sub-admin', 'Staff']))
+            @if ($showErpLatestDailyData && $canShowDailyRegister && in_array($role, ['inventory-manager', 'purchase-manager', 'admin', 'sub-admin', 'Staff']))
                 <div class="col-md-6">
                     <div class="card mb-0" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1284,7 +1315,7 @@
              HR WORKFORCE OVERVIEW SECTION
         ═══════════════════════════════════════════════════════════════ --}}
         @endif
-        @if ($showHrDashboardSection && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
+        @if ($showHrDashboardSection && tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Advance Pay', 'Leave']) && in_array($role, ['inventory-manager', 'admin', 'sub-admin']))
         <style>
             .hr-metric { min-height: 118px; }
             .hr-metric-label { color: #667085; font-size: 12px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; }
@@ -1310,7 +1341,7 @@
                 </div>
             </div>
 
-            @if ($showHrStaffStrength)
+            @if ($showHrStaffStrength && tenant_has_module(['Staff', 'HR']))
             <div class="col-lg-3 col-sm-6 col-6 d-flex">
                 <a href="{{ route('staff.list') }}" class="color_box w-100">
                     <div class="card flex-fill hr-metric" style="cursor:pointer; border-radius: 8px; border: 1px solid #d9f0df; box-shadow: none;">
@@ -1329,7 +1360,7 @@
             </div>
             @endif
 
-            @if ($showHrActiveStaff)
+            @if ($showHrActiveStaff && tenant_has_module(['Attendance', 'HR']))
             <div class="col-lg-3 col-sm-6 col-6 d-flex">
                 <a href="{{ route('attendence.summary') }}" class="color_box w-100">
                     <div class="card flex-fill hr-metric" style="cursor:pointer; border-radius: 8px; border: 1px solid #d9f0df; box-shadow: none;">
@@ -1348,7 +1379,7 @@
             </div>
             @endif
 
-            @if ($showHrMonthlyAttendance)
+            @if ($showHrMonthlyAttendance && tenant_has_module(['Attendance', 'HR']))
             <div class="col-lg-3 col-sm-6 col-6 d-flex">
                 <a href="{{ route('attendence.summary') }}" class="color_box w-100">
                     <div class="card flex-fill hr-metric" style="cursor:pointer; border-radius: 8px; border: 1px solid #d9f0df; box-shadow: none;">
@@ -1367,7 +1398,7 @@
             </div>
             @endif
 
-            @if ($showHrPersonalProgress)
+            @if ($showHrPersonalProgress && tenant_has_module(['Payroll', 'HR']))
             <div class="col-lg-3 col-sm-6 col-6 d-flex">
                 <a href="{{ route('payroll.list') }}" class="color_box w-100">
                     <div class="card flex-fill hr-metric" style="cursor:pointer; border-radius: 8px; border: 1px solid #d9f0df; box-shadow: none;">
@@ -1386,7 +1417,7 @@
             </div>
             @endif
 
-            @if ($showHrAttendancePattern)
+            @if ($showHrAttendancePattern && tenant_has_module(['Attendance', 'HR']))
             <div class="col-lg-7 col-sm-12 col-12 d-flex">
                 <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1399,7 +1430,7 @@
             </div>
             @endif
 
-            @if ($showHrSalaryPayrollTrend)
+            @if ($showHrSalaryPayrollTrend && tenant_has_module(['Payroll', 'HR']))
             <div class="col-lg-5 col-sm-12 col-12 d-flex">
                 <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1412,7 +1443,7 @@
             </div>
             @endif
 
-            @if ($showHrPayrollSnapshot)
+            @if ($showHrPayrollSnapshot && tenant_has_module(['Payroll', 'HR']))
             <div class="col-lg-4 col-sm-12 col-12 d-flex">
                 <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1444,7 +1475,7 @@
             </div>
             @endif
 
-            @if ($showHrAttendanceWatch)
+            @if ($showHrAttendanceWatch && tenant_has_module(['Attendance', 'HR']))
             <div class="col-lg-4 col-sm-12 col-12 d-flex">
                 <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">
@@ -1460,7 +1491,7 @@
                                 <tbody>
                                     @forelse ($attendanceWatch as $staffRow)
                                         <tr>
-                                            <td>{{ $staffRow->name }}</td>
+                                             <td>{{ $staffRow->name }}</td>
                                             <td>{{ number_format($staffRow->present_days, 0) }}</td>
                                             <td>
                                                 <span class="hr-mini-badge bg-light text-dark">{{ number_format($staffRow->absent_days, 0) }}</span>
@@ -1480,7 +1511,7 @@
             </div>
             @endif
 
-            @if ($showHrPayrollStatus)
+            @if ($showHrPayrollStatus && tenant_has_module(['Payroll', 'HR']))
             <div class="col-lg-4 col-sm-12 col-12 d-flex">
                 <div class="card flex-fill" style="border-radius: 8px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #e87b1e; padding: 12px 16px; border-bottom: none;">

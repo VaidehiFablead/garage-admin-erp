@@ -80,6 +80,9 @@ if (! function_exists('tenant_has_module')) {
             ['myplandetails', 'plan', 'plans'],
             ['shopsettings', 'settings', 'setting', 'generalsettings'],
             ['taxrates', 'tax', 'taxrate'],
+            ['dashboard'],
+            ['sales', 'salesorders', 'salesandorders', 'salesinvoice'],
+            ['quotations', 'quotation'],
             ['departments', 'department'],
             ['designations', 'designation'],
         ];

@@ -667,11 +667,11 @@
                         </form>
 
                         {{-- OR divider --}}
-                        <div class="d-flex align-items-center my-3">
+                        <!-- <div class="d-flex align-items-center my-3">
                             <hr style="flex:1; border-color:#ccc;">
                             <span style="padding:0 12px; color:#aaa; font-size:13px; font-weight:500;">or continue with</span>
                             <hr style="flex:1; border-color:#ccc;">
-                        </div>
+                        </div> -->
 
                         {{-- Login with Face button --}}
                         <!-- <button id="faceLoginBtn" type="button" style="
