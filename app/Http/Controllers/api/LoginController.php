@@ -77,6 +77,7 @@ class LoginController extends Controller
             } elseif ($user->role === 'staff' && !empty($user->branch_id)) {
                 $request->session()->put('selectedSubAdminId', $user->branch_id);
             }
+            $request->session()->save();
         }
 
         // Create personal access token for Passport
