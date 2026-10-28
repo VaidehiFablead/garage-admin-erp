@@ -229,7 +229,7 @@
                     </div>
                 </a>
             @endif
-            @if (tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Leave', 'Advance Pay']) && in_array(auth()->user()->role, ['admin', 'sub-admin', 'hr']))
+            @if (tenant_has_module(['HR', 'Attendance', 'Payroll', 'Leave', 'Advance Pay']) && in_array(auth()->user()->role, ['admin', 'sub-admin', 'hr']))
             <!-- HR Dropdown -->
             <div class="dropdown me-3 d-flex align-items-center">
                 <button class="btn btn-sm dropdown-toggle text-white" style="background-color: #ff9f43; border-radius: 6px; height: 36px;" data-bs-toggle="dropdown">
@@ -442,14 +442,16 @@
                                 data-feather="user"></i>
                             My Profile</a>
                         @if (auth()->user()->role === 'admin')
-                            <a class="dropdown-item setting" href="{{ route('setting.generalsettings') }}"><i
-                                    class="me-2" data-feather="settings"></i>Settings</a>
-                            <hr class="m-0">
-                            @if (auth()->user()->role === 'admin' && $showBranch)
-                            <a class="dropdown-item new_branch" href="{{ route('subbranch.list') }}">
-                                <i class="me-2" data-feather="settings"></i>My Branch</a>
+                            @if (tenant_has_module(['Shop Settings', 'Settings', 'Shop Setting']))
+                                <a class="dropdown-item setting" href="{{ route('setting.generalsettings') }}"><i
+                                        class="me-2" data-feather="settings"></i>Settings</a>
+                                <hr class="m-0">
                             @endif
-                            <hr class="m-0">
+                            @if ($showBranch)
+                                <a class="dropdown-item new_branch" href="{{ route('subbranch.list') }}">
+                                    <i class="me-2" data-feather="settings"></i>My Branch</a>
+                                <hr class="m-0">
+                            @endif
                         @endif
                         <a class="dropdown-item logout pb-0" href="{{ route('logout') }}" onclick="localStorage.removeItem('authToken'); localStorage.removeItem('selectedSubAdminId');"><img
                                 src="{{ env('ImagePath') . '/admin/assets/img/icons/log-out.svg' }}" class="me-2"
@@ -467,8 +469,12 @@
         <div class="dropdown-menu dropdown-menu-right">
             <a class="dropdown-item" href="{{ route('auth.profile') }}">My Profile</a>
             @if (auth()->user()->role === 'admin')
-                <a class="dropdown-item" href="{{ route('setting.generalsettings') }}">Settings</a>
-                <a class="dropdown-item" href="{{ route('subbranch.list') }}">My Branch</a>
+                @if (tenant_has_module(['Shop Settings', 'Settings', 'Shop Setting']))
+                    <a class="dropdown-item" href="{{ route('setting.generalsettings') }}">Settings</a>
+                @endif
+                @if ($showBranch)
+                    <a class="dropdown-item" href="{{ route('subbranch.list') }}">My Branch</a>
+                @endif
             @endif
             <a class="dropdown-item" href="{{ route('logout') }}" onclick="localStorage.removeItem('authToken'); localStorage.removeItem('selectedSubAdminId');">Logout</a>
         </div>
