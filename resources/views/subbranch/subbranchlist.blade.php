@@ -183,7 +183,6 @@
             border-color: #FF9F43;
             color: #fff;
         }
-    }
 </style>
 <div class="content">
     <div class="page-header">
@@ -474,11 +473,11 @@
                 text: "You won't be able to revert this!",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: "#d33",
-                confirmButtonColor: "#ff9f43", // Confirm button color (orange)
-                cancelButtonColor: "#6c757d", // Cancel button color (gray)
+                confirmButtonColor: "#ff9f43",
+                cancelButtonColor: "#6c757d",
                 confirmButtonText: "Yes, delete it!"
             }).then((result) => {
+                if (result.isConfirmed) {
                     var delHeaders = {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
                     };
@@ -490,17 +489,15 @@
                         url: `/api/deleteSubbranch/${customerId}`,
                         type: "POST",
                         headers: delHeaders,
-
                         success: function(response) {
-                            // Swal.fire("Deleted!", response.message, "success");
                             Swal.fire({
                                 title: "Deleted!",
                                 text: response.message,
                                 icon: "success",
-                                confirmButtonColor: "#ff9f43", // Custom OK button color
+                                confirmButtonColor: "#ff9f43",
                                 confirmButtonText: "OK"
                             });
-                            fetchCustomers(); // Refresh the table after deletion
+                            fetchCustomers();
                         },
                         error: function(xhr) {
                             let errorMessage = "Failed to delete branch.";
@@ -511,7 +508,7 @@
                                 title: "Error!",
                                 text: errorMessage,
                                 icon: "error",
-                                confirmButtonColor: "#ff9f43", // custom orange color
+                                confirmButtonColor: "#ff9f43",
                                 confirmButtonText: "OK"
                             });
                         },
