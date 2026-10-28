@@ -298,20 +298,31 @@ class SubBranchController extends Controller
 
     public function getSubbranch($id)
     {
-        $subbranch = User::with('userDetail')
-            ->where('isDeleted', 0)
-            ->where('id', $id)
-            ->first(); // ✅ changed from get() to first()
+        try {
+            $subbranch = User::with('userDetail')
+                ->where('isDeleted', 0)
+                ->where('id', $id)
+                ->first();
 
-        return response()->json(['status' => true, 'data' => $subbranch], 200);
+            return response()->json(['status' => true, 'data' => $subbranch], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+        }
     }
-
-
 
     public function getAllSubbranch()
     {
-        $subbranch = User::with('userDetail')->where('isDeleted', 0)->whereIn('role', ['sub-admin', 'admin'])->orderBy('created_at', 'desc')->get();
-        // dd($subbranch);
-        return response()->json(['status' => true, 'data' => $subbranch], 200);
+        try {
+            $subbranch = User::with('userDetail')
+                ->where('isDeleted', 0)
+                ->whereIn('role', ['sub-admin', 'admin'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json(['status' => true, 'data' => $subbranch], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }
+

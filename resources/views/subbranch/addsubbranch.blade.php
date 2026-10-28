@@ -169,16 +169,21 @@
             $btn.html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...')
                 .prop("disabled", true);
 
+            var headers = {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            };
+            if (authToken && authToken !== "null" && authToken !== "undefined") {
+                headers["Authorization"] = "Bearer " + authToken;
+            }
+
             $.ajax({
                 url: "/api/createSubbranch", // Ensure API route is correct
                 type: "POST",
                 data: formData,
                 processData: false,
                 contentType: false,
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                    "Authorization": "Bearer " + authToken,
-                },
+                headers: headers,
+
                 success: function(response) {
                     $btn.html(originalText).prop("disabled", false); // Restore button
                     if (response.status) {

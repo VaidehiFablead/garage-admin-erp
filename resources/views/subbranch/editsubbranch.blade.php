@@ -149,12 +149,16 @@
         let url = window.location.pathname;
         let customerId = url.split("/").pop();
 
+        var headers = {};
+        if (authToken && authToken !== "null" && authToken !== "undefined") {
+            headers["Authorization"] = `Bearer ${authToken}`;
+        }
+
         $.ajax({
             url: `/api/getSubbranch/${customerId}`,
             type: "GET",
-            headers: {
-                Authorization: `Bearer ${authToken}`,
-            },
+            headers: headers,
+
             success: function(response) {
                 if (response.status && response.data) {
                     const customer = response.data;
@@ -227,16 +231,21 @@
                 formData.append("avatar", avatar);
             }
 
+            var updateHeaders = {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            };
+            if (authToken && authToken !== "null" && authToken !== "undefined") {
+                updateHeaders["Authorization"] = `Bearer ${authToken}`;
+            }
+
             $.ajax({
                 url: `/api/updateSubbranch`,
                 type: "POST", // Laravel doesn't support `PUT` directly with FormData, so use POST with `_method` as PUT
                 data: formData,
                 processData: false,
                 contentType: false,
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                    Authorization: `Bearer ${authToken}`,
-                },
+                headers: updateHeaders,
+
                 success: function(response) {
                     $btn.html(originalText).prop("disabled", false); // Restore button
                     if (response.status) {

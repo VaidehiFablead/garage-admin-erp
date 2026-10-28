@@ -630,16 +630,26 @@
             return false;
         });
         // Fetch Sub Admins and populate select box
+        var subAdminAuthToken = localStorage.getItem("authToken");
+        var subAdminHeaders = {};
+        if (subAdminAuthToken && subAdminAuthToken !== "null" && subAdminAuthToken !== "undefined") {
+            subAdminHeaders["Authorization"] = "Bearer " + subAdminAuthToken;
+        }
+
         fetch('/api/get_subadmin', {
-                headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("authToken")
-                }
+                headers: subAdminHeaders
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    return null;
+                }
+                return res.json();
+            })
             .then(response => {
-                if (response.status) {
+                if (response && response.status && Array.isArray(response.data)) {
                     const select = document.getElementById("subBrandSelect");
                     const role = response.role;
+
 
                     if (role === 'admin') {
                         const subBranchContainer = document.getElementById('subBranchContainer');
@@ -689,7 +699,7 @@
                 }
                 const savedId = localStorage.getItem('selectedSubAdminId');
 
-                if (savedId && response.data && document.getElementById("subBrandSelect")) {
+                if (savedId && response && response.data && document.getElementById("subBrandSelect")) {
                     const optionExists = response.data.some(item => item.id == savedId);
                     if (optionExists) {
                         $('#subBrandSelect').val(savedId).trigger('change.select2');
@@ -699,7 +709,11 @@
                         }, 500);
                     }
                 }
+            })
+            .catch(err => {
+                console.warn('get_subadmin notice:', err);
             });
+
 
 
         $('#subBrandSelect').on('change', function() {
