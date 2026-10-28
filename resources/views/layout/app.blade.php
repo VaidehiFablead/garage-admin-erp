@@ -76,33 +76,45 @@
     <footer style="text-align: center; padding: 10px 0; background-color: #f4f4f4; height: 50px;">
         <h1 style="font-size: 14px; font-weight: 600;">© <?= date('Y') ?> Copyright - Fablead Developers Technolab</h1>
     </footer>
-    @include('partials.todayAppointmentsModal')
+    @if (tenant_has_module(['Appointment', 'CRM']))
+        @include('partials.todayAppointmentsModal')
+    @endif
     @include('layout.footer')
     <div class="mobile-bottom-nav">
+        @if (tenant_has_module('Dashboard'))
         <a href="{{ route('auth.dashboard') }}"
             class="nav-item {{ request()->routeIs('auth.dashboard') ? 'active' : '' }}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
+        @endif
+        @if (tenant_has_module(['All Masters', 'ERP']) && tenant_has_sub_module('All Items', 'All Masters'))
         <a href="{{ route('product.list') }}"
             class="nav-item {{ request()->routeIs('product.list') ? 'active' : '' }}">
             <i class="fas fa-cubes"></i>
             <span>Items</span>
         </a>
+        @endif
+        @if (tenant_has_module(['Job Card', 'ERP']))
         <a href="{{ route('job_card.index') }}" class="nav-item {{ request()->routeIs('sales.list') ? 'active' : '' }}">
             <i class="fas fa-shopping-cart"></i>
             <span>Job Card</span>
         </a>
+        @endif
+        @if (tenant_has_module(['Purchase', 'ERP']))
         <a href="{{ route('purchase.lists') }}"
             class="nav-item {{ request()->routeIs('purchase.lists') ? 'active' : '' }}">
             <i class="fas fa-shopping-bag"></i>
             <span>Purchase</span>
         </a>
+        @endif
+        @if (tenant_has_module(['Customer', 'CRM']))
         <a href="{{ route('customer.list') }}"
             class="nav-item {{ request()->routeIs('customer.list') ? 'active' : '' }}">
             <i class="fas fa-users"></i>
             <span>Customer</span>
         </a>
+        @endif
     </div>
     @stack('js')
     

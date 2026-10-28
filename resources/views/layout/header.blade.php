@@ -229,18 +229,25 @@
                     </div>
                 </a>
             @endif
-            @if (in_array(auth()->user()->role, ['admin', 'sub-admin', 'hr']))
+            @if (tenant_has_module(['HR', 'Staff', 'Attendance', 'Payroll', 'Leave', 'Advance Pay']) && in_array(auth()->user()->role, ['admin', 'sub-admin', 'hr']))
             <!-- HR Dropdown -->
             <div class="dropdown me-3 d-flex align-items-center">
                 <button class="btn btn-sm dropdown-toggle text-white" style="background-color: #ff9f43; border-radius: 6px; height: 36px;" data-bs-toggle="dropdown">
                     <i class="fa fa-id-badge"></i> HR<i class="fa fa-chevron-down ms-1"></i>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/staff/attendance/calendar">Attendance</a></li>
-                    <li><a class="dropdown-item" href="/payrollview">Payroll</a></li>
-                    <li><a class="dropdown-item" href="/staff">Staff</a></li>
-                    <li><a class="dropdown-item" href="/leave-request">Leaves</a></li>
-                    <!-- <li><a class="dropdown-item" href="/settings">Settings</a></li> -->
+                    @if (tenant_has_module(['Attendance', 'HR']) && (tenant_has_sub_module('Attendance', 'Attendance') || tenant_has_sub_module('Manage Attendance', 'Attendance')))
+                        <li><a class="dropdown-item" href="/staff/attendance/calendar">Attendance</a></li>
+                    @endif
+                    @if (tenant_has_module(['Payroll', 'HR']) && (tenant_has_sub_module('Payroll View', 'Payroll') || tenant_has_sub_module('Add Payroll', 'Payroll') || tenant_has_sub_module('Group Salary', 'Payroll')))
+                        <li><a class="dropdown-item" href="/payrollview">Payroll</a></li>
+                    @endif
+                    @if (tenant_has_module(['Staff', 'HR']) && (tenant_has_sub_module('All Staff', 'Staff') || tenant_has_sub_module('New Staff', 'Staff')))
+                        <li><a class="dropdown-item" href="/staff">Staff</a></li>
+                    @endif
+                    @if (tenant_has_module(['Leave', 'HR']) && (tenant_has_sub_module('All Leave', 'Leave') || tenant_has_sub_module('New Leave', 'Leave')))
+                        <li><a class="dropdown-item" href="/leave-request">Leaves</a></li>
+                    @endif
                 </ul>
             </div>
         @endif
@@ -272,14 +279,14 @@
 
 
                 <!-- New Order Button -->
-                @if (app('hasPermission')(17, 'view'))
+                @if (tenant_has_module(['Appointment', 'CRM']) && (tenant_has_sub_module('All Appointment', 'Appointment') || tenant_has_sub_module('New Appointment', 'Appointment')) && (app('hasPermission')(17, 'view') || app('hasPermission')(12, 'view')))
                     <a href="/appointments" class="btn btn-sm d-flex align-items-center justify-content-center me-3"
                         style="height: 36px; background-color: #ff9f43; color: white;">
                         <i class="fa fa-calendar-check me-2" aria-hidden="true"></i> <span
                             class="header-btn-text">Appointment</span>
                     </a>
                 @endif
-                @if (app('hasPermission')(25, 'view'))
+                @if (tenant_has_module(['Account Ledger', 'Accounting']) && tenant_has_sub_module('Account Ledger', 'Account Ledger') && (app('hasPermission')(25, 'view') || app('hasPermission')(13, 'view')))
                     <a href="/account-ledger" class="btn btn-sm d-flex align-items-center justify-content-center me-3"
                         style="height: 36px; background-color: #ff9f43; color: white;">
                         <i class="fa fa-book me-2" aria-hidden="true"></i> <span class="header-btn-text">Account
@@ -294,7 +301,7 @@
                 {{-- @if (empty($subAdminId)) --}}
 
                 {{-- Job Cards (Bills) Dropdown --}}
-                @if (app('hasPermission')(16, 'view') || app('hasPermission')(16, 'add'))
+                @if (tenant_has_module(['Job Card', 'ERP']) && (app('hasPermission')(16, 'view') || app('hasPermission')(16, 'add')))
                     <div class="dropdown me-3">
                         <a class="btn btn-sm d-flex align-items-center justify-content-center dropdown-toggle"
                             style="height: 36px; background-color: #ff9f43; color: white;" href="#" role="button"
@@ -303,7 +310,7 @@
                                 (Bills)</span>
                         </a>
                         <ul class="dropdown-menu">
-                            @if (app('hasPermission')(16, 'view'))
+                            @if (tenant_has_sub_module('All Job Cards', 'Job Card') && app('hasPermission')(16, 'view'))
                                 <li>
                                     <a class="dropdown-item" href="{{ route('job_card.index') }}">
                                         <img class="me-2"
@@ -313,7 +320,7 @@
                                     </a>
                                 </li>
                             @endif
-                            @if (app('hasPermission')(16, 'add'))
+                            @if (tenant_has_sub_module('New Job Card', 'Job Card') && app('hasPermission')(16, 'add'))
                                 <li>
                                     <a class="dropdown-item" href="{{ route('job_card.create') }}">
                                         <img class="me-2"
@@ -366,7 +373,7 @@
                 @endif --}}
 
                 {{-- Daily Register Dropdown --}}
-                @if (app('hasPermission')(24, 'view') || app('hasPermission')(24, 'add'))
+                @if (tenant_has_module(['Daily Register', 'ERP']) && (app('hasPermission')(24, 'view') || app('hasPermission')(24, 'add')))
                     <div class="dropdown">
                         <a class="btn btn-sm d-flex align-items-center justify-content-center dropdown-toggle me-3"
                             style="height: 36px; background-color: #ff9f43; color: white;" href="#" role="button"
@@ -375,7 +382,7 @@
                                 Register</span>
                         </a>
                         <ul class="dropdown-menu">
-                            @if (app('hasPermission')(24, 'view'))
+                            @if (tenant_has_sub_module('All Daily Register', 'Daily Register') && app('hasPermission')(24, 'view'))
                                 <li>
                                     <a class="dropdown-item" href="{{ route('daily_data.index') }}">
                                         <img class="me-2"
@@ -385,7 +392,7 @@
                                     </a>
                                 </li>
                             @endif
-                            @if (app('hasPermission')(24, 'add'))
+                            @if (tenant_has_sub_module('New Daily Register', 'Daily Register') && app('hasPermission')(24, 'add'))
                                 <li>
                                     <a class="dropdown-item" href="{{ route('daily_data.add-daily-data') }}">
                                         <img class="me-2"
@@ -399,17 +406,15 @@
                     </div>
                 @endif
 
-
+                @if (tenant_has_module(['Appointment', 'CRM']))
                 <li class="nav-item me-3">
                     <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#todayAppointmentsModal"
                         class="d-flex align-items-center justify-content-center"
                         style="height: 38px; width: 38px; background-color: #ff9f43; color: white; border-radius: 50%;">
                         <i class="fa fa-bell"></i>
-                        {{-- @if ($appointments->count() || $upcomingEmis->count())
-                        <span class="badge bg-danger">{{ $appointments->count() + $upcomingEmis->count() }}</span>
-                    @endif --}}
                     </a>
                 </li>
+                @endif
             </div>
 
             <li class="nav-item dropdown has-arrow main-drop">
