@@ -17,9 +17,10 @@ class SubBranchController extends Controller
     {
         $branchLimit = tenant_branch_limit();
         if ($branchLimit !== null && $branchLimit > 0) {
-            $subAdminCount = \App\Models\User::where('role', 'sub-admin')->where('isDeleted', 0)->count();
-            if ($subAdminCount >= $branchLimit) {
-                return redirect()->route('subbranch.list')->with('error', "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches.");
+            $totalBranchCount = \App\Models\User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->count();
+            if ($totalBranchCount >= $branchLimit) {
+                $allowedSub = max(0, $branchLimit - 1);
+                return redirect()->route('subbranch.list')->with('error', "Maximum branch limit reached. Your plan allows only {$branchLimit} total branch(es) (1 Main Branch + {$allowedSub} Sub-branch).");
             }
         }
 

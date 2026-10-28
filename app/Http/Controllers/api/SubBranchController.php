@@ -17,23 +17,29 @@ class SubBranchController extends Controller
 {
     public function createSubbranch(Request $request)
     {
-        // ✅ Enforce dynamic branch limit based on tenant plan with isDeleted = 0
+        // ✅ Enforce dynamic branch limit based on tenant plan with isDeleted = 0 (1 Admin + remaining Sub-branches)
         $branchLimit = tenant_branch_limit();
         if ($branchLimit !== null && $branchLimit > 0) {
-            $subAdminCount = User::where('role', 'sub-admin')->where('isDeleted', 0)->count();
-            if ($subAdminCount >= $branchLimit) {
+            $totalBranchCount = User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->count();
+            if ($totalBranchCount >= $branchLimit) {
+                $allowedSub = max(0, $branchLimit - 1);
                 return response()->json([
                     'status' => false,
-                    'error' => "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches.",
-                    'message' => "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches."
+                    'error' => "Maximum branch limit reached. Your plan allows only {$branchLimit} total branch(es) (1 Main Branch + {$allowedSub} Sub-branch).",
+                    'message' => "Maximum branch limit reached. Your plan allows only {$branchLimit} total branch(es) (1 Main Branch + {$allowedSub} Sub-branch)."
                 ], 403);
             }
         }
 
         $validator = Validator::make($request->all(), [
             'customer_name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email',
-            // 'phone' => 'required|numeric|digits:10|unique:users,phone',
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->where(function ($query) {
+                    return $query->where('isDeleted', 0);
+                }),
+            ],
             'phone' => [
                 'required',
                 'numeric',
@@ -115,7 +121,15 @@ class SubBranchController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'required|exists:users,id',
             'customer_name' => 'required|string|max:255',
-            'email' => 'nullable    |email|unique:users,email,' . $request->id,
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')
+                    ->ignore($request->id)
+                    ->where(function ($query) {
+                        return $query->where('isDeleted', 0);
+                    }),
+            ],
             // 'phone' => 'required|numeric|unique:users,phone,' . $request->id,
             'phone' => [
                 'required',
