@@ -219,9 +219,10 @@
                             }
                         });
                     } else {
+                        let errorMsg = (xhr.responseJSON && (xhr.responseJSON.error || xhr.responseJSON.message)) || "Something went wrong. Please try again.";
                         Swal.fire({
                             title: "Error!",
-                            text: "Something went wrong. Please try again.",
+                            text: errorMsg,
                             icon: "error",
                             confirmButtonText: "OK",
                             confirmButtonColor: "#ff9f43",

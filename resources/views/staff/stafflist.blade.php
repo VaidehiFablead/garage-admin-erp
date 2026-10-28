@@ -1,4 +1,4 @@
-﻿@extends('layout.app')
+@extends('layout.app')
 
 @section('title', 'Staff List')
 
@@ -265,12 +265,19 @@
                 <h4>All Staffs</h4>
             </div>
             <div class="page-btn">
-                <a href="{{ route('staff.add') }}" class="btn btn-sm"
+                <a href="{{ route('staff.add') }}" class="btn btn-sm" id="new-staff-btn"
                     style="background:#ff9f43; color:#fff; font-weight:500; border-radius:4px; padding:8px 15px; white-space:nowrap;">
                     <i class="fa fa-plus me-1"></i> New Staff
                 </a>
             </div>
         </div>
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
         <div class="card">
             <div class="card-body">
@@ -339,6 +346,7 @@
     <script>
         $(document).ready(function() {
             var authToken = localStorage.getItem("authToken");
+            const userLimit = {{ tenant_user_limit() !== null ? (int) tenant_user_limit() : 'null' }};
             var table = $('.datanew').DataTable({
                 destroy: true,
                 paging: false,
@@ -488,6 +496,21 @@
 
                             // Update pagination UI
                             updatePaginationUI(pagination);
+
+                            // ✅ Enforce dynamic user/staff limit
+                            let activeStaffCount = (typeof response.active_staff_count !== 'undefined') ? response.active_staff_count : pagination.total;
+                            let effectiveLimit = (response.user_limit !== undefined && response.user_limit !== null) ? response.user_limit : userLimit;
+                            if (effectiveLimit !== null && effectiveLimit > 0 && activeStaffCount >= effectiveLimit) {
+                                $('#new-staff-btn')
+                                    .attr('href', 'javascript:void(0);')
+                                    .css({'opacity': '0.5', 'cursor': 'not-allowed', 'pointer-events': 'none'})
+                                    .attr('title', `Maximum ${effectiveLimit} staff members limit reached`);
+                            } else {
+                                $('#new-staff-btn')
+                                    .attr('href', "{{ route('staff.add') }}")
+                                    .css({'opacity': '', 'cursor': '', 'pointer-events': ''})
+                                    .removeAttr('title');
+                            }
 
                             // Build table rows
                             let tableBody = [];

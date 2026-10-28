@@ -17,13 +17,17 @@ class SubBranchController extends Controller
 {
     public function createSubbranch(Request $request)
     {
-        // ✅ Limit: max 2 active sub-admins allowed
-        $subAdminCount = User::where('role', 'sub-admin')->where('isDeleted', 0)->count();
-        if ($subAdminCount >= 2) {
-            return response()->json([
-                'status' => false,
-                'error' => 'Maximum branch limit reached. You cannot create more than 2 sub-branches.'
-            ], 403);
+        // ✅ Enforce dynamic branch limit based on tenant plan with isDeleted = 0
+        $branchLimit = tenant_branch_limit();
+        if ($branchLimit !== null && $branchLimit > 0) {
+            $subAdminCount = User::where('role', 'sub-admin')->where('isDeleted', 0)->count();
+            if ($subAdminCount >= $branchLimit) {
+                return response()->json([
+                    'status' => false,
+                    'error' => "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches.",
+                    'message' => "Maximum branch limit reached. Your plan allows only {$branchLimit} sub-branches."
+                ], 403);
+            }
         }
 
         $validator = Validator::make($request->all(), [

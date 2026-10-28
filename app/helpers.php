@@ -175,3 +175,55 @@ if (! function_exists('tenant_has_sub_module')) {
         return false;
     }
 }
+
+if (! function_exists('tenant_branch_limit')) {
+    /**
+     * Get maximum branches (sub-admins) allowed by tenant plan.
+     */
+    function tenant_branch_limit(): ?int
+    {
+        $limit = tenant('max_branch') ?? tenant('branch_limit');
+        if ($limit !== null && $limit !== '') {
+            return (int) $limit;
+        }
+
+        try {
+            $user = auth()->user() ?? auth('api')->user();
+            $plan = $user ? $user->getActivePlan() : null;
+            if (!$plan) {
+                $plan = \App\Models\Plan::where('is_active', 1)->latest('id')->first();
+            }
+            if ($plan && $plan->branch_limit !== null && $plan->branch_limit !== '') {
+                return (int) $plan->branch_limit;
+            }
+        } catch (\Throwable) {}
+
+        return null;
+    }
+}
+
+if (! function_exists('tenant_user_limit')) {
+    /**
+     * Get maximum users/staff allowed by tenant plan.
+     */
+    function tenant_user_limit(): ?int
+    {
+        $limit = tenant('max_user') ?? tenant('user_limit');
+        if ($limit !== null && $limit !== '') {
+            return (int) $limit;
+        }
+
+        try {
+            $user = auth()->user() ?? auth('api')->user();
+            $plan = $user ? $user->getActivePlan() : null;
+            if (!$plan) {
+                $plan = \App\Models\Plan::where('is_active', 1)->latest('id')->first();
+            }
+            if ($plan && $plan->user_limit !== null && $plan->user_limit !== '') {
+                return (int) $plan->user_limit;
+            }
+        } catch (\Throwable) {}
+
+        return null;
+    }
+}

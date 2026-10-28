@@ -197,6 +197,13 @@
             </div>
     </div>
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
 
@@ -256,6 +263,7 @@
     $(document).ready(function() {
         var authToken = localStorage.getItem("authToken");
         const imagePath = "{{ env('ImagePath') }}";
+        const branchLimit = {{ tenant_branch_limit() !== null ? (int) tenant_branch_limit() : 'null' }};
         fetchCustomers(); // Call function on page load
 
         var allCustomers = [];
@@ -302,13 +310,15 @@
                         allCustomers = response.data;
                         filteredCustomers = [...allCustomers];
 
-                        // ✅ Check sub-admin count and disable "New Branch" button if >= 2
-                        let subAdminCount = allCustomers.filter(c => c.role === 'sub-admin').length;
-                        if (subAdminCount >= 2) {
+                        // ✅ Check dynamic sub-admin limit with isDeleted = 0
+                        let activeSubAdmins = allCustomers.filter(c => c.role === 'sub-admin' && (c.isDeleted === 0 || c.isDeleted === '0' || !c.isDeleted));
+                        let subAdminCount = activeSubAdmins.length;
+
+                        if (branchLimit !== null && branchLimit > 0 && subAdminCount >= branchLimit) {
                             $('#new-branch-btn')
                                 .attr('href', 'javascript:void(0);')
                                 .css({'opacity': '0.5', 'cursor': 'not-allowed', 'pointer-events': 'none'})
-                                .attr('title', 'Maximum 2 sub-branches limit reached');
+                                .attr('title', `Maximum ${branchLimit} sub-branches limit reached`);
                         } else {
                             $('#new-branch-btn')
                                 .attr('href', "{{ route('subbranch.add') }}")
