@@ -386,8 +386,6 @@ class TenantManager
             'filesystems.disks.public.root' => $root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'public',
             'cache.stores.file.path' => $root.DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR.'data',
             'cache.prefix' => 'tenant_'.$tenantId.'_',
-            'session.files' => $root.DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'sessions',
-            'session.cookie' => $this->baseSessionCookie.'_t'.$tenantId,
         ]);
 
         Storage::forgetDisk(['local', 'public']);
@@ -434,13 +432,17 @@ class TenantManager
         $tProject = strtoupper((string) ($tenant['project_code'] ?? ''));
         $tDomain = strtoupper((string) ($tenant['domain'] ?? ''));
         $tDatabase = strtoupper((string) ($tenant['db']['database'] ?? ($tenant['database_name'] ?? '')));
+        $tBrand = strtoupper((string) ($tenant['brand_name'] ?? ''));
+        $tClientName = strtoupper((string) ($tenant['client_name'] ?? ''));
 
-        // If this app is Garage ERP, allow if tenant belongs to GARAGE (by project, product, domain, or db)
+        // If this app is Garage ERP, allow if tenant belongs to GARAGE (by project, product, domain, db, brand, or client)
         $isGarageApp = str_contains($product, 'GARAGE') || str_contains($project, 'GARAGE');
         $isGarageTenant = str_contains($tProject, 'GARAGE') 
             || str_contains($tProduct, 'GARAGE')
             || str_contains($tDomain, 'GARAGE')
-            || str_contains($tDatabase, 'GARAGE');
+            || str_contains($tDatabase, 'GARAGE')
+            || str_contains($tBrand, 'GARAGE')
+            || str_contains($tClientName, 'GARAGE');
         if ($isGarageApp && $isGarageTenant) {
             return true;
         }

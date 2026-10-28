@@ -801,9 +801,11 @@
                         _token: $('meta[name="csrf-token"]').attr('content'),
                     },
                     success: function(response) {
-                        if (response.token) {
-                            localStorage.setItem("authToken", response.token);
-                            localStorage.setItem("token", response.token);
+                        if (response.status || response.token || response.redirect) {
+                            if (response.token) {
+                                localStorage.setItem("authToken", response.token);
+                                localStorage.setItem("token", response.token);
+                            }
 
                             if (response.user) {
                                 let selectedId = response.user.id;
@@ -818,9 +820,12 @@
                             // Store flag for one-time popup
                             sessionStorage.setItem("showAppointments", "1");
 
-                            window.location.href = response.redirect;
+                            window.location.href = response.redirect || "/dashboard";
                         } else if (response.error) {
                             $("#loginMessage").text(response.error);
+                            $submitBtn.html(originalContent).prop("disabled", false);
+                        } else {
+                            window.location.href = response.redirect || "/dashboard";
                         }
                     },
                     error: function(xhr) {
