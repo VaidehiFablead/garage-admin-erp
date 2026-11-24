@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -308,11 +309,15 @@ class AuthController extends Controller
             ->where('branch_id', $filterId)
             ->count();
 
-        $quotationCount = DB::table('job_cards')
-            ->where('isDeleted', '!=', 1)
-            // ->where('branch_id', $filterId)
-            ->where('quotation_status', 'job_cards')
-            ->count();
+        if (Schema::hasTable('job_cards') && Schema::hasColumn('job_cards', 'quotation_status')) {
+            $quotationCount = DB::table('job_cards')
+                ->where('isDeleted', '!=', 1)
+                // ->where('branch_id', $filterId)
+                ->where('quotation_status', 'job_cards')
+                ->count();
+        } else {
+            $quotationCount = 0;
+        }
 
         // Recent products
         $recentProducts = Product::where('isDeleted', '!=', 1)
@@ -1518,11 +1523,27 @@ class AuthController extends Controller
                 ->get();
 
                 // dd($filterId);
-       $quotationCount = DB::table('orders')
-    ->where('isDeleted', '!=', 1)
-    ->where('branch_id', $filterId)
-    ->where('quotation_status', 'quotation')
-    ->count();
+        if (Schema::hasTable('orders') && Schema::hasColumn('orders', 'quotation_status')) {
+            $quotationCount = DB::table('orders')
+                ->where('isDeleted', '!=', 1)
+                ->where('branch_id', $filterId)
+                ->where('quotation_status', 'quotation')
+                ->count();
+        } elseif (Schema::hasTable('job_cards') && Schema::hasColumn('job_cards', 'quotation_status')) {
+            $quotationCount = DB::table('job_cards')
+                ->where('isDeleted', '!=', 1)
+                ->where('quotation_status', 'quotation')
+                ->when($filterId, function ($q) use ($filterId) {
+                    if (Schema::hasColumn('job_cards', 'subbranch_id')) {
+                        $q->where('subbranch_id', $filterId);
+                    } elseif (Schema::hasColumn('job_cards', 'branch_id')) {
+                        $q->where('branch_id', $filterId);
+                    }
+                })
+                ->count();
+        } else {
+            $quotationCount = 0;
+        }
         return response()->json([
             'status' => true,
             'data' => [

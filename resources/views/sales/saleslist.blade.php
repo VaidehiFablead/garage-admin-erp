@@ -170,7 +170,7 @@
                         <div class="col-lg-3 col-sm-6 col-12">
                             <div class="form-group d-flex justify-content-end">
                                 <a class="btn btn-filters ms-auto">
-                                    <img src="admin/assets/img/icons/search-whites.svg" alt="img">
+                                    <img src="{{ asset('admin/assets/img/icons/search-white.svg') }}" alt="img">
                                 </a>
                             </div>
                         </div>
