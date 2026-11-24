@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\admin\AccountLedgerController;
 use App\Http\Controllers\admin\AdvancePaymentController;
+use App\Http\Controllers\admin\BalanceSheetController;
 use App\Http\Controllers\admin\AppointmentController;
 use App\Http\Controllers\admin\AttendanceController;
 use App\Http\Controllers\admin\AttendanceeController;
@@ -156,6 +157,9 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/income-statement', [IncomeSheetController::class, 'index'])->name('income-statement.index');
         Route::get('/income-statement/pdf', [IncomeSheetController::class, 'generatePdf'])->name('income-statement.pdf');
         Route::get('/income-statement/excel', [IncomeSheetController::class, 'generateExcel'])->name('income-statement.excel');
+
+        // Balance Sheet
+        Route::get('/balance-sheet', [BalanceSheetController::class, 'index'])->name('accounting.balance-sheet');
 
         //authcontroller
         Route::get('/forgetpassword', [AuthController::class, 'forgetpassword'])->name('auth.forgetpassword');

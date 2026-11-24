@@ -68,11 +68,15 @@
                     $showCrmSection = tenant_has_module(['CRM', 'Appointment', 'Customer']) && ($canAppointment || $canCustomer);
 
                     // Accounting Submodules
-                    $canAccountLedger = tenant_has_module(['Account Ledger', 'Accounting', 'Manage Accounting']) && (tenant_has_sub_module(['Account Ledger', 'account-ledger'], 'Manage Accounting') || tenant_has_sub_module('Account Ledger', 'Account Ledger')) && (app('hasPermission')(13, 'view') || app('hasPermission')(42, 'view'));
+                    $canManageAccounting = tenant_has_module(['Manage Accounting', 'Accounting']) && (
+                        app('hasPermission')(13, 'view') || app('hasPermission')(42, 'view') || app('hasPermission')(43, 'view') || app('hasPermission')(44, 'view')
+                    );
 
-                    $canIncomeStatement = tenant_has_module(['Income Statement', 'Accounting', 'Manage Accounting']) && (tenant_has_sub_module(['Income Statement', 'income-statement'], 'Manage Accounting') || tenant_has_sub_module(['Income Statement', 'income-statement'])) && (app('hasPermission')(13, 'view') || app('hasPermission')(43, 'view'));
+                    $canAccountLedger = $canManageAccounting && (app('hasPermission')(13, 'view') || app('hasPermission')(42, 'view'));
 
-                    $canManageAccounting = tenant_has_module(['Manage Accounting', 'Accounting']) && ($canAccountLedger || $canIncomeStatement);
+                    $canIncomeStatement = $canManageAccounting && (app('hasPermission')(13, 'view') || app('hasPermission')(43, 'view'));
+
+                    $canBalanceSheet = $canManageAccounting && (app('hasPermission')(13, 'view') || app('hasPermission')(44, 'view'));
 
                     $canCreditNotes = tenant_has_sub_module('Credit Notes', 'Credit/Debit Notes') && app('hasPermission')(25, 'list');
                     $canDebitNotes = tenant_has_sub_module('Debit Notes', 'Credit/Debit Notes') && app('hasPermission')(26, 'list');
@@ -91,7 +95,7 @@
                         $canAllExpense || $canNewExpense || $canAllExpenseType
                     );
 
-                    $showAccountingSection = tenant_has_module(['Accounting', 'Account Ledger', 'Manage Accounting', 'Income Statement', 'Credit/Debit Notes', 'GST Reports', 'Expense']) && (
+                    $showAccountingSection = tenant_has_module(['Accounting', 'Account Ledger', 'Manage Accounting', 'Income Statement', 'Balance Sheet', 'Credit/Debit Notes', 'GST Reports', 'Expense']) && (
                         $canManageAccounting || $canCreditDebitNotes || $canGstReports || $canExpense
                     );
 
@@ -167,7 +171,7 @@
                 @endif
 
                 @php
-                    $isOtherSectionActive = request()->routeIs('appointments.*') || request()->routeIs('customer.*') || request()->routeIs('account_ledger.*') || request()->routeIs('income-statement.*') || request()->routeIs('credit-notes*') || request()->routeIs('debit-notes*') || request()->routeIs('gst.*') || request()->routeIs('expense.*') || request()->routeIs('expensetype.*') || request()->routeIs('staff.*') || request()->routeIs('attendence.*') || request()->routeIs('payroll.*') || request()->routeIs('advance_pay.*') || request()->routeIs('leave.*') || request()->routeIs('plans.*') || request()->routeIs('subbranch.*') || request()->routeIs('setting.*') || request()->routeIs('auth.taxrates') || request()->routeIs('department.*') || request()->routeIs('designation.*');
+                    $isOtherSectionActive = request()->routeIs('appointments.*') || request()->routeIs('customer.*') || request()->routeIs('account_ledger.*') || request()->routeIs('income-statement.*') || request()->routeIs('accounting.balance-sheet*') || request()->routeIs('credit-notes*') || request()->routeIs('debit-notes*') || request()->routeIs('gst.*') || request()->routeIs('expense.*') || request()->routeIs('expensetype.*') || request()->routeIs('staff.*') || request()->routeIs('attendence.*') || request()->routeIs('payroll.*') || request()->routeIs('advance_pay.*') || request()->routeIs('leave.*') || request()->routeIs('plans.*') || request()->routeIs('subbranch.*') || request()->routeIs('setting.*') || request()->routeIs('auth.taxrates') || request()->routeIs('department.*') || request()->routeIs('designation.*');
                     $erpIsOpen = !$isOtherSectionActive;
                 @endphp
                 <!-- ERP -->
@@ -431,6 +435,14 @@
                                                 <a href="{{ route('income-statement.index') }}">
                                                     <i class="fa fa-file-invoice-dollar"></i>
                                                     <span>Income Statement</span>
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if ($canBalanceSheet)
+                                            <li>
+                                                <a href="{{ route('accounting.balance-sheet') }}">
+                                                    <i class="fa fa-file-invoice"></i>
+                                                    <span>Balance Sheet</span>
                                                 </a>
                                             </li>
                                         @endif

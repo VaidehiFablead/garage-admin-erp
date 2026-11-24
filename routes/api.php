@@ -3,6 +3,7 @@
 use App\Http\Controllers\admin\JobCardController;
 use App\Http\Controllers\api\AccountLedgerController;
 use App\Http\Controllers\api\AdvancePaymentController;
+use App\Http\Controllers\api\BalanceSheetController;
 use App\Http\Controllers\api\AppointmentController;
 use App\Http\Controllers\api\AttendanceController;
 use App\Http\Controllers\api\AutoCarCategoryController;
@@ -292,6 +293,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::get('/export-account-ledger', [AccountLedgerController::class, 'exportAccountLedgerExcel']);
     Route::post('/account-ledger/download-pdf', [AccountLedgerController::class, 'downloadAccountLedgerPDF']);
     Route::get('/income-statement', [IncomeSheetController::class, 'GetAll']);
+    Route::get('/balance-sheet', [BalanceSheetController::class, 'getBalanceSheet']);
 
     Route::post('/createdailydata', [DailyDataController::class, 'add_daily_data'])->name('daily_data.store');
     Route::get('/daily-data/ajax', [DailyDataController::class, 'apiIndex']);
