@@ -899,6 +899,10 @@
 
     <div class="content">
         @php
+            $subAdminId = session('selectedSubAdminId');
+            $userRole = Auth::check() ? Auth::user()->role : '';
+            $isMainBranch = (empty($subAdminId) || $subAdminId == 1) && ($userRole !== 'sub-admin');
+
             $canShowJobCard = tenant_has_module(['Job Card', 'ERP']);
             $canShowSales = tenant_has_module(['Job Card', 'ERP', 'Sales & Orders', 'Sales']);
             $canShowPurchase = tenant_has_module(['Purchase', 'ERP']);
@@ -907,7 +911,7 @@
             $canShowCustomer = tenant_has_module(['Customer', 'CRM']);
             $canShowVendor = tenant_has_module(['Vendor', 'ERP']);
             $canShowDailyRegister = tenant_has_module(['Daily Register', 'ERP']);
-            $hasAnyTopWidget = $canShowSales || $canShowPurchase || $canShowExpense || $canShowQuotation || $canShowCustomer || $canShowVendor;
+            $hasAnyTopWidget = $canShowSales || $canShowJobCard || $canShowPurchase || $canShowExpense || $canShowQuotation || $canShowCustomer || $canShowVendor;
         @endphp
 
         @if ($showErpDashboardSection && tenant_has_module('Dashboard'))
@@ -922,10 +926,10 @@
         @if ($hasAnyTopWidget)
         <div class="row dashboard-widgets-row">
 
-            @if ($canShowSales)
-            <!-- Sales -->
+            @if ($canShowSales || $canShowJobCard)
+            <!-- Main Branch: Job Card / Sub Branch: Sales -->
             <div class="col-lg-4 col-sm-6 col-4">
-                <a href="{{ route('sales.list') }}">
+                <a href="{{ $isMainBranch ? route('job_card.index') : route('sales.list') }}" id="mainCardLink">
                     <div class="dash-widget dash1">
                         <div class="dash-widgetimg">
                             <span><img src="{{ env('ImagePath') . 'admin/assets/img/icons/dash2.svg' }}"
@@ -942,7 +946,7 @@
                                     {{ $currencySymbol }}
                                 @endif
                             </h5>
-                            <h6>Total Sales Amount</h6>
+                            <h6 id="mainCardTitle">{{ $isMainBranch ? 'Total Job Card Amount' : 'Total Sales Amount' }}</h6>
                         </div>
                     </div>
                 </a>
@@ -1563,6 +1567,19 @@
             const selectedSubAdminId = localStorage.getItem('selectedSubAdminId');
             // console.log(selectedSubAdminId);
 
+            // Sync dashboard card for Main Branch vs Sub Admin
+            (function() {
+                var isMain = !selectedSubAdminId || selectedSubAdminId === "1";
+                var titleEl = document.getElementById('mainCardTitle');
+                var linkEl = document.getElementById('mainCardLink');
+                if (titleEl) {
+                    titleEl.textContent = isMain ? 'Total Job Card Amount' : 'Total Sales Amount';
+                }
+                if (linkEl) {
+                    linkEl.href = isMain ? '{{ route('job_card.index') }}' : '{{ route('sales.list') }}';
+                }
+            })();
+
             $('#dateFilter').on('change', function() {
                 var filter = $(this).val();
 
@@ -1582,7 +1599,7 @@
                             var countType = $(this).closest('.dash-widget').find('h6')
                                 .text().trim();
 
-                            if (countType === "Total Collections" || countType === "Total Sales Amount") {
+                            if (countType === "Total Collections" || countType === "Total Sales Amount" || countType === "Total Job Card Amount") {
                                 $(this).text(response.mainAmountFormatted);
                                 $(this).attr('data-count', response.mainAmount);
                             } else if (countType === "Total Expense" || countType === "Total Expense Amount") {
