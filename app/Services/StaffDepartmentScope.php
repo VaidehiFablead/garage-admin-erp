@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 class StaffDepartmentScope
 {
@@ -211,8 +212,11 @@ class StaffDepartmentScope
     {
         $query = Order::with(['creator:id,name', 'staff:id,name', 'deliveries.deliveredBy', 'user'])
             ->where('isDeleted', '!=', 1)
-            ->where('quotation_status', '!=', 'quotation')
             ->where('order_type', 'delivery');
+
+        if (Schema::hasColumn('orders', 'quotation_status')) {
+            $query->where('quotation_status', '!=', 'quotation');
+        }
 
         self::applyOrderScope($query, $user);
 
