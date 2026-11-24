@@ -462,7 +462,9 @@
         /* Desktop: hide details toggle column, reset flex on first cell */
         @media (min-width: 768px) {
             .dataview table thead th.details-column,
-            .dataview table tbody td:nth-child(2) {
+            .dataview table tbody td.details-cell,
+            .dataview table thead th.action-column,
+            .dataview table tbody td.action-cell {
                 display: none !important;
             }
 
@@ -1169,9 +1171,9 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <span>{{ $item->vehicle_no ?? 'N/A' }}</span>
+                                                        <span>{{ !empty(trim($item->vehicle_no ?? '')) ? strtoupper($item->vehicle_no) : (!empty(trim($item->vehicle_number ?? '')) ? strtoupper($item->vehicle_number) : 'N/A') }}</span>
                                                     </td>
-                                                    <td>{{ $item->customer->name ?? 'Unknown' }}</td>
+                                                    <td>{{ $item->customer->name ?? $item->customer_name ?? 'N/A' }}</td>
                                                     <td>
                                                         @if ($currencyPosition === 'left')
                                                             {{ $currencySymbol }}
@@ -1194,9 +1196,9 @@
                                                     <td colspan="5">
                                                         <div class="collapse-content">
                                                             <p class="mb-1"><strong>Vehicle No:</strong>
-                                                                {{ $item->vehicle_no ?? 'N/A' }}</p>
+                                                                {{ !empty(trim($item->vehicle_no ?? '')) ? strtoupper($item->vehicle_no) : (!empty(trim($item->vehicle_number ?? '')) ? strtoupper($item->vehicle_number) : 'N/A') }}</p>
                                                             <p class="mb-1"><strong>Customer Name:</strong>
-                                                                {{ $item->customer->name ?? 'Unknown' }}</p>
+                                                                {{ $item->customer->name ?? $item->customer_name ?? 'N/A' }}</p>
                                                             <p class="mb-0"><strong>Grand Total:</strong>
                                                                 @if ($currencyPosition === 'left')
                                                                     {{ $currencySymbol }}
@@ -1254,10 +1256,10 @@
                                             @foreach ($latestPurchases as $index => $item)
                                                 <tr>
                                                     {{-- Vehicle Number --}}
-                                                    <td>{{ ucfirst($item->vehicle_no ?? 'N/A') }}</td>
+                                                    <td>{{ !empty(trim($item->vehicle_no ?? '')) ? strtoupper($item->vehicle_no) : (!empty(trim($item->vehicle_number ?? '')) ? strtoupper($item->vehicle_number) : 'N/A') }}</td>
 
                                                     {{-- Customer Name --}}
-                                                    <td>{{ ucfirst($item->customer->name ?? 'N/A') }}</td>
+                                                    <td>{{ ucfirst($item->customer->name ?? $item->customer_name ?? 'N/A') }}</td>
 
                                                     {{-- Details toggle (mobile only via CSS) --}}
                                                     <td class="details-cell">
@@ -1269,7 +1271,7 @@
                                                     </td>
 
                                                     {{-- Technician Name --}}
-                                                    <td>{{ ucfirst($item->technicianUser->name ?? 'N/A') }}</td>
+                                                    <td>{{ ucfirst($item->technicianUser->name ?? $item->technician ?? 'N/A') }}</td>
 
                                                     {{-- Total Subtotal Amount --}}
                                                     <td>
@@ -1287,7 +1289,7 @@
                                                     <td colspan="5">
                                                         <div class="collapse-content">
                                                             <p class="mb-1"><strong>Job Done By:</strong>
-                                                                {{ ucfirst($item->technicianUser->name ?? 'N/A') }}</p>
+                                                                {{ ucfirst($item->technicianUser->name ?? $item->technician ?? 'N/A') }}</p>
                                                             <p class="mb-1"><strong>Work Amount:</strong>
                                                                 @if ($currencyPosition === 'left')
                                                                     {{ $currencySymbol }}

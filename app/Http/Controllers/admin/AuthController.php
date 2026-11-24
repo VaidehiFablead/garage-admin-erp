@@ -328,7 +328,7 @@ class AuthController extends Controller
 
         // Latest 4 Sales (Job Cards)
         $latestSales = JobCard::where('type', 'jobCard')
-            ->with('customer', 'paymentStore')
+            ->with(['customer', 'technicianUser', 'paymentStore'])
             ->where('subbranch_id', $filterId)
             ->where('isDeleted', 0)
             ->orderBy('id', 'desc')
@@ -337,7 +337,7 @@ class AuthController extends Controller
 
         // Latest 4 Purchases (Daily Data)
         $latestPurchases = JobCard::where('type', 'dailyData')
-            ->with('customer', 'paymentStore')
+            ->with(['customer', 'technicianUser', 'paymentStore'])
             ->where('subbranch_id', $filterId)
             ->where('isDeleted', 0)
             ->orderBy('id', 'desc')
@@ -392,7 +392,7 @@ class AuthController extends Controller
         //     $salesChartLabel = 'Job Card';
         // }
         $latestSales = JobCard::where('type', 'jobCard')
-            ->with('customer', 'paymentStore')
+            ->with(['customer', 'technicianUser', 'paymentStore'])
             ->where('subbranch_id', $filterId)
             ->where('isDeleted', 0)
             ->orderBy('id', 'desc')
@@ -416,6 +416,7 @@ class AuthController extends Controller
 
             // Latest 4 purchases (dailyData)
             $latestPurchases = JobCard::where('type', 'dailyData')
+                ->with(['customer', 'technicianUser', 'paymentStore'])
                 ->where('isDeleted', 0)
                 ->where('subbranch_id', $filterId)
                 ->orderBy('created_at', 'desc')
@@ -1427,7 +1428,7 @@ class AuthController extends Controller
                 ->pluck('total', 'month')
                 ->toArray();
 
-            $latestSales = JobCard::with('customer')
+            $latestSales = JobCard::with(['customer', 'technicianUser'])
                 ->where('type', 'jobCard')
                 ->where('isDeleted', 0)
                 ->where('subbranch_id', $filterId)
@@ -1516,11 +1517,12 @@ class AuthController extends Controller
             //     ->where('isDeleted', 0)
             //     ->orderBy('created_at', 'desc')
             //     ->get();
-            $latestSales = JobCard::with(['customer', 'branch'])
+            $latestSales = JobCard::with(['customer', 'technicianUser', 'branch'])
                 ->where('type', 'jobCard')
                 ->where('isDeleted', 0)
                 ->where('subbranch_id', $filterId) // ✅ MUST ADD
                 ->orderBy('created_at', 'desc')
+                ->take(4)
                 ->get();
 
                 // dd($filterId);

@@ -946,8 +946,8 @@
         // console.log(currencySymbol);
 
         function capitalizeFirstLetter(str) {
-            if (!str || str === 'N/A') return 'N/A';
-            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+            if (!str || str === 'N/A' || str === 'n/a') return 'N/A';
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
         function updateLatestSalesTable(salesData, currencySymbol = '', currencyPosition = 'left') {
@@ -962,11 +962,15 @@
                 }
 
                 salesData.forEach((sale, index) => {
-                    console.log(sale);
-                    const jobCardNumber = capitalizeFirstLetter(sale.job_card_number || sale.order_number);
-                    const vehicleNo = capitalizeFirstLetter(sale.vehicle_no || (sale.user && sale.user.name) || 'N/A');
-                    const customerName = capitalizeFirstLetter((sale.customer && sale.customer.name) || sale
-                        .payment_status);
+                    const jobCardNumber = (sale.job_card_number || sale.order_number || 'N/A').toUpperCase();
+                    const rawVehicle = (sale.vehicle_no && String(sale.vehicle_no).trim() !== '') ? String(sale.vehicle_no).trim() :
+                                       (sale.vehicle_number && String(sale.vehicle_number).trim() !== '') ? String(sale.vehicle_number).trim() :
+                                       (sale.user && sale.user.name) ? String(sale.user.name).trim() : '';
+                    const vehicleNo = rawVehicle ? rawVehicle.toUpperCase() : 'N/A';
+                    const rawCustomer = (sale.customer && sale.customer.name) ? sale.customer.name :
+                                        (sale.customer_name) ? sale.customer_name :
+                                        (sale.payment_status) ? sale.payment_status : 'N/A';
+                    const customerName = capitalizeFirstLetter(rawCustomer);
                     const amountRaw = parseFloat(sale.total_subtotal_amount || sale.total_amount || 0).toFixed(2);
                     const totalAmount =
                         `${currencyPosition === 'left' ? currencySymbol : ''}${amountRaw}${currencyPosition === 'right' ? currencySymbol : ''}`;
@@ -1015,10 +1019,16 @@
                 }
 
                 latestPurchases.forEach((item, index) => {
-                    const vehicleNo = capitalizeFirstLetter(item.vehicle_no || 'N/A');
-                    const customerName = capitalizeFirstLetter((item.customer && item.customer.name) || 'N/A');
-                    const technicianName = capitalizeFirstLetter((item.technician_user && item.technician_user
-                        .name) || 'N/A');
+                    const rawVehicle = (item.vehicle_no && String(item.vehicle_no).trim() !== '') ? String(item.vehicle_no).trim() :
+                                       (item.vehicle_number && String(item.vehicle_number).trim() !== '') ? String(item.vehicle_number).trim() : '';
+                    const vehicleNo = rawVehicle ? rawVehicle.toUpperCase() : 'N/A';
+                    const rawCustomer = (item.customer && item.customer.name) ? item.customer.name :
+                                        (item.customer_name) ? item.customer_name : 'N/A';
+                    const customerName = capitalizeFirstLetter(rawCustomer);
+                    const rawTech = (item.technician_user && item.technician_user.name && String(item.technician_user.name).trim() !== '') ? item.technician_user.name :
+                                    (item.technician && typeof item.technician === 'string' && String(item.technician).trim() !== '' && isNaN(item.technician)) ? item.technician :
+                                    'N/A';
+                    const technicianName = capitalizeFirstLetter(rawTech);
 
                     let totalAmount = Number(item.total_subtotal_amount || 0).toFixed(2);
                     if (currencyPosition === 'left') {
