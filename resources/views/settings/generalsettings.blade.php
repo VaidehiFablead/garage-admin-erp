@@ -447,7 +447,7 @@
                             <div class="image-upload">
                                 <input type="file" id="logo" accept="image/*">
                                 <div class="image-uploads">
-                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}"
+                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
                                         alt="img">
                                     <h4>Drag and drop a file to upload</h4>
                                 </div>
@@ -463,7 +463,7 @@
                             <div class="image-upload">
                                 <input type="file" id="favicon" accept="image/*">
                                 <div class="image-uploads">
-                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}"
+                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
                                         alt="img">
                                     <h4>Drag and drop a file to upload</h4>
                                 </div>
@@ -479,7 +479,7 @@
                             <div class="image-upload">
                                 <input type="file" id="qr_code" accept="image/*">
                                 <div class="image-uploads">
-                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}"
+                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
                                         alt="img">
                                     <h4>Drag and drop a file to upload</h4>
                                 </div>
@@ -1027,7 +1027,13 @@
             var authToken = localStorage.getItem("authToken");
             const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
 
-            const ImagePath = "{{ env('ImagePath') }}";
+            const ImagePath = ("{{ image_path() }}").replace(/\/+$/, '');
+            const getStorageUrl = function(path) {
+                if (!path) return '';
+                if (path.startsWith('http://') || path.startsWith('https://')) return path;
+                var cleanPath = String(path).replace(/^\/+/, '').replace(/^storage\/+/, '');
+                return ImagePath + '/storage/' + cleanPath;
+            };
             // Load General Settings Data
             function loadGeneralSettings() {
                 $.ajax({
@@ -1064,16 +1070,13 @@
                             $("#currency_symbol").val(response.settings.currency_symbol ?? "");
 
                             if (response.settings.logo) {
-                                $("#logo_preview").attr("src", ImagePath + '/storage/' + response
-                                    .settings.logo).show();
+                                $("#logo_preview").attr("src", getStorageUrl(response.settings.logo)).show();
                             }
                             if (response.settings.favicon) {
-                                $("#favicon_preview").attr("src", ImagePath + '/storage/' + response
-                                    .settings.favicon).show();
+                                $("#favicon_preview").attr("src", getStorageUrl(response.settings.favicon)).show();
                             }
                             if (response.settings.qr_code) {
-                                $("#qr_preview").attr("src", ImagePath + '/storage/' + response.settings
-                                    .qr_code).show();
+                                $("#qr_preview").attr("src", getStorageUrl(response.settings.qr_code)).show();
                             }
                             
                             $("#office_latitude").val(response.settings.office_latitude ?? "");

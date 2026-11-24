@@ -1,5 +1,62 @@
 <?php
 
+if (! function_exists('image_path_base')) {
+    function image_path_base(): string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $raw = env('ImagePath');
+        if ($raw !== null && $raw !== '') {
+            $trimmed = rtrim(trim((string)$raw), '/');
+            return $cached = ($trimmed !== '' ? $trimmed . '/' : '/');
+        }
+
+        try {
+            if (function_exists('app') && app()->bound('config')) {
+                $configured = config('app.image_path');
+                if (is_string($configured) && $configured !== '') {
+                    return $cached = rtrim($configured, '/').'/';
+                }
+
+                $appUrl = config('app.url');
+                if (is_string($appUrl) && $appUrl !== '') {
+                    return $cached = rtrim($appUrl, '/').'/';
+                }
+            }
+        } catch (\Throwable) {
+            // Application not booted yet.
+        }
+
+        $raw = env('IMAGE_PATH') ?: env('APP_URL', '');
+        $raw = trim((string) $raw);
+
+        if ($raw === '') {
+            return $cached = '/';
+        }
+
+        return $cached = rtrim($raw, '/').'/';
+    }
+}
+
+if (! function_exists('image_path')) {
+    /**
+     * Build an asset / image URL without redundant double slashes (e.g. /public//storage/ -> /public/storage/).
+     */
+    function image_path(?string $path = ''): string
+    {
+        $base = image_path_base();
+
+        if ($path === null || $path === '') {
+            return $base;
+        }
+
+        return $base . ltrim($path, '/');
+    }
+}
+
 if (! function_exists('tenant')) {
     /**
      * Current client (tenant) details from admin-products, or null when tenancy is off.

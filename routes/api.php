@@ -435,7 +435,9 @@ Route::get('/leave', [AdminLeaveController::class, 'index']);
 Route::post('/leave', [AdminLeaveController::class, 'store']);
 Route::post('/leave/update/{leaveId}', [AdminLeaveController::class, 'updateStatus'])->whereNumber('leaveId');
 Route::get('/getEmployees', [AdminLeaveController::class, 'getEmployees']);
-Route::get('/hr/dashboard-data', [HrDashboardController::class, 'getDashboardData']);
+if (class_exists('HrDashboardController')) {
+    Route::get('/hr/dashboard-data', [HrDashboardController::class, 'getDashboardData']);
+}
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
