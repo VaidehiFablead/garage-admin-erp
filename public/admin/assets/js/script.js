@@ -38,6 +38,22 @@ $(document).ready(function () {
                 }
             }
         });
+
+        // Default open 1st menu (ERP) if no other Level-1 submenu is active
+        var hasActiveOtherSubmenu = false;
+        $('#sidebar-menu > ul > li.submenu').not('.menu-erp').each(function() {
+            if ($(this).find('a.active').length > 0) {
+                hasActiveOtherSubmenu = true;
+            }
+        });
+        if (!hasActiveOtherSubmenu) {
+            var $firstMenu = $('#sidebar-menu > ul > li.submenu.menu-erp');
+            if ($firstMenu.length) {
+                $firstMenu.find('> a').addClass('subdrop');
+                $firstMenu.find('> ul').show();
+            }
+        }
+
         $('#sidebar-menu a').on('click', function (e) {
             if ($(this).parent().hasClass('submenu')) {
                 e.preventDefault();

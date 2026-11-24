@@ -162,15 +162,19 @@
                     </li>
                 @endif
 
+                @php
+                    $isOtherSectionActive = request()->routeIs('appointments.*') || request()->routeIs('customer.*') || request()->routeIs('account_ledger.*') || request()->routeIs('credit-notes*') || request()->routeIs('debit-notes*') || request()->routeIs('gst.*') || request()->routeIs('expense.*') || request()->routeIs('expensetype.*') || request()->routeIs('staff.*') || request()->routeIs('attendence.*') || request()->routeIs('payroll.*') || request()->routeIs('advance_pay.*') || request()->routeIs('leave.*') || request()->routeIs('plans.*') || request()->routeIs('subbranch.*') || request()->routeIs('setting.*') || request()->routeIs('auth.taxrates') || request()->routeIs('department.*') || request()->routeIs('designation.*');
+                    $erpIsOpen = !$isOtherSectionActive;
+                @endphp
                 <!-- ERP -->
                 @if ($showErpSection)
                     <li class="submenu menu-erp">
-                        <a href="javascript:void(0);">
+                        <a href="javascript:void(0);" class="{{ $erpIsOpen ? 'subdrop' : '' }}">
                             <i class="fa fa-database"></i>
                             <span>ERP</span>
                             <span class="menu-arrow"></span>
                         </a>
-                        <ul>
+                        <ul style="{{ $erpIsOpen ? 'display: block;' : '' }}">
                             <!-- All Masters Submenu -->
                             @if ($canAllMasters)
                                 <li class="submenu">
@@ -962,6 +966,16 @@
                 if (headerLeft) headerLeft.classList.remove('active');
                 if (toggleBtn) toggleBtn.classList.remove('active');
             }
+        }
+
+        // Default open 1st menu (ERP) if no other submenu is active
+        const hasOtherActive = document.querySelector('#sidebar-menu > ul > li.submenu:not(.menu-erp) a.active');
+        const erpMenu = document.querySelector('#sidebar-menu > ul > li.submenu.menu-erp');
+        if (!hasOtherActive && erpMenu) {
+            const erpLink = erpMenu.querySelector(':scope > a');
+            const erpUl = erpMenu.querySelector(':scope > ul');
+            if (erpLink) erpLink.classList.add('subdrop');
+            if (erpUl) erpUl.style.display = 'block';
         }
 
         // Live Search feature implementation
