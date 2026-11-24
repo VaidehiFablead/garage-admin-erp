@@ -385,19 +385,20 @@ console.log(sale);
                             const discount = sale.discount || 0;
 
                             let imagePath = '';
-                            let imageBasePath = '{{ env('ImagePath') }}'; // inject from .env
+                            let imageBasePath = ('{{ rtrim(env('ImagePath', ''), '/') }}').replace(/\/+$/, '');
 
                             try {
                                 const images = JSON.parse(product.images);
                                 console.log(images);
 
                                 if (images && images.length > 0 && images[0]) {
-                                    imagePath = `${imageBasePath}/storage/${images[0]}`;
+                                    let cleanImg = String(images[0]).replace(/^\/+/, '');
+                                    imagePath = imageBasePath ? `${imageBasePath}/storage/${cleanImg}` : `/storage/${cleanImg}`;
                                 } else {
-                                    imagePath = `${imageBasePath}/admin/assets/img/product/noimage.png`;
+                                    imagePath = imageBasePath ? `${imageBasePath}/admin/assets/img/product/noimage.png` : `/admin/assets/img/product/noimage.png`;
                                 }
                             } catch (e) {
-                                imagePath = `${imageBasePath}/admin/assets/img/product/noimage.png`;
+                                imagePath = imageBasePath ? `${imageBasePath}/admin/assets/img/product/noimage.png` : `/admin/assets/img/product/noimage.png`;
                             }
                             const unitPrice = formatCurrency(item.price, company_info.currency_symbol, company_info.currency_position);
                             const totalAmount = formatCurrency(item.total_amount, company_info.currency_symbol, company_info.currency_position);

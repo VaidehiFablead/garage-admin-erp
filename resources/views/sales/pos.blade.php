@@ -2258,15 +2258,17 @@
                                 let cleanImageString = product.image.replace(/\\/g, '');
                                 cleanImageString = cleanImageString.replace(/^"(.*)"$/, '$1');
 
-                                let imageBasePath = "{{ env('ImagePath') }}"; // or config('app.url') if you prefer
+                                let imageBasePath = ('{{ rtrim(env('ImagePath', ''), '/') }}').replace(/\/+$/, '');
 
                                 if (cleanImageString.startsWith('[')) {
                                     let imagesArray = JSON.parse(cleanImageString);
                                     if (Array.isArray(imagesArray) && imagesArray.length > 0) {
-                                        productImage = `${imageBasePath}/storage/${imagesArray[0]}`;
+                                        let cleanImg = String(imagesArray[0]).replace(/^\/+/, '');
+                                        productImage = imageBasePath ? `${imageBasePath}/storage/${cleanImg}` : `/storage/${cleanImg}`;
                                     }
                                 } else {
-                                    productImage = `${imageBasePath}/storage/${cleanImageString}`;
+                                    let cleanImg = String(cleanImageString).replace(/^\/+/, '');
+                                    productImage = imageBasePath ? `${imageBasePath}/storage/${cleanImg}` : `/storage/${cleanImg}`;
                                 }
                             } catch (e) {
 
