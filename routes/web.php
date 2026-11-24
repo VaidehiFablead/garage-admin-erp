@@ -89,6 +89,15 @@ Route::get('/face-photo/{filename}', function ($filename) {
     return response()->file($path, ['Content-Type' => $mime]);
 })->where('filename', '.+');
 
+// Tenant storage routes to serve isolated files under storage/ and public/storage/
+Route::get('storage/{path}', \App\Http\Controllers\TenantStorageController::class)
+    ->where('path', '.*')
+    ->name('tenant.storage');
+
+Route::get('public/storage/{path}', \App\Http\Controllers\TenantStorageController::class)
+    ->where('path', '.*')
+    ->name('tenant.storage.public');
+
 
 
 Route::middleware(['check.license'])->group(function () {
