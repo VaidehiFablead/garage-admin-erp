@@ -13,6 +13,7 @@
                     $user = Auth::user();
                     $role = $user ? $user->role : '';
                     $isStaff = Auth::check() && strtolower($role) === 'staff';
+                    $isMainBranch = (empty($subAdminId) || $subAdminId == 1) && ($role !== 'sub-admin');
 
                     // Dashboard
                     $showDashboard = tenant_has_module('Dashboard') && (
@@ -38,6 +39,10 @@
                     $canNewJobCard = tenant_has_sub_module('New Job Card', 'Job Card') && app('hasPermission')(16, 'add');
                     $canJobCard = tenant_has_module(['Job Card', 'ERP']) && ($canAllJobCards || $canNewJobCard);
 
+                    $canAllSales = (app('hasPermission')(2, 'view') || in_array($role, ['admin', 'sub-admin']));
+                    $canNewSale = (app('hasPermission')(2, 'add') || in_array($role, ['admin', 'sub-admin']));
+                    $canSales = $canAllSales || $canNewSale;
+
                     $canAllDailyRegister = tenant_has_sub_module('All Daily Register', 'Daily Register') && app('hasPermission')(24, 'view');
                     $canNewDailyRegister = tenant_has_sub_module('New Daily Register', 'Daily Register') && app('hasPermission')(24, 'add');
                     $canDailyRegister = tenant_has_module(['Daily Register', 'ERP']) && ($canAllDailyRegister || $canNewDailyRegister);
@@ -52,8 +57,8 @@
 
                     $canInventory = tenant_has_module(['Inventory', 'ERP']) && tenant_has_sub_module('Inventory', 'Inventory') && app('hasPermission')(15, 'view');
 
-                    $showErpSection = tenant_has_module(['ERP', 'All Masters', 'Job Card', 'Daily Register', 'Purchase', 'Vendor', 'Inventory']) && (
-                        $canAllMasters || $canJobCard || $canDailyRegister || $canPurchase || $canVendor || $canInventory
+                    $showErpSection = tenant_has_module(['ERP', 'All Masters', 'Job Card', 'Daily Register', 'Purchase', 'Vendor', 'Inventory', 'Sales', 'Sales & Bills', 'Sales and Orders']) && (
+                        $canAllMasters || ($isMainBranch ? $canJobCard : $canSales) || $canDailyRegister || $canPurchase || $canVendor || $canInventory
                     );
 
                     // CRM Submodules
@@ -230,22 +235,43 @@
                                 </li>
                             @endif
 
-                            <!-- Job Card -->
+                            <!-- Job Card (Main Branch Only) -->
                             @if ($canJobCard)
-                                <li class="submenu">
-                                    <a href="javascript:void(0);">
+                                <li class="submenu sidebar-jobcard-menu" style="{{ $isMainBranch ? '' : 'display: none !important;' }}">
+                                    <a href="javascript:void(0);" class="{{ request()->routeIs(['job_card.*']) ? 'active subdrop' : '' }}">
                                         <i class="fa fa-file-invoice"></i>
                                         <span>Job Card</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
                                         @if ($canAllJobCards)
-                                            <li><a href="{{ route('job_card.index') }}"><i
+                                            <li><a href="{{ route('job_card.index') }}" class="{{ request()->routeIs('job_card.index') ? 'active' : '' }}"><i
                                                         class="fa fa-list"></i><span>All Job Cards</span></a></li>
                                         @endif
                                         @if ($canNewJobCard)
-                                            <li><a href="{{ route('job_card.create') }}"><i
+                                            <li><a href="{{ route('job_card.create') }}" class="{{ request()->routeIs('job_card.create') ? 'active' : '' }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Job Card</span></a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
+
+                            <!-- Sales (Sub Admin Branch Only) -->
+                            @if ($canSales)
+                                <li class="submenu sidebar-sales-menu" style="{{ !$isMainBranch ? '' : 'display: none !important;' }}">
+                                    <a href="javascript:void(0);" class="{{ request()->routeIs(['sales.*', 'salesreturn.*']) ? 'active subdrop' : '' }}">
+                                        <i class="fa fa-shopping-cart"></i>
+                                        <span>Sales</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if ($canAllSales)
+                                            <li><a href="{{ route('sales.list') }}" class="{{ request()->routeIs('sales.list') ? 'active' : '' }}"><i
+                                                        class="fa fa-list"></i><span>All Sales Bill</span></a></li>
+                                        @endif
+                                        @if ($canNewSale)
+                                            <li><a href="{{ route('sales.add') }}" class="{{ request()->routeIs('sales.add') ? 'active' : '' }}"><i
+                                                        class="fa fa-plus-circle"></i><span>New Sale</span></a></li>
                                         @endif
                                     </ul>
                                 </li>
@@ -1079,5 +1105,16 @@
                 });
             });
         }
+
+        // Branch-based sidebar toggle (Main Branch -> Job Card, Sub Branch -> Sales)
+        function syncBranchSidebar() {
+            var subAdminId = localStorage.getItem('selectedSubAdminId');
+            var isMain = !subAdminId || subAdminId === "1";
+            var jc = document.querySelectorAll('.sidebar-jobcard-menu');
+            var sl = document.querySelectorAll('.sidebar-sales-menu');
+            jc.forEach(function(el) { el.style.setProperty('display', isMain ? '' : 'none', 'important'); });
+            sl.forEach(function(el) { el.style.setProperty('display', !isMain ? '' : 'none', 'important'); });
+        }
+        syncBranchSidebar();
     });
 </script>

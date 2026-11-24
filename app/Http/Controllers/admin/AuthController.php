@@ -999,7 +999,7 @@ class AuthController extends Controller
             ->sum('amount');
 
         // ✅ Decide what to show: Orders vs Collections
-        if (!empty($request->selectedSubAdminId)) {
+        if (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId != 1) {
             // Sub-Admin selected → show Total Orders (payments received for orders)
             $mainAmount = $totalOrders + $totalCollection1;
             $mainAmountFormatted = number_format($mainAmount, 2);
@@ -1263,12 +1263,12 @@ class AuthController extends Controller
             ->sum('grand_total');
 
         $totalCollection = DB::table('payment_store')
-            ->join('orders', 'payment_store.order_id', '=', 'orders.id')
+            ->join('job_cards', 'payment_store.jobcard_id', '=', 'job_cards.id')
             ->where('payment_store.isDeleted', '!=', 1)
             ->whereBetween('payment_store.payment_date', [$start, $end]);
 
         if (!empty($filterId)) {
-            $totalCollection->where('orders.branch_id', $filterId);
+            $totalCollection->where('job_cards.subbranch_id', $filterId);
         }
 
         
@@ -1293,7 +1293,8 @@ class AuthController extends Controller
             ->sum('payment_store.payment_amount');
         
         // ✅ Decide what to show: Orders vs Collections
-        if (!empty($request->selectedSubAdminId)) {
+        $isSubAdmin = (!empty($selectedSubAdminId) && $selectedSubAdminId != 1) || (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId != 1);
+        if ($isSubAdmin) {
             // Sub-Admin selected → show Total Orders (payments received for orders)
             $mainAmount = $totalOrders;
             $mainAmountFormatted = number_format($totalOrders, 2);
