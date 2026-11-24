@@ -68,7 +68,11 @@
                     $showCrmSection = tenant_has_module(['CRM', 'Appointment', 'Customer']) && ($canAppointment || $canCustomer);
 
                     // Accounting Submodules
-                    $canAccountLedger = tenant_has_module(['Account Ledger', 'Accounting']) && tenant_has_sub_module('Account Ledger', 'Account Ledger') && app('hasPermission')(13, 'view');
+                    $canAccountLedger = tenant_has_module(['Account Ledger', 'Accounting', 'Manage Accounting']) && (tenant_has_sub_module(['Account Ledger', 'account-ledger'], 'Manage Accounting') || tenant_has_sub_module('Account Ledger', 'Account Ledger')) && (app('hasPermission')(13, 'view') || app('hasPermission')(42, 'view'));
+
+                    $canIncomeStatement = tenant_has_module(['Income Statement', 'Accounting', 'Manage Accounting']) && (tenant_has_sub_module(['Income Statement', 'income-statement'], 'Manage Accounting') || tenant_has_sub_module(['Income Statement', 'income-statement'])) && (app('hasPermission')(13, 'view') || app('hasPermission')(43, 'view'));
+
+                    $canManageAccounting = tenant_has_module(['Manage Accounting', 'Accounting']) && ($canAccountLedger || $canIncomeStatement);
 
                     $canCreditNotes = tenant_has_sub_module('Credit Notes', 'Credit/Debit Notes') && app('hasPermission')(25, 'list');
                     $canDebitNotes = tenant_has_sub_module('Debit Notes', 'Credit/Debit Notes') && app('hasPermission')(26, 'list');
@@ -87,8 +91,8 @@
                         $canAllExpense || $canNewExpense || $canAllExpenseType
                     );
 
-                    $showAccountingSection = tenant_has_module(['Accounting', 'Account Ledger', 'Credit/Debit Notes', 'GST Reports', 'Expense']) && (
-                        $canAccountLedger || $canCreditDebitNotes || $canGstReports || $canExpense
+                    $showAccountingSection = tenant_has_module(['Accounting', 'Account Ledger', 'Manage Accounting', 'Income Statement', 'Credit/Debit Notes', 'GST Reports', 'Expense']) && (
+                        $canManageAccounting || $canCreditDebitNotes || $canGstReports || $canExpense
                     );
 
                     // HR Submodules
@@ -163,7 +167,7 @@
                 @endif
 
                 @php
-                    $isOtherSectionActive = request()->routeIs('appointments.*') || request()->routeIs('customer.*') || request()->routeIs('account_ledger.*') || request()->routeIs('credit-notes*') || request()->routeIs('debit-notes*') || request()->routeIs('gst.*') || request()->routeIs('expense.*') || request()->routeIs('expensetype.*') || request()->routeIs('staff.*') || request()->routeIs('attendence.*') || request()->routeIs('payroll.*') || request()->routeIs('advance_pay.*') || request()->routeIs('leave.*') || request()->routeIs('plans.*') || request()->routeIs('subbranch.*') || request()->routeIs('setting.*') || request()->routeIs('auth.taxrates') || request()->routeIs('department.*') || request()->routeIs('designation.*');
+                    $isOtherSectionActive = request()->routeIs('appointments.*') || request()->routeIs('customer.*') || request()->routeIs('account_ledger.*') || request()->routeIs('income-statement.*') || request()->routeIs('credit-notes*') || request()->routeIs('debit-notes*') || request()->routeIs('gst.*') || request()->routeIs('expense.*') || request()->routeIs('expensetype.*') || request()->routeIs('staff.*') || request()->routeIs('attendence.*') || request()->routeIs('payroll.*') || request()->routeIs('advance_pay.*') || request()->routeIs('leave.*') || request()->routeIs('plans.*') || request()->routeIs('subbranch.*') || request()->routeIs('setting.*') || request()->routeIs('auth.taxrates') || request()->routeIs('department.*') || request()->routeIs('designation.*');
                     $erpIsOpen = !$isOtherSectionActive;
                 @endphp
                 <!-- ERP -->
@@ -405,13 +409,32 @@
                             <span class="menu-arrow"></span>
                         </a>
                         <ul>
-                            <!-- Account Ledger -->
-                            @if ($canAccountLedger)
-                                <li>
-                                    <a href="{{ route('account_ledger.add') }}">
-                                        <i class="fa fa-book"></i>
-                                        <span>Account Ledger</span>
+                            <!-- Manage Accounting -->
+                            @if ($canManageAccounting)
+                                <li class="submenu">
+                                    <a href="javascript:void(0);">
+                                        <i class="fa fa-calculator"></i>
+                                        <span>Manage Accounting</span>
+                                        <span class="menu-arrow"></span>
                                     </a>
+                                    <ul>
+                                        @if ($canAccountLedger)
+                                            <li>
+                                                <a href="{{ route('account_ledger.add') }}">
+                                                    <i class="fa fa-book"></i>
+                                                    <span>Account Ledger</span>
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if ($canIncomeStatement)
+                                            <li>
+                                                <a href="{{ route('income-statement.index') }}">
+                                                    <i class="fa fa-file-invoice-dollar"></i>
+                                                    <span>Income Statement</span>
+                                                </a>
+                                            </li>
+                                        @endif
+                                    </ul>
                                 </li>
                             @endif
 

@@ -22,6 +22,7 @@ use App\Http\Controllers\api\GeneralSettingController;
 use App\Http\Controllers\api\GstController;
 use App\Http\Controllers\api\GSTR_1Controller;
 use App\Http\Controllers\api\GstSalesReportController;
+use App\Http\Controllers\api\IncomeSheetController;
 use App\Http\Controllers\api\InventoryController;
 use App\Http\Controllers\api\JobCardConroller;
 use App\Http\Controllers\api\LabourServiceController;
@@ -290,6 +291,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::get('/get-payment-pending', [AccountLedgerController::class, 'getPendingPaymentDetails'])->name('get.payment.pending');
     Route::get('/export-account-ledger', [AccountLedgerController::class, 'exportAccountLedgerExcel']);
     Route::post('/account-ledger/download-pdf', [AccountLedgerController::class, 'downloadAccountLedgerPDF']);
+    Route::get('/income-statement', [IncomeSheetController::class, 'GetAll']);
 
     Route::post('/createdailydata', [DailyDataController::class, 'add_daily_data'])->name('daily_data.store');
     Route::get('/daily-data/ajax', [DailyDataController::class, 'apiIndex']);

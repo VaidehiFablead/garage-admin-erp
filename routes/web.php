@@ -19,6 +19,7 @@ use App\Http\Controllers\admin\DebitNoteItemController;
 use App\Http\Controllers\admin\ExpenseController;
 use App\Http\Controllers\admin\ExpenseTypeController;
 use App\Http\Controllers\admin\GstSalesReportController;
+use App\Http\Controllers\admin\IncomeSheetController;
 use App\Http\Controllers\admin\InventoryController;
 use App\Http\Controllers\admin\InvoiceController;
 use App\Http\Controllers\admin\JobCardController;
@@ -150,6 +151,11 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/account-ledger-list', [AccountLedgerController::class, 'index'])->name('account_ledger.list');
         Route::get('/account-ledger', [AccountLedgerController::class, 'add'])->name('account_ledger.add');
         Route::get('/pending-payment', [AccountLedgerController::class, 'pendingPayment'])->name('pening_payment.payment');
+
+        // Income Statement
+        Route::get('/income-statement', [IncomeSheetController::class, 'index'])->name('income-statement.index');
+        Route::get('/income-statement/pdf', [IncomeSheetController::class, 'generatePdf'])->name('income-statement.pdf');
+        Route::get('/income-statement/excel', [IncomeSheetController::class, 'generateExcel'])->name('income-statement.excel');
 
         //authcontroller
         Route::get('/forgetpassword', [AuthController::class, 'forgetpassword'])->name('auth.forgetpassword');

@@ -125,7 +125,7 @@ if (! function_exists('tenant_has_module')) {
             ['inventory', 'manageinventory'],
             ['appointment', 'appointments', 'crm'],
             ['customer', 'customers'],
-            ['accounting', 'accountledger', 'ledger'],
+            ['accounting', 'accountledger', 'ledger', 'manageaccounting', 'manage accounting', 'incomestatement', 'income statement'],
             ['creditdebitnotes', 'creditnotes', 'debitnotes', 'creditdebitnotestype'],
             ['gstreports', 'gstreport', 'gst'],
             ['hr', 'humanresources'],
