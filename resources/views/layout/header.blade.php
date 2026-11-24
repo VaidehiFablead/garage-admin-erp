@@ -250,9 +250,9 @@
 
         @if($showBranch)
             <div class="me-3 filterbranch position-relative" id="subBranchContainer"
-                style="z-index:99999; display: none; margin-top: .7rem;">
+                style="z-index:99999; display: none;">
                 <div class="d-flex align-items-center">
-                    <select id="subBrandSelect" class="form-select form-select-sm" style="height: 38px; width: 155px;">
+                    <select id="subBrandSelect" class="form-select form-select-sm" style="height: 36px; width: 155px; border-radius: 6px;">
 
                     </select>
                     <div id="currentSelection" class="ms-2 text-muted" style="font-size: 12px;"></div>
@@ -274,21 +274,21 @@
                 <!-- Search Field Container -->
 
 
-                <!-- New Order Button -->
-                @if (tenant_has_module(['Appointment', 'CRM']) && (tenant_has_sub_module('All Appointment', 'Appointment') || tenant_has_sub_module('New Appointment', 'Appointment')) && (app('hasPermission')(17, 'view') || app('hasPermission')(12, 'view')))
+                <!-- Appointment & Account Ledger Buttons (Commented out) -->
+                {{-- @if (tenant_has_module(['Appointment', 'CRM']) && (tenant_has_sub_module('All Appointment', 'Appointment') || tenant_has_sub_module('New Appointment', 'Appointment')) && (app('hasPermission')(17, 'view') || app('hasPermission')(12, 'view')))
                     <a href="/appointments" class="btn btn-sm d-flex align-items-center justify-content-center me-3"
-                        style="height: 36px; background-color: #ff9f43; color: white;">
+                        style="height: 36px; background-color: #ff9f43; color: white; border-radius: 6px;">
                         <i class="fa fa-calendar-check me-2" aria-hidden="true"></i> <span
                             class="header-btn-text">Appointment</span>
                     </a>
-                @endif
-                @if (tenant_has_module(['Account Ledger', 'Accounting']) && tenant_has_sub_module('Account Ledger', 'Account Ledger') && (app('hasPermission')(25, 'view') || app('hasPermission')(13, 'view')))
+                @endif --}}
+                {{-- @if (tenant_has_module(['Account Ledger', 'Accounting']) && tenant_has_sub_module('Account Ledger', 'Account Ledger') && (app('hasPermission')(25, 'view') || app('hasPermission')(13, 'view')))
                     <a href="/account-ledger" class="btn btn-sm d-flex align-items-center justify-content-center me-3"
-                        style="height: 36px; background-color: #ff9f43; color: white;">
+                        style="height: 36px; background-color: #ff9f43; color: white; border-radius: 6px;">
                         <i class="fa fa-book me-2" aria-hidden="true"></i> <span class="header-btn-text">Account
                             Ledger</span>
                     </a>
-                @endif
+                @endif --}}
 
                 @php
                     $subAdminId = session('selectedSubAdminId');
@@ -300,7 +300,7 @@
                 @if (tenant_has_module(['Job Card', 'ERP']) && (app('hasPermission')(16, 'view') || app('hasPermission')(16, 'add')))
                     <div class="dropdown me-3">
                         <a class="btn btn-sm d-flex align-items-center justify-content-center dropdown-toggle"
-                            style="height: 36px; background-color: #ff9f43; color: white;" href="#" role="button"
+                            style="height: 36px; background-color: #ff9f43; color: white; border-radius: 6px;" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa fa-tasks me-2" aria-hidden="true"></i> <span class="header-btn-text">Job cards
                                 (Bills)</span>
@@ -370,9 +370,9 @@
 
                 {{-- Daily Register Dropdown --}}
                 @if (tenant_has_module(['Daily Register', 'ERP']) && (app('hasPermission')(24, 'view') || app('hasPermission')(24, 'add')))
-                    <div class="dropdown">
-                        <a class="btn btn-sm d-flex align-items-center justify-content-center dropdown-toggle me-3"
-                            style="height: 36px; background-color: #ff9f43; color: white;" href="#" role="button"
+                    <div class="dropdown me-3">
+                        <a class="btn btn-sm d-flex align-items-center justify-content-center dropdown-toggle"
+                            style="height: 36px; background-color: #ff9f43; color: white; border-radius: 6px;" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa fa-calendar me-2" aria-hidden="true"></i> <span class="header-btn-text">Daily
                                 Register</span>
@@ -403,10 +403,10 @@
                 @endif
 
                 @if (tenant_has_module(['Appointment', 'CRM']))
-                <li class="nav-item me-3">
+                <li class="nav-item me-3" style="list-style: none;">
                     <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#todayAppointmentsModal"
                         class="d-flex align-items-center justify-content-center"
-                        style="height: 38px; width: 38px; background-color: #ff9f43; color: white; border-radius: 50%;">
+                        style="height: 36px; width: 36px; background-color: #ff9f43; color: white; border-radius: 50%;">
                         <i class="fa fa-bell"></i>
                     </a>
                 </li>
