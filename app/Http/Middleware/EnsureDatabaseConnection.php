@@ -11,6 +11,16 @@ class EnsureDatabaseConnection
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (
+            $request->is('storage/*') ||
+            $request->is('public/storage/*') ||
+            $request->is('*/storage/*') ||
+            $request->is('storage') ||
+            $request->is('public/storage')
+        ) {
+            return $next($request);
+        }
+
         $this->connectWithRetry();
 
         return $next($request);

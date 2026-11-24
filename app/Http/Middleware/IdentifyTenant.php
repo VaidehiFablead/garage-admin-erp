@@ -81,8 +81,20 @@ class IdentifyTenant
         // If request is on central domain or localhost and not yet authenticated, allow public routes
         $centralHost = static::isCentralHost($request->getHost());
 
-        // For public login, logout and face recognition endpoints, allow passing through
-        if ($request->is('/') || $request->is('login') || $request->is('logout') || $request->is('auth/*') || $request->is('face-login*') || $request->is('api/face-login*')) {
+        // For public login, logout, static/storage files and face recognition endpoints, allow passing through
+        if (
+            $request->is('/') ||
+            $request->is('login') ||
+            $request->is('logout') ||
+            $request->is('auth/*') ||
+            $request->is('face-login*') ||
+            $request->is('api/face-login*') ||
+            $request->is('storage/*') ||
+            $request->is('public/storage/*') ||
+            $request->is('*/storage/*') ||
+            $request->is('storage') ||
+            $request->is('public/storage')
+        ) {
             if (! $centralHost) {
                 // If on a client subdomain, resolve that client's branding/theme
                 try {
@@ -99,6 +111,15 @@ class IdentifyTenant
         if ($centralHost) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['status' => false, 'error' => 'Unauthenticated'], 401);
+            }
+            if (
+                $request->is('storage/*') ||
+                $request->is('public/storage/*') ||
+                $request->is('*/storage/*') ||
+                $request->is('storage') ||
+                $request->is('public/storage')
+            ) {
+                return $next($request);
             }
             if (! $request->is('/')) {
                 return redirect('/');
