@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class BalanceSheetController extends Controller
 {
@@ -33,6 +34,9 @@ class BalanceSheetController extends Controller
         // ======================
         // 🧾 1️⃣ ASSETS
         // ======================
+        $hasCustomInvoiceId = Schema::hasColumn('payment_store', 'custom_invoice_id');
+        $hasPurchaseId      = Schema::hasColumn('payment_store', 'purchase_id');
+
         $cash = DB::table('payment_store')
             ->join('orders', 'orders.id', '=', 'payment_store.order_id')
             ->where('payment_store.isDeleted', 0)
@@ -42,38 +46,46 @@ class BalanceSheetController extends Controller
                     ->where('payment_store.order_id', '<>', '')
                     ->where('payment_store.order_id', '>', 0);
             })
-            ->where(function ($q) {
-                $q->whereNull('payment_store.purchase_id')
-                    ->orWhere('payment_store.purchase_id', '=', 0)
-                    ->orWhere('payment_store.purchase_id', '=', '');
+            ->when($hasPurchaseId, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereNull('payment_store.purchase_id')
+                        ->orWhere('payment_store.purchase_id', '=', 0)
+                        ->orWhere('payment_store.purchase_id', '=', '');
+                });
             })
-            ->where(function ($q) {
-                $q->whereNull('payment_store.custom_invoice_id')
-                    ->orWhere('payment_store.custom_invoice_id', '=', 0)
-                    ->orWhere('payment_store.custom_invoice_id', '=', '');
+            ->when($hasCustomInvoiceId, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereNull('payment_store.custom_invoice_id')
+                        ->orWhere('payment_store.custom_invoice_id', '=', 0)
+                        ->orWhere('payment_store.custom_invoice_id', '=', '');
+                });
             })
             ->when($branchId, fn($q) => $q->where('orders.branch_id', $branchId))
             ->sum('payment_store.payment_amount');
 
-// Bank (UPI / Bank / Online)
+        // Bank (UPI / Bank / Online)
         $bank = DB::table('payment_store')
             ->join('orders', 'orders.id', '=', 'payment_store.order_id')
             ->where('payment_store.isDeleted', 0)
-            ->whereIn('payment_store.payment_method', ['upi', 'bank', 'online','Online', 'debit card', 'Debit Card', 'Debit card', 'scan', 'Scan'])
+            ->whereIn('payment_store.payment_method', ['upi', 'bank', 'online', 'Online', 'debit card', 'Debit Card', 'Debit card', 'scan', 'Scan'])
             ->where(function ($q) {
                 $q->whereNotNull('payment_store.order_id')
                     ->where('payment_store.order_id', '<>', '')
                     ->where('payment_store.order_id', '>', 0);
             })
-            ->where(function ($q) {
-                $q->whereNull('payment_store.purchase_id')
-                    ->orWhere('payment_store.purchase_id', '=', 0)
-                    ->orWhere('payment_store.purchase_id', '=', '');
+            ->when($hasPurchaseId, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereNull('payment_store.purchase_id')
+                        ->orWhere('payment_store.purchase_id', '=', 0)
+                        ->orWhere('payment_store.purchase_id', '=', '');
+                });
             })
-            ->where(function ($q) {
-                $q->whereNull('payment_store.custom_invoice_id')
-                    ->orWhere('payment_store.custom_invoice_id', '=', 0)
-                    ->orWhere('payment_store.custom_invoice_id', '=', '');
+            ->when($hasCustomInvoiceId, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->whereNull('payment_store.custom_invoice_id')
+                        ->orWhere('payment_store.custom_invoice_id', '=', 0)
+                        ->orWhere('payment_store.custom_invoice_id', '=', '');
+                });
             })
             ->when($branchId, fn($q) => $q->where('orders.branch_id', $branchId))
             ->sum('payment_store.payment_amount');
