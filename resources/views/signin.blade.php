@@ -14,12 +14,12 @@
 
     <link rel="shortcut icon" type="image/x-icon" href="https://fableadtechnolabs.com/favicon-192x192.webp">
 
-    <link rel="stylesheet" href="{{ env('ImagePath') . 'admin/assets/css/bootstrap.min.css' }}">
+    <link rel="stylesheet" href="{{ image_path('admin/assets/css/bootstrap.min.css') }}">
 
-    <link rel="stylesheet" href="{{ env('ImagePath') . 'admin/assets/plugins/fontawesome/css/fontawesome.min.css' }}">
-    <link rel="stylesheet" href="{{ env('ImagePath') . 'admin/assets/plugins/fontawesome/css/all.min.css' }}">
+    <link rel="stylesheet" href="{{ image_path('admin/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ image_path('admin/assets/plugins/fontawesome/css/all.min.css') }}">
 
-    <link rel="stylesheet" href="{{ env('ImagePath') . 'admin/assets/css/style.css' }}">
+    <link rel="stylesheet" href="{{ image_path('admin/assets/css/style.css') }}">
     <!-- <style>
         /* .logo-img {
             margin-left: 9rem;
@@ -615,7 +615,7 @@
                 <!-- <div class="login-content"> -->
                     <div class="login-userset">
                         <div class="login-logo">
-                            <img src="{{ isset($settings) && $settings->logo ? env('ImagePath') . '/storage/' . $settings->logo : 'https://fableadtechnolabs.com/static/media/250x150%20(1).b3f5a4db48c7770366ef.webp' }}"
+                            <img src="{{ isset($settings) && $settings->logo ? image_path('storage/' . $settings->logo) : 'https://fableadtechnolabs.com/static/media/250x150%20(1).b3f5a4db48c7770366ef.webp' }}"
                                 alt="img" class="logo-img">
 
                         </div>
@@ -631,7 +631,7 @@
                                 <label>Username</label>
                                 <div class="form-addons">
                                     <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username">
-                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/mail.svg' }}"
+                                    <img src="{{ image_path('admin/assets/img/icons/mail.svg') }}"
                                         alt="img">
                                 </div>
                                 <small id="usernameError" class="text-danger"></small>
@@ -694,10 +694,10 @@
         <h1 style="font-size: 14px; font-weight: 600;">© <?= date('Y') ?> Copyright - Fablead Developers Technolab</h1>
     </footer>
 
-    <script src="{{ env('ImagePath') . 'admin/assets/js/jquery-3.6.0.min.js' }}"></script>
-    <script src="{{ env('ImagePath') . 'admin/assets/js/feather.min.js' }}"></script>
-    <script src="{{ env('ImagePath') . 'admin/assets/js/bootstrap.bundle.min.js' }}"></script>
-    <script src="{{ env('ImagePath') . 'admin/assets/js/script.js' }}"></script>
+    <script src="{{ image_path('admin/assets/js/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ image_path('admin/assets/js/feather.min.js') }}"></script>
+    <script src="{{ image_path('admin/assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ image_path('admin/assets/js/script.js') }}"></script>
 
     {{-- ===================== FACE LOGIN MODAL ===================== --}}
     <div class="modal fade" id="faceLoginModal" tabindex="-1" aria-labelledby="faceLoginModalLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -753,7 +753,7 @@
     {{-- face-api.js (CDN) --}}
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     {{-- Face login handler --}}
-    <script src="{{ env('ImagePath') . 'admin/assets/js/face-login.js' }}"></script>
+    <script src="{{ image_path('admin/assets/js/face-login.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#loginForm").submit(function(e) {

@@ -165,10 +165,10 @@
 
     <div class="header-left">
         <a href="{{ route('auth.dashboard') }}" class="logo">
-            <img src="{{ !empty($settings) && !empty($settings->logo) ? env('ImagePath') . '/storage/' . $settings->logo : 'https://fableadtechnolabs.com/static/media/250x150%20(1).b3f5a4db48c7770366ef.webp' }}" class="logo-view">
+            <img src="{{ !empty($settings) && !empty($settings->logo) ? image_path('storage/' . $settings->logo) : 'https://fableadtechnolabs.com/static/media/250x150%20(1).b3f5a4db48c7770366ef.webp' }}" class="logo-view">
         </a>
         <a href="{{ route('auth.dashboard') }}" class="logo-small">
-            <img src="{{ !empty($settings) && !empty($settings->favicon) ? env('ImagePath') . '/storage/' . $settings->favicon : 'https://fableadtechnolabs.com/favicon-192x192.webp' }}" >
+            <img src="{{ !empty($settings) && !empty($settings->favicon) ? image_path('storage/' . $settings->favicon) : 'https://fableadtechnolabs.com/favicon-192x192.webp' }}" >
         </a>
 
         <!-- <a id="toggle_btn" href="javascript:void(0);">
@@ -310,7 +310,7 @@
                                 <li>
                                     <a class="dropdown-item" href="{{ route('job_card.index') }}">
                                         <img class="me-2"
-                                            src="{{ env('ImagePath') . '/admin/assets/img/icons/purchase1.svg' }}"
+                                            src="{{ image_path('admin/assets/img/icons/purchase1.svg') }}"
                                             alt="Job Cards Icon">
                                         All Job cards (Bills)
                                     </a>
@@ -320,7 +320,7 @@
                                 <li>
                                     <a class="dropdown-item" href="{{ route('job_card.create') }}">
                                         <img class="me-2"
-                                            src="{{ env('ImagePath') . '/admin/assets/img/icons/purchase1.svg' }}"
+                                            src="{{ image_path('admin/assets/img/icons/purchase1.svg') }}"
                                             alt="Job Cards Icon">
                                         New Job cards (Bills)
                                     </a>
@@ -416,7 +416,7 @@
             <li class="nav-item dropdown has-arrow main-drop">
                 <a href="javascript:void(0);" class="dropdown-toggle nav-link userset" data-bs-toggle="dropdown">
                     <span class="user-img"><img
-                            src="{{ !empty($admin) && !empty($admin->profile_image) ? env('ImagePath') . 'storage/' . $admin->profile_image : env('ImagePath') . '/admin/assets/img/customer/customer5.jpg' }}"
+                            src="{{ !empty($admin) && !empty($admin->profile_image) ? image_path('storage/' . $admin->profile_image) : image_path('admin/assets/img/customer/customer5.jpg') }}"
                             alt="" style="height: 40px;">
                         <span class="status online"></span></span>
                 </a>
@@ -424,7 +424,7 @@
                     <div class="profilename">
                         <div class="profileset">
                             <span class="user-img">
-                                <img src="{{ !empty($admin) && !empty($admin->profile_image) ? env('ImagePath') . 'storage/' . $admin->profile_image : env('ImagePath') . '/admin/assets/img/customer/customer5.jpg' }}"
+                                <img src="{{ !empty($admin) && !empty($admin->profile_image) ? image_path('storage/' . $admin->profile_image) : image_path('admin/assets/img/customer/customer5.jpg') }}"
                                     alt="">
                             </span>
                             <span class="status online"></span></span>
@@ -450,7 +450,7 @@
                             @endif
                         @endif
                         <a class="dropdown-item logout pb-0" href="{{ route('logout') }}" onclick="localStorage.removeItem('authToken'); localStorage.removeItem('selectedSubAdminId');"><img
-                                src="{{ env('ImagePath') . '/admin/assets/img/icons/log-out.svg' }}" class="me-2"
+                                src="{{ image_path('admin/assets/img/icons/log-out.svg') }}" class="me-2"
                                 alt="img">Logout</a>
                     </div>
                 </div>
