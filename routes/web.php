@@ -185,6 +185,25 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/product-detail/{id}', [ProductController::class, 'product_detail'])->name('product.detail');
         Route::get('/import-product', [ProductController::class, 'product_import'])->name('product.import');
         Route::get('/product-view/{id}', [ProductController::class, 'product_view'])->name('product.view');
+        Route::post('/api/update-product-barcode-info', function (\Illuminate\Http\Request $request) {
+            if ($request->product_id) {
+                $product = \App\Models\Product::find($request->product_id);
+                if ($product) {
+                    if ($request->has('barcode') && $request->barcode) {
+                        $rawBarcodeStr = (string) $request->barcode;
+                        $bcList = array_values(array_filter(array_map('trim', explode(',', $rawBarcodeStr))));
+                        if (!empty($bcList)) {
+                            $product->barcode = $bcList[0];
+                        }
+                    }
+                    if ($request->has('price') && $request->price !== null && $request->price !== '') {
+                        $product->price = $request->price;
+                    }
+                    try { $product->save(); } catch (\Throwable $e) {}
+                }
+            }
+            return response()->json(['status' => true, 'message' => 'Barcode info updated successfully']);
+        });
 
         // purchase
         // Route::get('/purchase', [ProductController::class, 'product_list'])->name('Product.list');
