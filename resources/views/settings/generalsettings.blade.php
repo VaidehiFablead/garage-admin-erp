@@ -85,6 +85,15 @@
             content: "Dashboard";
         }
 
+        #barcode-tab::before {
+            content: "\f02a";
+            margin-right: 6px;
+        }
+
+        #barcode-tab::after {
+            content: "Barcode Setting";
+        }
+
         .settings-tabs .nav-link i {
             color: #98a2b3;
             font-size: 14px;
@@ -272,6 +281,12 @@
                         <a class="nav-link" id="dashboard-tab" data-toggle="tab" href="#dashboard-settings"
                             role="tab" aria-controls="dashboard-settings" aria-selected="false">
                             📊 Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="barcode-tab" data-toggle="tab" href="#barcode-settings"
+                            role="tab" aria-controls="barcode-settings" aria-selected="false">
+                            <i class="fa fa-barcode me-1"></i> Barcode Setting
                         </a>
                     </li>
                     <!-- <li class="nav-item" role="presentation">
@@ -999,6 +1014,50 @@
                         </div>
                     </div>
 
+                    <!-- ================= BARCODE SETTINGS TAB ================= -->
+                    <div class="tab-pane fade" id="barcode-settings" role="tabpanel" aria-labelledby="barcode-tab">
+                        <div class="row">
+                            <div class="col-lg-3 col-sm-6 col-12">
+                                <div class="form-group">
+                                    <label>Barcode Type</label>
+                                    <select id="barcode_type" name="barcode_type" class="form-select">
+                                        <option value="barcode">Barcode</option>
+                                        <option value="qrcode">QR Code</option>
+                                    </select>
+                                    <small class="text-muted">Choose between barcode or QR code format.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-12">
+                                <div class="form-group">
+                                    <label>Barcode Setting Type</label>
+                                    <select id="barcode_setting_type" name="barcode_setting_type" class="form-select">
+                                        <option value="simple">Simple</option>
+                                        <option value="detailed">Detailed</option>
+                                    </select>
+                                    <small class="text-muted">Choose simple barcode or detailed barcode output.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-12 d-none" id="barcodeDetailWrapper">
+                                <div class="form-group">
+                                    <label>Detailed Barcode Format</label>
+                                    <select id="barcode_detail_option" name="barcode_detail_option" class="form-select">
+                                        <option value="long">Long</option>
+                                        <option value="short">Short</option>
+                                    </select>
+                                    <small class="text-muted">Shown only when Barcode Setting Type is Detailed.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 mt-4">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" id="saveBarcodeSettings">
+                                    Save Barcode Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
         </div>
 
     </div>
@@ -1146,6 +1205,21 @@
                             $("#show_hr_payroll_snapshot").val(response.settings.show_hr_payroll_snapshot ?? 1);
                             $("#show_hr_attendance_watch").val(response.settings.show_hr_attendance_watch ?? 1);
                             $("#show_hr_payroll_status").val(response.settings.show_hr_payroll_status ?? 1);
+
+                            // Barcode settings
+                            $("#barcode_type").val(
+                                response.settings.barcode_type === null || response.settings.barcode_type === undefined || response.settings.barcode_type === '' ?
+                                'barcode' : response.settings.barcode_type
+                            );
+                            $("#barcode_setting_type").val(
+                                response.settings.barcode_setting_type === null || response.settings.barcode_setting_type === undefined || response.settings.barcode_setting_type === '' ?
+                                'simple' : response.settings.barcode_setting_type
+                            );
+                            $("#barcode_detail_option").val(
+                                response.settings.barcode_detail_option === null || response.settings.barcode_detail_option === undefined || response.settings.barcode_detail_option === '' ?
+                                'long' : response.settings.barcode_detail_option
+                            );
+                            toggleBarcodeDetailOption();
                         } else {
                             console.warn("⚠️ No settings returned from backend:", response);
                         }
@@ -1221,6 +1295,16 @@ $("#show_hr_dashboard").on("change", function () {
 // Initial Load
 toggleERPSubSections();
 toggleHRSubSections();
+
+            function toggleBarcodeDetailOption() {
+                const isDetailed = $("#barcode_setting_type").val() === "detailed";
+                $("#barcodeDetailWrapper").toggleClass("d-none", !isDetailed);
+                $("#barcode_detail_option").prop("disabled", !isDetailed);
+            }
+
+            $("#barcode_setting_type").on("change", function() {
+                toggleBarcodeDetailOption();
+            });
 
             loadGeneralSettings(); // Load on page load
 
@@ -1755,6 +1839,60 @@ toggleHRSubSections();
                     },
                     complete: function() {
                         $button.removeClass("disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================== BARCODE SETTINGS SAVE ==================
+            $("#saveBarcodeSettings").on("click", function(e) {
+                e.preventDefault();
+                const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+                const authToken = localStorage.getItem("authToken");
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                $button.addClass("disabled").attr("aria-disabled", "true").html(
+                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...'
+                );
+
+                const data = {
+                    barcode_type: $("#barcode_type").val(),
+                    barcode_setting_type: $("#barcode_setting_type").val(),
+                    _token: "{{ csrf_token() }}"
+                };
+
+                if (data.barcode_setting_type === "detailed") {
+                    data.barcode_detail_option = $("#barcode_detail_option").val();
+                }
+
+                if (selectedSubAdminId) {
+                    data.selectedSubAdminId = selectedSubAdminId;
+                }
+
+                $.ajax({
+                    url: "{{ route('barcode-settings.update') }}",
+                    type: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + authToken,
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    data: data,
+                    success: function(response) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: response.message || "Barcode settings updated successfully!",
+                            icon: "success",
+                            confirmButtonText: "OK",
+                            confirmButtonColor: "#ff9f43",
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) ||
+                            "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
                     }
                 });
             });
