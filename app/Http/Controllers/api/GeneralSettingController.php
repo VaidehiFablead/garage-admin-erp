@@ -327,4 +327,81 @@ class GeneralSettingController extends Controller
             'branch_id' => $branchId
         ]);
     }
+
+    public function updateOrderFormatSettings(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            if ($subAdmin) {
+                $selectedSubAdminId = $subAdmin->id;
+            } else {
+                $selectedSubAdminId = $userBranchId;
+            }
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'with_gst_format'           => 'nullable|string|max:100',
+            'without_gst_format'        => 'nullable|string|max:100',
+            'rental_format'             => 'nullable|string|max:100',
+            'advance_payment_format'    => 'nullable|string|max:100',
+            'quotation_format'          => 'nullable|string|max:100',
+            'quotation_with_gst_format' => 'nullable|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+
+        if ($request->has('with_gst_format')) {
+            $settings->with_gst_format = $request->with_gst_format;
+        }
+        if ($request->has('without_gst_format')) {
+            $settings->without_gst_format = $request->without_gst_format;
+        }
+        if ($request->has('rental_format')) {
+            $settings->rental_format = $request->rental_format;
+        }
+        if ($request->has('advance_payment_format')) {
+            $settings->advance_payment_format = $request->advance_payment_format;
+        }
+        if ($request->has('quotation_format')) {
+            $settings->quotation_format = $request->quotation_format;
+        }
+        if ($request->has('quotation_with_gst_format')) {
+            $settings->quotation_with_gst_format = $request->quotation_with_gst_format;
+        }
+
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Order number format updated successfully',
+            'settings' => $settings,
+            'branch_id' => $selectedSubAdminId,
+        ]);
+    }
 }
