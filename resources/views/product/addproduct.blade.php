@@ -3,8 +3,23 @@
 @section('title', 'Product Add')
 
 @section('content')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
+        .form-label-icon {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-label-icon i {
+            color: #ff9f43;
+            font-size: 13px;
+            width: 14px;
+            text-align: center;
+        }
         @media screen and (max-width: 768px) {
             .form-group {
                 margin-bottom: 10px !important
@@ -269,7 +284,7 @@
 
                         <div class="col-lg-6 col-sm-6 col-12">
                             <div class="form-group">
-                                <label><i class="fa-solid fa-qrcode me-1"></i> Barcode</label>
+                                <label class="form-label-icon"><i class="fa-solid fa-qrcode fas fa-qrcode"></i> Barcode</label>
                                 <div id="barcode-container">
                                     <div class="barcode-input-group mb-2 d-flex flex-wrap gap-2">
                                         <input type="text" id="barcode-input-field" class="form-control barcode-input"
@@ -280,7 +295,7 @@
                                             style="background:#ff9f43; color:#fff; border:none; border-radius:6px; padding:8px 12px; font-weight:600;">Auto</button>
                                         <button type="button" class="barcode-scan-btn scan-barcode-btn"
                                             id="openBarcodeScanner" title="Scan Barcode">
-                                            <i class="fa-solid fa-camera"></i>
+                                            <i class="fa-solid fa-camera fas fa-camera"></i>
                                         </button>
                                     </div>
                                     <div id="barcode-badges" class="d-flex flex-wrap gap-2 mt-2">
