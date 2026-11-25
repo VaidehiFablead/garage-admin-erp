@@ -193,6 +193,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/dashboard-settings/update', [GeneralSettingController::class, 'updateDashboardSettings'])->name('general-dashboard-settings.update');
     Route::post('/barcode-settings/update', [GeneralSettingController::class, 'updateBarcodeSettings'])->name('barcode-settings.update');
     Route::post('/sales-settings/update', [GeneralSettingController::class, 'updateBarcodeSettings'])->name('sales-settings.update');
+    Route::post('/order-format-settings/update', [GeneralSettingController::class, 'updateOrderFormatSettings'])->name('order-format-settings.update');
 
     // Route::post('/purchase_order', [PurchaseController::class, 'purchase_order'])->name('purchase_order');
     // Route::post('/purchase_order1', [PurchaseController::class, 'purchase_order1'])->name('purchase_order1');

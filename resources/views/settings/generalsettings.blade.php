@@ -3,6 +3,12 @@
 @section('title', 'Shop Settings')
 
 @section('content')
+@php
+    $currentSubAdminId = session('selectedSubAdminId');
+    $currentUser = Auth::user();
+    $currentRole = $currentUser ? strtolower($currentUser->role) : '';
+    $isSubAdminBranch = (!empty($currentSubAdminId) && $currentSubAdminId != 1) || ($currentRole === 'sub-admin');
+@endphp
     <style>
         @media screen and (max-width: 768px) {
             .form-group {
@@ -87,11 +93,18 @@
 
         #barcode-tab::before {
             content: "\f02a";
-            margin-right: 6px;
         }
 
         #barcode-tab::after {
             content: "Barcode Setting";
+        }
+
+        #order-format-tab::before {
+            content: "\f0cb";
+        }
+
+        #order-format-tab::after {
+            content: "Order No Format";
         }
 
         .settings-tabs .nav-link i {
@@ -286,7 +299,13 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="barcode-tab" data-toggle="tab" href="#barcode-settings"
                             role="tab" aria-controls="barcode-settings" aria-selected="false">
-                            <i class="fa fa-barcode me-1"></i> Barcode Setting
+                            Barcode Setting
+                        </a>
+                    </li>
+                    <li class="nav-item sub-admin-only-tab" role="presentation" style="{{ $isSubAdminBranch ? '' : 'display: none !important;' }}">
+                        <a class="nav-link" id="order-format-tab" data-toggle="tab" data-bs-toggle="tab" href="#order-format-settings"
+                            role="tab" aria-controls="order-format-settings" aria-selected="false">
+                            Order No Format
                         </a>
                     </li>
                     <!-- <li class="nav-item" role="presentation">
@@ -1058,8 +1077,210 @@
                         </div>
                     </div>
 
+                    <!-- ================= ORDER NO FORMAT TAB ================= -->
+                    <div class="tab-pane fade" id="order-format-settings" role="tabpanel" aria-labelledby="order-format-tab">
+                        <div class="order-format-container mt-2">
+                            <!-- 1. With GST Bill No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">With GST Bill No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_with_gst" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">INV-2026-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="with_gst" data-format-title="With GST Bill No" data-default-format="INV-{YYYY}-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Without GST Bill No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">Without GST Bill No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_without_gst" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">W-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="without_gst" data-format-title="Without GST Bill No" data-default-format="W-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Rental Bill No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-truck-loading"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">Rental Bill No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_rental" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">R-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="rental" data-format-title="Rental Bill No" data-default-format="R-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 4. Advance Receipt No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-receipt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">Advance Receipt No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_advance_payment" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">ADV-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="advance_payment" data-format-title="Advance Receipt No" data-default-format="ADV-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 5. Quotation No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">Quotation No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_quotation" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">Q-2026-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="quotation" data-format-title="Quotation No" data-default-format="Q-{YYYY}-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 6. Quotation with GST No Preview -->
+                            <div class="order-format-card d-flex align-items-center justify-content-between p-3 mb-3" style="border: 1px solid #ffd8af; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                                <div class="d-flex align-items-center">
+                                    <div class="order-format-icon me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px; border-radius: 8px; background: #fff3e6; color: #ff9f43; font-size: 20px;">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                            <span style="font-weight: 600; color: #333; font-size: 14px;">Quotation with GST No Preview:</span>
+                                            <span class="badge-order-preview" id="preview_badge_quotation_with_gst" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: #fffaf5; font-weight: 700; padding: 3px 12px; border-radius: 6px; font-size: 13px;">QGST-2026-0001</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #888;">
+                                            Supported tags: <code style="color: #666;">{NUMBER}</code>, <code style="color: #666;">{0000}</code>, <code style="color: #666;">{YYYY}</code>, <code style="color: #666;">{YY}</code>, <code style="color: #666;">{MM}</code>, <code style="color: #666;">{DD}</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-edit-format" data-bs-toggle="modal" data-bs-target="#editOrderFormatModal" data-toggle="modal" data-target="#editOrderFormatModal" data-format-key="quotation_with_gst" data-format-title="Quotation with GST No" data-default-format="QGST-{YYYY}-{0000}" style="border: 1.5px solid #ff9f43; color: #ff9f43; background: transparent; font-weight: 600; border-radius: 6px; padding: 6px 16px; font-size: 13px;">
+                                        + Edit Format
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
         </div>
 
+    </div>
+
+    <!-- ================= EDIT ORDER NO FORMAT PATTERN MODAL ================= -->
+    <div class="modal fade" id="editOrderFormatModal" tabindex="-1" aria-labelledby="editOrderFormatModalLabel" aria-hidden="true" style="z-index: 1065;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden;">
+                <div class="modal-header d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #f1f5f9; padding: 18px 24px;">
+                    <div class="d-flex align-items-center">
+                        <div style="background: #fff8eb; width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #ff9f43; font-size: 18px; margin-right: 12px;">
+                            <i class="fas fa-list-ul"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold" id="modal_format_title_text" style="color: #1e293b; font-size: 18px; margin-bottom: 0;">
+                            Add With GST Bill No Format
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close-custom" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close" style="border: none; background: transparent; font-size: 22px; line-height: 1; color: #ef4444; font-weight: 700; cursor: pointer; padding: 0 4px;">
+                        &times;
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 18px 24px 24px 24px;">
+                    <input type="hidden" id="modal_format_key">
+                    
+                    <p id="modal_format_description" class="text-muted mb-3" style="font-size: 13px; color: #64748b; line-height: 1.5;">
+                        Enter a pattern with custom prefix, symbols, and tags to format sale bill order numbers.
+                    </p>
+
+                    <!-- Order No Format Pattern Outline Input Box -->
+                    <div class="position-relative mt-3 mb-4" style="border: 1.5px solid #64748b; border-radius: 8px; padding: 10px 16px;">
+                        <span style="position: absolute; top: -10px; left: 14px; background: #fff; padding: 0 6px; font-size: 12px; font-weight: 600; color: #64748b;">Order No Format Pattern</span>
+                        <input type="text" id="modal_format_input" class="w-100" style="border: none; outline: none; font-size: 15px; font-weight: 600; color: #334155; background: transparent;" value="INV-{YYYY}-{0000}" placeholder="INV-{YYYY}-{0000}">
+                    </div>
+
+                    <!-- Quick Insert Tags -->
+                    <div class="mb-2" style="font-size: 13px; font-weight: 600; color: #334155;">Quick Insert Tags:</div>
+                    <div class="d-flex flex-wrap gap-2 mb-4" id="format_tag_buttons">
+                        <button type="button" class="btn btn-tag-insert" data-tag="{NUMBER}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {NUMBER} (1)</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{0000}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {0000} (0001)</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{00000}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {00000} (00001)</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{YYYY}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {YYYY} ({{ date('Y') }})</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{YY}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {YY} ({{ date('y') }})</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{MM}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {MM} ({{ date('m') }})</button>
+                        <button type="button" class="btn btn-tag-insert" data-tag="{DD}" style="background: #f0f7ff; border: 1px solid #d0e3ff; color: #0284c7; border-radius: 6px; font-weight: 600; font-size: 12.5px; padding: 6px 12px; cursor: pointer;">+ {DD} ({{ date('d') }})</button>
+                    </div>
+
+                    <!-- Live Preview Box -->
+                    <div class="d-flex align-items-center p-3 mb-4 rounded" style="background: #fffcf6; border: 1.5px solid #fed7aa; border-radius: 8px;">
+                        <i class="fas fa-eye me-2" style="color: #f59e0b; font-size: 15px;"></i>
+                        <span style="font-weight: 600; color: #475569; font-size: 13.5px; margin-right: 6px;">Live Preview:</span>
+                        <span id="modal_live_preview_text" style="color: #f59e0b; font-weight: 700; font-size: 14.5px;">INV-{{ date('Y') }}-0001</span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex align-items-center justify-content-between mt-3">
+                        <button type="button" class="btn" data-bs-dismiss="modal" data-dismiss="modal" style="background: #fff; border: 1.5px solid #e2e8f0; color: #475569; font-weight: 600; font-size: 13.5px; border-radius: 6px; padding: 9px 34px;">Cancel</button>
+                        <button type="button" class="btn text-white fw-bold" id="btn_save_order_format" style="background: #ff9f43; border: none; font-size: 13.5px; border-radius: 6px; padding: 9px 24px; box-shadow: 0 2px 5px rgba(255,159,67,0.3);">Add & Select Format</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -1220,6 +1441,21 @@
                                 'long' : response.settings.barcode_detail_option
                             );
                             toggleBarcodeDetailOption();
+
+                            // Order Number Format Settings
+                            window.orderFormats = window.orderFormats || {};
+                            window.orderFormats.with_gst = response.settings.with_gst_format || 'INV-{YYYY}-{0000}';
+                            window.orderFormats.without_gst = response.settings.without_gst_format || 'W-{0000}';
+                            window.orderFormats.rental = response.settings.rental_format || 'R-{0000}';
+                            window.orderFormats.advance_payment = response.settings.advance_payment_format || 'ADV-{0000}';
+                            window.orderFormats.quotation = response.settings.quotation_format || 'Q-{YYYY}-{0000}';
+                            window.orderFormats.quotation_with_gst = response.settings.quotation_with_gst_format || 'QGST-{YYYY}-{0000}';
+                            if (typeof renderAllOrderFormatPreviews === 'function') {
+                                renderAllOrderFormatPreviews();
+                            }
+                            if (typeof checkSubAdminBranch === 'function') {
+                                checkSubAdminBranch();
+                            }
                         } else {
                             console.warn("⚠️ No settings returned from backend:", response);
                         }
@@ -1890,6 +2126,301 @@ toggleHRSubSections();
                     error: function(xhr) {
                         Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) ||
                             "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================= SUB-ADMIN BRANCH TAB VISIBILITY =================
+            function checkSubAdminBranch() {
+                const subId = localStorage.getItem("selectedSubAdminId");
+                const uRole = (localStorage.getItem("userRole") || "{{ Auth::user()->role ?? '' }}").toLowerCase();
+                const isSub = (subId && subId !== "1" && subId !== "null" && subId !== "") || (uRole === 'sub-admin');
+
+                if (isSub) {
+                    $('.sub-admin-only-tab').show();
+                } else {
+                    $('.sub-admin-only-tab').hide();
+                    if ($('#order-format-tab').hasClass('active')) {
+                        $('#shop-tab').tab('show');
+                    }
+                }
+            }
+            checkSubAdminBranch();
+
+            // ================= ORDER NO FORMAT LOGIC =================
+            const defaultOrderFormats = {
+                with_gst: 'INV-{YYYY}-{0000}',
+                without_gst: 'W-{0000}',
+                rental: 'R-{0000}',
+                advance_payment: 'ADV-{0000}',
+                quotation: 'Q-{YYYY}-{0000}',
+                quotation_with_gst: 'QGST-{YYYY}-{0000}'
+            };
+
+            window.orderFormats = window.orderFormats || Object.assign({}, defaultOrderFormats);
+
+            const formatDescriptions = {
+                with_gst: 'Enter a pattern with custom prefix, symbols, and tags to format sale bill order numbers.',
+                without_gst: 'Enter a pattern with custom prefix, symbols, and tags to format without GST bill numbers.',
+                rental: 'Enter a pattern with custom prefix, symbols, and tags to format rental order numbers.',
+                advance_payment: 'Enter a pattern with custom prefix, symbols, and tags to format advance receipt numbers.',
+                quotation: 'Enter a pattern with custom prefix, symbols, and tags to format quotation numbers.',
+                quotation_with_gst: 'Enter a pattern with custom prefix, symbols, and tags to format quotation with GST numbers.'
+            };
+
+            function evaluateOrderFormatPreview(formatStr, sampleNum = 1) {
+                if (!formatStr || String(formatStr).trim() === '') return '';
+                const now = new Date();
+                const yyyy = String(now.getFullYear());
+                const yy = yyyy.slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                
+                let result = String(formatStr);
+                result = result.replace(/\{YYYY\}/g, yyyy);
+                result = result.replace(/\{YY\}/g, yy);
+                result = result.replace(/\{MM\}/g, mm);
+                result = result.replace(/\{DD\}/g, dd);
+                
+                result = result.replace(/\{00000\}/g, String(sampleNum).padStart(5, '0'));
+                result = result.replace(/\{0000\}/g, String(sampleNum).padStart(4, '0'));
+                result = result.replace(/\{000\}/g, String(sampleNum).padStart(3, '0'));
+                result = result.replace(/\{00\}/g, String(sampleNum).padStart(2, '0'));
+                result = result.replace(/\{0\}/g, String(sampleNum));
+                result = result.replace(/\{1\}/g, String(sampleNum));
+                result = result.replace(/\{NUMBER\}/g, String(sampleNum));
+                
+                return result;
+            }
+
+            function renderAllOrderFormatPreviews() {
+                $("#preview_badge_with_gst").text(evaluateOrderFormatPreview(window.orderFormats.with_gst || defaultOrderFormats.with_gst));
+                $("#preview_badge_without_gst").text(evaluateOrderFormatPreview(window.orderFormats.without_gst || defaultOrderFormats.without_gst));
+                $("#preview_badge_rental").text(evaluateOrderFormatPreview(window.orderFormats.rental || defaultOrderFormats.rental));
+                $("#preview_badge_advance_payment").text(evaluateOrderFormatPreview(window.orderFormats.advance_payment || defaultOrderFormats.advance_payment));
+                $("#preview_badge_quotation").text(evaluateOrderFormatPreview(window.orderFormats.quotation || defaultOrderFormats.quotation));
+                $("#preview_badge_quotation_with_gst").text(evaluateOrderFormatPreview(window.orderFormats.quotation_with_gst || defaultOrderFormats.quotation_with_gst));
+            }
+
+            // Initial render of badges
+            renderAllOrderFormatPreviews();
+
+            let modalFormatCursorPos = null;
+
+            function populateOrderFormatModal(key, title, defaultFormat) {
+                const fallbackDefault = defaultFormat || defaultOrderFormats[key] || 'INV-{YYYY}-{0000}';
+                const currentFormat = (window.orderFormats && window.orderFormats[key] !== undefined && window.orderFormats[key] !== null && window.orderFormats[key] !== '') 
+                    ? window.orderFormats[key] 
+                    : fallbackDefault;
+
+                const now = new Date();
+                const currentYYYY = now.getFullYear();
+                const currentYY = String(currentYYYY).slice(-2);
+                const currentMM = String(now.getMonth() + 1).padStart(2, '0');
+                const currentDD = String(now.getDate()).padStart(2, '0');
+
+                // Dynamically update quick tag button text
+                $(`.btn-tag-insert[data-tag="{YYYY}"]`).text(`+ {YYYY} (${currentYYYY})`);
+                $(`.btn-tag-insert[data-tag="{YY}"]`).text(`+ {YY} (${currentYY})`);
+                $(`.btn-tag-insert[data-tag="{MM}"]`).text(`+ {MM} (${currentMM})`);
+                $(`.btn-tag-insert[data-tag="{DD}"]`).text(`+ {DD} (${currentDD})`);
+
+                $("#modal_format_key").val(key);
+                $("#modal_format_title_text").text("Add " + (title || "Order No") + " Format");
+                $("#modal_format_description").text(formatDescriptions[key] || 'Enter a pattern with custom prefix, symbols, and tags to format order numbers.');
+                $("#modal_format_input").val(currentFormat).attr('placeholder', fallbackDefault);
+                
+                modalFormatCursorPos = currentFormat.length;
+                
+                const previewResult = evaluateOrderFormatPreview(currentFormat);
+                const previewEl = document.getElementById("modal_live_preview_text");
+                if (previewEl) {
+                    previewEl.innerText = previewResult;
+                }
+                $("#modal_live_preview_text").text(previewResult);
+            }
+
+            function openOrderFormatModal() {
+                const modalEl = document.getElementById('editOrderFormatModal');
+                if (!modalEl) return;
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modalInstance.show();
+                } else if (typeof $ !== 'undefined' && typeof $(modalEl).modal === 'function') {
+                    $(modalEl).modal('show');
+                }
+            }
+
+            function closeOrderFormatModal() {
+                const modalEl = document.getElementById('editOrderFormatModal');
+                if (!modalEl) return;
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modalInstance.hide();
+                } else if (typeof $ !== 'undefined' && typeof $(modalEl).modal === 'function') {
+                    $(modalEl).modal('hide');
+                }
+            }
+
+            // Click on + Edit Format button
+            $(document).on("click", ".btn-edit-format", function(e) {
+                const key = $(this).data("format-key") || $(this).attr("data-format-key");
+                const title = $(this).data("format-title") || $(this).attr("data-format-title");
+                const defaultFormat = $(this).data("default-format") || $(this).attr("data-default-format");
+
+                populateOrderFormatModal(key, title, defaultFormat);
+                openOrderFormatModal();
+            });
+
+            // Handle bootstrap modal show event
+            $('#editOrderFormatModal').on('show.bs.modal', function(e) {
+                const triggerBtn = $(e.relatedTarget);
+                if (triggerBtn && triggerBtn.length && triggerBtn.hasClass('btn-edit-format')) {
+                    const key = triggerBtn.data("format-key") || triggerBtn.attr("data-format-key");
+                    const title = triggerBtn.data("format-title") || triggerBtn.attr("data-format-title");
+                    const defaultFormat = triggerBtn.data("default-format") || triggerBtn.attr("data-default-format");
+                    populateOrderFormatModal(key, title, defaultFormat);
+                }
+            });
+
+            // Focus and set cursor to end when modal is fully displayed
+            $('#editOrderFormatModal').on('shown.bs.modal', function() {
+                const input = document.getElementById('modal_format_input');
+                if (input) {
+                    const len = input.value.length;
+                    input.focus();
+                    try {
+                        input.setSelectionRange(len, len);
+                    } catch (e) {}
+                    modalFormatCursorPos = len;
+                }
+            });
+
+            // Close modal triggers
+            $(document).on("click", "#editOrderFormatModal [data-bs-dismiss='modal'], #editOrderFormatModal [data-dismiss='modal'], #editOrderFormatModal .btn-close-custom", function(e) {
+                e.preventDefault();
+                closeOrderFormatModal();
+            });
+
+            // Track cursor position and update live preview in real-time as user types, pastes, or moves cursor
+            $(document).on("input keyup mouseup select", "#modal_format_input", function() {
+                if (this.selectionStart !== null && this.selectionStart !== undefined) {
+                    modalFormatCursorPos = this.selectionStart;
+                }
+                const previewResult = evaluateOrderFormatPreview(this.value);
+                const previewEl = document.getElementById("modal_live_preview_text");
+                if (previewEl) {
+                    previewEl.innerText = previewResult;
+                }
+                $("#modal_live_preview_text").text(previewResult);
+            });
+
+            // Function to insert tag into input pattern
+            function insertOrderFormatTag(tag) {
+                if (!tag) return;
+                const input = document.getElementById("modal_format_input");
+                if (!input) return;
+
+                const currentVal = input.value || '';
+                let startPos = currentVal.length;
+                let endPos = currentVal.length;
+
+                if (document.activeElement === input && input.selectionStart !== null && input.selectionStart !== undefined) {
+                    startPos = input.selectionStart;
+                    endPos = input.selectionEnd !== null ? input.selectionEnd : startPos;
+                } else if (modalFormatCursorPos !== null && modalFormatCursorPos !== undefined && !isNaN(modalFormatCursorPos)) {
+                    startPos = modalFormatCursorPos;
+                    endPos = modalFormatCursorPos;
+                }
+
+                if (startPos < 0 || startPos > currentVal.length || isNaN(startPos)) {
+                    startPos = currentVal.length;
+                    endPos = currentVal.length;
+                }
+                if (endPos < startPos || endPos > currentVal.length || isNaN(endPos)) {
+                    endPos = startPos;
+                }
+
+                const newVal = currentVal.substring(0, startPos) + tag + currentVal.substring(endPos);
+                input.value = newVal;
+
+                const newCursorPos = startPos + tag.length;
+                modalFormatCursorPos = newCursorPos;
+
+                input.focus();
+                try {
+                    input.setSelectionRange(newCursorPos, newCursorPos);
+                } catch (err) {}
+
+                // Update Live Preview instantly
+                const previewResult = evaluateOrderFormatPreview(newVal);
+                const previewEl = document.getElementById("modal_live_preview_text");
+                if (previewEl) {
+                    previewEl.innerText = previewResult;
+                }
+                $("#modal_live_preview_text").text(previewResult);
+            }
+
+            // Expose globally
+            window.insertOrderFormatTag = insertOrderFormatTag;
+
+            // Insert tag at cursor position when quick insert tag button is clicked
+            $(document).on("click", ".btn-tag-insert", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const tag = $(this).data("tag") || $(this).attr("data-tag");
+                if (tag) {
+                    insertOrderFormatTag(tag);
+                }
+            });
+
+            // Save Format via AJAX
+            $("#btn_save_order_format").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const key = $("#modal_format_key").val();
+                const formatValue = $("#modal_format_input").val().trim();
+
+                if (!key) return;
+
+                const defaultHtml = $button.html();
+                $button.addClass("disabled").attr("aria-disabled", "true").html(
+                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...'
+                );
+
+                const data = {};
+                data[key + "_format"] = formatValue;
+
+                const currentSubAdminId = localStorage.getItem("selectedSubAdminId");
+                if (currentSubAdminId) {
+                    data.selectedSubAdminId = currentSubAdminId;
+                }
+
+                $.ajax({
+                    url: "{{ route('order-format-settings.update') }}",
+                    type: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + (typeof authToken !== 'undefined' ? authToken : ''),
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    data: data,
+                    success: function(response) {
+                        window.orderFormats[key] = formatValue;
+                        renderAllOrderFormatPreviews();
+                        closeOrderFormatModal();
+                        Swal.fire({
+                            title: "Success!",
+                            text: response.message || "Order number format updated successfully!",
+                            icon: "success",
+                            confirmButtonText: "OK",
+                            confirmButtonColor: "#ff9f43",
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
                     },
                     complete: function() {
                         $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
