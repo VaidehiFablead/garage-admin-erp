@@ -57,15 +57,16 @@
         /* ── 3-Column Barcode Grid (with clear separation between cards) ── */
         .barcode-grid-table {
             width: 100%;
-            border-collapse: separate !important;
-            border-spacing: 3mm 3.5mm !important;
+            border-collapse: collapse;
             table-layout: fixed;
+            margin-top: 1.5mm;
         }
 
         .barcode-grid-table td.grid-col {
             width: 33.333%;
             vertical-align: top;
-            padding: 0 !important;
+            padding: 2mm 3.5mm;
+            box-sizing: border-box;
         }
 
         .barcode-grid-table tr {
@@ -79,11 +80,11 @@
         /* ── Individual Barcode Card ── */
         .label-card {
             width: 100%;
-            height: 31mm;
+            height: 28.5mm;
             border: 1px solid #222;
-            border-radius: 6px;
+            border-radius: 5px;
             background: #fff;
-            padding: 1.5mm 2mm;
+            padding: 1.5mm 1.5mm;
             box-sizing: border-box;
             overflow: hidden;
             page-break-inside: avoid !important;
@@ -91,12 +92,12 @@
 
         .card-company-header {
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 7pt;
             font-weight: bold;
             text-transform: uppercase;
             border-bottom: 1px solid #222;
-            padding-bottom: 1.5px;
-            margin-bottom: 2px;
+            padding-bottom: 1px;
+            margin-bottom: 1.5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -107,7 +108,7 @@
         .card-body-table {
             width: 100%;
             border-collapse: collapse;
-            height: 23mm;
+            height: 20.5mm;
         }
 
         .card-body-table td {
@@ -121,30 +122,30 @@
         }
 
         .card-code-img {
-            max-width: 20mm;
-            max-height: 20mm;
+            max-width: 18mm;
+            max-height: 18mm;
             display: block;
             margin: 0 auto;
         }
 
         .card-code-img.barcode-1d {
             transform: rotate(-90deg);
-            max-height: 18mm;
-            max-width: 15mm;
+            max-height: 16mm;
+            max-width: 13.5mm;
         }
 
         .card-info-col {
             width: 65%;
             vertical-align: top;
-            padding-left: 3px;
+            padding-left: 2px;
         }
 
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 6.8pt;
+            font-size: 6.5pt;
             font-weight: bold;
-            line-height: 1.25;
+            line-height: 1.2;
         }
 
         .details-table td {
@@ -165,14 +166,14 @@
         }
 
         .mrp-val {
-            font-size: 9pt;
+            font-size: 8.5pt;
             font-weight: bold;
         }
 
         .taxes-subtext {
-            font-size: 5pt;
+            font-size: 4.8pt;
             font-weight: bold;
-            margin-top: 1px;
+            margin-top: 0.5px;
             color: #333;
         }
     </style>
