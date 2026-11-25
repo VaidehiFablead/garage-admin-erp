@@ -632,7 +632,8 @@
                 let actionBtns = '';
 
                 let productName = (product.name || '').replace(/"/g, '&quot;');
-                actionBtns += `<a class="btn-icon-mobile print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${product.barcode || ''}" data-name="${productName}" title="Print Barcode">
+                let productBarcode = product.barcode || product.SKU || '';
+                actionBtns += `<a class="btn-icon-mobile print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${productBarcode}" data-name="${productName}" title="Print Barcode">
                     <i class="fas fa-print" style="color: #092C4C; font-size: 16px;"></i>
                 </a>`;
 
@@ -859,7 +860,7 @@
                                     quantityDisplay,
                                     // createdAt,
                                     `
-                                                 <a class="me-3 print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${product.barcode || ''}" data-name="${productName}" title="Print Barcode">
+                                                 <a class="me-3 print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${product.barcode || product.SKU || ''}" data-name="${productName}" title="Print Barcode">
                                                      <i class="fas fa-print" style="color: #092C4C; font-size: 16px;"></i>
                                                  </a>
                                                  @if (app('hasPermission')(1, 'view')) 
@@ -1275,17 +1276,10 @@
             e.stopPropagation();
 
             let productId = $(this).data('id');
-            let barcode = String($(this).data('barcode') || '');
             let name = $(this).data('name') || 'Product';
             let authToken = localStorage.getItem("authToken");
 
-            if (!barcode || barcode.trim() === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No Barcode',
-                    text: 'This product does not have a barcode assigned.',
-                    confirmButtonColor: '#ff9f43'
-                });
+            if (!productId) {
                 return;
             }
 
@@ -1318,19 +1312,23 @@
                         document.body.removeChild(link);
                     } else {
                         Swal.fire({
-                            icon: 'error',
-                            title: 'Failed',
-                            text: response.message || 'Could not generate barcode PDF.',
+                            icon: 'warning',
+                            title: 'No Barcode',
+                            text: response.message || 'This product does not have a barcode assigned.',
                             confirmButtonColor: '#ff9f43'
                         });
                     }
                 },
-                error: function() {
+                error: function(xhr) {
                     Swal.close();
+                    let msg = 'This product does not have a barcode assigned.';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to generate barcode PDF.',
+                        icon: 'warning',
+                        title: 'No Barcode',
+                        text: msg,
                         confirmButtonColor: '#ff9f43'
                     });
                 }

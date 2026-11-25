@@ -108,6 +108,7 @@ class ProductController extends Controller
             'id',
             'name',
             'SKU',
+            'barcode',
             'price',
             'quantity',
             'unit_id',
@@ -132,7 +133,8 @@ class ProductController extends Controller
         $search = $request->search;
         $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")
-              ->orWhere('SKU', 'LIKE', "%{$search}%");
+              ->orWhere('SKU', 'LIKE', "%{$search}%")
+              ->orWhere('barcode', 'LIKE', "%{$search}%");
         });
     }
 
@@ -1479,11 +1481,13 @@ class ProductController extends Controller
         }
 
         foreach ($products as $product) {
-            if (!empty($product->barcode)) {
+            $effectiveBarcode = !empty($product->barcode) ? $product->barcode : (!empty($product->SKU) ? $product->SKU : null);
+            if (!empty($effectiveBarcode)) {
                 $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-                $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                $item['barcode'] = $effectiveBarcode;
+                $item['barcode_image'] = $this->generateBarcodeImage($generator, $effectiveBarcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
                 $item['name'] = $item['display_name'];
-                $item['value'] = $item['barcode'];
+                $item['value'] = $effectiveBarcode;
                 $item['img'] = $item['barcode_image'];
                 $barcodeItems->push((object) $item);
                 $barcodeImages[$item['id']] = $item['barcode_image'];
@@ -1568,11 +1572,14 @@ class ProductController extends Controller
         $generator  = new DNS1D();
         $barcodes   = [];
 
-        if (!empty($product->barcode)) {
+        $primaryBarcode = !empty($product->barcode) ? $product->barcode : (!empty($product->SKU) ? $product->SKU : null);
+
+        if (!empty($primaryBarcode)) {
             $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-            $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
+            $item['barcode'] = $primaryBarcode;
+            $item['barcode_image'] = $this->generateBarcodeImage($generator, $primaryBarcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
             $item['name'] = $item['display_name'];
-            $item['value'] = $item['barcode'];
+            $item['value'] = $primaryBarcode;
             $item['img'] = $item['barcode_image'];
             $barcodes[] = $item;
         }
@@ -1595,6 +1602,13 @@ class ProductController extends Controller
             }
         } catch (\Throwable $e) {
             // Ignore if table query fails
+        }
+
+        if (empty($barcodes)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'This product does not have a barcode or SKU assigned.',
+            ], 400);
         }
 
         $view = $barcodeLayout === 'detailed'
