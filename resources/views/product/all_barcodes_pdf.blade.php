@@ -54,17 +54,18 @@
             color: #111;
         }
 
-        /* ── 3-Column Barcode Grid ── */
+        /* ── 3-Column Barcode Grid (with clear separation between cards) ── */
         .barcode-grid-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate !important;
+            border-spacing: 3mm 3.5mm !important;
             table-layout: fixed;
         }
 
         .barcode-grid-table td.grid-col {
             width: 33.333%;
             vertical-align: top;
-            padding: 1.5mm 1.5mm;
+            padding: 0 !important;
         }
 
         .barcode-grid-table tr {
@@ -114,22 +115,26 @@
         }
 
         .card-code-col {
-            width: 34%;
+            width: 35%;
             vertical-align: middle;
             text-align: center;
-            border-right: 1px solid #eee;
-            padding-right: 2px;
         }
 
         .card-code-img {
-            max-width: 17mm;
-            max-height: 22mm;
+            max-width: 20mm;
+            max-height: 20mm;
             display: block;
             margin: 0 auto;
         }
 
+        .card-code-img.barcode-1d {
+            transform: rotate(-90deg);
+            max-height: 18mm;
+            max-width: 15mm;
+        }
+
         .card-info-col {
-            width: 66%;
+            width: 65%;
             vertical-align: top;
             padding-left: 3px;
         }
@@ -176,6 +181,7 @@
 
     @php
         $currSym = html_entity_decode($settings->currency_symbol ?? '₹', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $isQr = ($barcodeType ?? '') === 'qrcode' || ($barcodeType ?? '') === 'QRCODE';
         $firstPageItems = $products->slice(0, 12);
         $remainingItems = $products->slice(12);
     @endphp
@@ -229,7 +235,7 @@
                                                 $imgSrc = $barcodeImages[$bc->id] ?? ($bc->barcode_image ?? ($bc->img ?? null));
                                             @endphp
                                             @if(!empty($imgSrc))
-                                                <img src="{{ $imgSrc }}" class="card-code-img">
+                                                <img src="{{ $imgSrc }}" class="card-code-img {{ $isQr ? '' : 'barcode-1d' }}">
                                             @endif
                                         </td>
                                         <td class="card-info-col">
@@ -291,7 +297,7 @@
                                                         $imgSrc = $barcodeImages[$bc->id] ?? ($bc->barcode_image ?? ($bc->img ?? null));
                                                     @endphp
                                                     @if(!empty($imgSrc))
-                                                        <img src="{{ $imgSrc }}" class="card-code-img">
+                                                        <img src="{{ $imgSrc }}" class="card-code-img {{ $isQr ? '' : 'barcode-1d' }}">
                                                     @endif
                                                 </td>
                                                 <td class="card-info-col">
