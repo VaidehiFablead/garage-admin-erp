@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Milon\Barcode\DNS1D;
+use Milon\Barcode\DNS2D;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Validation\Rule;
@@ -1051,16 +1052,22 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'error' => 'Unauthorized access to this product.'], 403);
         }
 
-        // Fetch currency settings
-        $settings         = DB::table('settings')->first();
+        // Fetch currency and barcode settings
+        $settings         = DB::table('settings')->where('branch_id', $branchId)->first() ?? DB::table('settings')->first();
         $currencySymbol   = $settings->currency_symbol ?? '₹';
         $currencyPosition = $settings->currency_position ?? 'left';
+        $barcodeType      = $settings->barcode_type ?? 'barcode';
 
-        $barcodeGenerator = new DNS1D();
         $barcodeHtml      = null;
 
         if (! empty($product->barcode)) {
-            $barcodeHtml = $barcodeGenerator->getBarcodeHTML($product->barcode, 'C128');
+            if ($barcodeType === 'qrcode' || $barcodeType === 'QRCODE') {
+                $dns2d = new DNS2D();
+                $barcodeHtml = $dns2d->getBarcodeHTML($product->barcode, 'QRCODE', 3, 3);
+            } else {
+                $barcodeGenerator = new DNS1D();
+                $barcodeHtml = $barcodeGenerator->getBarcodeHTML($product->barcode, 'C128');
+            }
         }
 
         return response()->json([

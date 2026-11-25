@@ -275,4 +275,56 @@ class GeneralSettingController extends Controller
             'message' => 'Dashboard settings updated successfully',
         ]);
     }
+
+    public function updateBarcodeSettings(Request $request)
+    {
+        $authUser = Auth::guard('api')->user();
+
+        $branchId = $authUser->id;
+        if ($authUser->role === 'admin' && $request->filled('selectedSubAdminId') && $request->selectedSubAdminId !== 'null') {
+            $branchId = (int) $request->selectedSubAdminId;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'barcode_type'          => 'nullable|in:barcode,qrcode',
+            'barcode_setting_type'  => 'nullable|in:simple,detailed',
+            'barcode_detail_option' => 'nullable|in:long,short',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::where('branch_id', $branchId)->first();
+        if (!$settings) {
+            $settings = new Setting();
+            $settings->branch_id = $branchId;
+        }
+
+        if ($request->has('barcode_type')) {
+            $settings->barcode_type = $request->barcode_type;
+        }
+        if ($request->has('barcode_setting_type')) {
+            $settings->barcode_setting_type = $request->barcode_setting_type;
+            if ($request->barcode_setting_type === 'simple') {
+                $settings->barcode_detail_option = null;
+            }
+        }
+        if ($request->has('barcode_detail_option') && $request->barcode_setting_type === 'detailed') {
+            $settings->barcode_detail_option = $request->barcode_detail_option;
+        }
+
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Barcode settings updated successfully',
+            'settings' => $settings,
+            'branch_id' => $branchId
+        ]);
+    }
 }
