@@ -1397,7 +1397,7 @@ class ProductController extends Controller
         ];
     }
 
-    private function generateBarcodeImage(DNS1D $generator, string $value, string $layout, ?string $detailOption = null, ?string $barcodeType = 'barcode', bool $vertical = false): string
+    private function generateBarcodeImage(DNS1D $generator, string $value, string $layout, ?string $detailOption = null, ?string $barcodeType = 'barcode'): string
     {
         // If barcode type is QR code, generate QR code instead
         if ($barcodeType === 'qrcode' || $barcodeType === 'QRCODE') {
@@ -1407,26 +1407,14 @@ class ProductController extends Controller
 
         // Generate traditional barcode
         if ($layout === 'detailed' && $detailOption === 'short') {
-            $rawPng = base64_decode($generator->getBarcodePNG($value, 'C128', 1.35, 34));
-        } elseif ($layout === 'detailed' && $detailOption === 'long') {
-            $rawPng = base64_decode($generator->getBarcodePNG($value, 'C128', 1.8, 48));
-        } else {
-            $rawPng = base64_decode($generator->getBarcodePNG($value, 'C128', 1.6, 45));
+            return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 1.35, 34);
         }
 
-        if ($vertical && function_exists('imagerotate')) {
-            $gd = @imagecreatefromstring($rawPng);
-            if ($gd !== false) {
-                $rotated = imagerotate($gd, 90, 0);
-                ob_start();
-                imagepng($rotated);
-                $rawPng = ob_get_clean();
-                imagedestroy($gd);
-                imagedestroy($rotated);
-            }
+        if ($layout === 'detailed' && $detailOption === 'long') {
+            return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 1.8, 48);
         }
 
-        return 'data:image/png;base64,' . base64_encode($rawPng);
+        return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 2, 55);
     }
 
     public function exportAllBarcodesPdf(Request $request)
@@ -1466,7 +1454,7 @@ class ProductController extends Controller
         foreach ($products as $product) {
             if (!empty($product->barcode)) {
                 $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-                $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType, true);
+                $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
                 $item['name'] = $item['display_name'];
                 $item['value'] = $item['barcode'];
                 $item['img'] = $item['barcode_image'];
@@ -1483,7 +1471,7 @@ class ProductController extends Controller
                             $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
                             $item['id'] = $product->id . '_' . $addBc->id;
                             $item['barcode'] = $addBc->barcode;
-                            $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType, true);
+                            $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
                             $item['name'] = $item['display_name'];
                             $item['value'] = $addBc->barcode;
                             $item['img'] = $item['barcode_image'];
@@ -1555,7 +1543,7 @@ class ProductController extends Controller
 
         if (!empty($product->barcode)) {
             $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-            $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType, true);
+            $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
             $item['name'] = $item['display_name'];
             $item['value'] = $item['barcode'];
             $item['img'] = $item['barcode_image'];
@@ -1570,7 +1558,7 @@ class ProductController extends Controller
                     if (!empty($addBc->barcode)) {
                         $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
                         $item['barcode'] = $addBc->barcode;
-                        $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType, true);
+                        $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
                         $item['name'] = $item['display_name'];
                         $item['value'] = $addBc->barcode;
                         $item['img'] = $item['barcode_image'];
