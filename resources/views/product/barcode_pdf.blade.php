@@ -91,8 +91,7 @@
         .left-section img {
             display: block;
             margin: auto;
-            transform: rotate(-90deg);
-            max-height: 28mm;
+            max-height: 26mm;
             max-width: 18mm;
         }
 

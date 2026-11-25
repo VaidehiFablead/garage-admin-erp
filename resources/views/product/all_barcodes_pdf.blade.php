@@ -25,8 +25,7 @@
         /* ── Company Header Section ── */
         .page-header-block {
             width: 100%;
-            padding: 1mm 1mm 2mm 1mm;
-            margin-bottom: 1mm;
+            margin-bottom: 2mm;
         }
 
         .header-table {
@@ -41,15 +40,15 @@
 
         hr.divider {
             height: 1px;
-            background: #bbb;
+            background: #ccc;
             border: none;
-            margin: 4px 0 6px 0;
+            margin: 3px 0 5px 0;
         }
 
         .section-title {
             text-align: center;
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             letter-spacing: 0.5px;
             color: #111;
@@ -65,49 +64,49 @@
         .barcode-grid-table td.grid-col {
             width: 33.333%;
             vertical-align: top;
-            padding: 1mm 1.25mm;
+            padding: 1.5mm 1.5mm;
         }
 
         .barcode-grid-table tr {
-            height: 34mm;
-            page-break-inside: avoid;
+            page-break-inside: avoid !important;
         }
 
-        .barcode-grid-table tr.page-break-before {
-            page-break-before: always;
+        .page-break {
+            page-break-after: always;
         }
 
         /* ── Individual Barcode Card ── */
         .label-card {
             width: 100%;
-            height: 32mm;
+            height: 31mm;
             border: 1px solid #222;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #fff;
             padding: 1.5mm 2mm;
             box-sizing: border-box;
-            page-break-inside: avoid;
             overflow: hidden;
+            page-break-inside: avoid !important;
         }
 
         .card-company-header {
             text-align: center;
-            font-size: 7.5px;
+            font-size: 7.5pt;
             font-weight: bold;
             text-transform: uppercase;
             border-bottom: 1px solid #222;
             padding-bottom: 1.5px;
-            margin-bottom: 2.5px;
+            margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.1;
+            letter-spacing: 0.2px;
         }
 
         .card-body-table {
             width: 100%;
             border-collapse: collapse;
-            height: 24mm;
+            height: 23mm;
         }
 
         .card-body-table td {
@@ -115,26 +114,22 @@
         }
 
         .card-code-col {
-            width: 36%;
+            width: 34%;
             vertical-align: middle;
             text-align: center;
+            border-right: 1px solid #eee;
+            padding-right: 2px;
         }
 
         .card-code-img {
-            max-width: 21mm;
+            max-width: 17mm;
             max-height: 22mm;
             display: block;
             margin: 0 auto;
         }
 
-        .card-code-img.barcode-1d {
-            transform: rotate(-90deg);
-            max-height: 21mm;
-            max-width: 19mm;
-        }
-
         .card-info-col {
-            width: 64%;
+            width: 66%;
             vertical-align: top;
             padding-left: 3px;
         }
@@ -142,7 +137,7 @@
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 6.8px;
+            font-size: 6.8pt;
             font-weight: bold;
             line-height: 1.25;
         }
@@ -153,75 +148,74 @@
         }
 
         .details-table .key {
-            width: 40%;
+            width: 38%;
             text-transform: uppercase;
             white-space: nowrap;
         }
 
         .details-table .val {
-            width: 60%;
+            width: 62%;
             text-transform: uppercase;
             word-break: break-word;
         }
 
         .mrp-val {
-            font-size: 9px;
+            font-size: 9pt;
             font-weight: bold;
         }
 
         .taxes-subtext {
-            font-size: 5px;
+            font-size: 5pt;
             font-weight: bold;
             margin-top: 1px;
-            color: #222;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-    <!-- ── Company Header ── -->
-    <div class="page-header-block">
-        <table class="header-table">
-            <tr>
-                <td style="width: 140px;">
-                    @if(!empty($settings->logo) && file_exists(storage_path('app/public/' . $settings->logo)))
-                        @php
-                            $logoPath = storage_path('app/public/' . $settings->logo);
-                            $logoData = base64_encode(file_get_contents($logoPath));
-                            $logoMime = mime_content_type($logoPath);
-                        @endphp
-                        <img src="data:{{ $logoMime }};base64,{{ $logoData }}" alt="Logo"
-                             style="max-height: 48px; max-width: 130px; object-fit: contain;">
-                    @endif
-                </td>
-                <td style="text-align: right; padding-left: 10px;">
-                    <div style="font-size: 14px; font-weight: bold; text-transform: uppercase; color: #000;">
-                        {{ $settings->name ?? 'COMPANY NAME' }}
-                    </div>
-                    <div style="font-size: 8.5px; color: #444; margin-top: 2px; text-transform: uppercase; line-height: 1.3;">
-                        {{ str_replace(["\r\n", "\r", "\n"], ', ', $settings->address ?? '') }}<br>
-                        @if(!empty($settings->phone))PHONE: {{ $settings->phone }}@endif
-                        @if(!empty($settings->email)) | EMAIL: {{ strtoupper($settings->email) }}@endif
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <hr class="divider">
-        <div class="section-title">All Product Barcodes</div>
-    </div>
-
-    <!-- ── Barcode Labels Grid ── -->
     @php
         $currSym = html_entity_decode($settings->currency_symbol ?? '₹', ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $isQr = ($barcodeType ?? '') === 'qrcode' || ($barcodeType ?? '') === 'QRCODE';
+        $firstPageItems = $products->slice(0, 12);
+        $remainingItems = $products->slice(12);
     @endphp
 
     @if($products->count() > 0)
+        {{-- PAGE 1 (Header + 4 rows × 3 columns = 12 cards) --}}
+        <div class="page-header-block">
+            <table class="header-table">
+                <tr>
+                    <td style="width: 130px;">
+                        @if(!empty($settings->logo) && file_exists(storage_path('app/public/' . $settings->logo)))
+                            @php
+                                $logoPath = storage_path('app/public/' . $settings->logo);
+                                $logoData = base64_encode(file_get_contents($logoPath));
+                                $logoMime = mime_content_type($logoPath);
+                            @endphp
+                            <img src="data:{{ $logoMime }};base64,{{ $logoData }}" alt="Logo"
+                                 style="max-height: 40px; max-width: 120px; object-fit: contain;">
+                        @endif
+                    </td>
+                    <td style="text-align: right; padding-left: 10px;">
+                        <div style="font-size: 13px; font-weight: bold; text-transform: uppercase; color: #000;">
+                            {{ $settings->name ?? 'COMPANY NAME' }}
+                        </div>
+                        <div style="font-size: 8pt; color: #444; margin-top: 2px; text-transform: uppercase; line-height: 1.3;">
+                            {{ str_replace(["\r\n", "\r", "\n"], ', ', $settings->address ?? '') }}<br>
+                            @if(!empty($settings->phone))PHONE: {{ $settings->phone }}@endif
+                            @if(!empty($settings->email)) | EMAIL: {{ strtoupper($settings->email) }}@endif
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <hr class="divider">
+            <div class="section-title">All Product Barcodes</div>
+        </div>
+
         <table class="barcode-grid-table">
-            @foreach($products->chunk(15) as $pageRows)
-                @foreach($pageRows->chunk(3) as $rowIndex => $row)
-                <tr class="{{ $rowIndex === 0 && !$loop->first ? 'page-break-before' : '' }}">
+            @foreach($firstPageItems->chunk(3) as $row)
+                <tr>
                     @foreach($row as $bc)
                         <td class="grid-col">
                             <div class="label-card">
@@ -235,7 +229,7 @@
                                                 $imgSrc = $barcodeImages[$bc->id] ?? ($bc->barcode_image ?? ($bc->img ?? null));
                                             @endphp
                                             @if(!empty($imgSrc))
-                                                <img src="{{ $imgSrc }}" class="card-code-img {{ $isQr ? '' : 'barcode-1d' }}">
+                                                <img src="{{ $imgSrc }}" class="card-code-img">
                                             @endif
                                         </td>
                                         <td class="card-info-col">
@@ -245,12 +239,12 @@
                                                     <td class="val">: {{ strtoupper($bc->name ?? $bc->display_name ?? 'N/A') }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="key">CATAGORY</td>
+                                                    <td class="key">CATEGORY</td>
                                                     <td class="val">: {{ strtoupper($bc->category ?? $bc->category_name ?? ($bc->category->name ?? 'N/A')) }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="key" style="padding-top: 2px;">MRP</td>
-                                                    <td class="val" style="padding-top: 2px;">
+                                                    <td class="key" style="padding-top: 1px;">MRP</td>
+                                                    <td class="val" style="padding-top: 1px;">
                                                         : <span class="mrp-val">
                                                             @if(isset($bc->mrp) && $bc->mrp !== null)
                                                                 {{ $currSym }}{{ number_format((float)$bc->mrp, 2) }}
@@ -274,9 +268,72 @@
                         <td class="grid-col" style="border: none;"></td>
                     @endfor
                 </tr>
-                @endforeach
             @endforeach
         </table>
+
+        {{-- SUBSEQUENT PAGES (5 rows × 3 columns = 15 cards per page) --}}
+        @if($remainingItems->count() > 0)
+            @foreach($remainingItems->chunk(15) as $chunk)
+                <div class="page-break"></div>
+                <table class="barcode-grid-table">
+                    @foreach($chunk->chunk(3) as $row)
+                        <tr>
+                            @foreach($row as $bc)
+                                <td class="grid-col">
+                                    <div class="label-card">
+                                        <div class="card-company-header">
+                                            {{ $settings->name ?? 'COMPANY NAME' }}
+                                        </div>
+                                        <table class="card-body-table">
+                                            <tr>
+                                                <td class="card-code-col">
+                                                    @php
+                                                        $imgSrc = $barcodeImages[$bc->id] ?? ($bc->barcode_image ?? ($bc->img ?? null));
+                                                    @endphp
+                                                    @if(!empty($imgSrc))
+                                                        <img src="{{ $imgSrc }}" class="card-code-img">
+                                                    @endif
+                                                </td>
+                                                <td class="card-info-col">
+                                                    <table class="details-table">
+                                                        <tr>
+                                                            <td class="key">ITEM</td>
+                                                            <td class="val">: {{ strtoupper($bc->name ?? $bc->display_name ?? 'N/A') }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="key">CATEGORY</td>
+                                                            <td class="val">: {{ strtoupper($bc->category ?? $bc->category_name ?? ($bc->category->name ?? 'N/A')) }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="key" style="padding-top: 1px;">MRP</td>
+                                                            <td class="val" style="padding-top: 1px;">
+                                                                : <span class="mrp-val">
+                                                                    @if(isset($bc->mrp) && $bc->mrp !== null)
+                                                                        {{ $currSym }}{{ number_format((float)$bc->mrp, 2) }}
+                                                                    @elseif(isset($bc->price) && $bc->price !== null)
+                                                                        {{ $currSym }}{{ number_format((float)$bc->price, 2) }}
+                                                                    @else
+                                                                        {{ $currSym }}0.00
+                                                                    @endif
+                                                                </span>
+                                                                <div class="taxes-subtext">(INCL. OF ALL TAXES)</div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                            @endforeach
+                            @for($i = count($row); $i < 3; $i++)
+                                <td class="grid-col" style="border: none;"></td>
+                            @endfor
+                        </tr>
+                    @endforeach
+                </table>
+            @endforeach
+        @endif
     @else
         <div style="text-align: center; color: #888; margin-top: 20px;">No products found.</div>
     @endif
