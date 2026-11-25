@@ -31,6 +31,7 @@
 
     <link rel="stylesheet" href="{{ image_path('admin/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ image_path('admin/assets/plugins/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
     <!-- <link rel="stylesheet" href="{{ image_path('admin/assets/css/style.css') }}"> -->
     <!-- Google Font -->

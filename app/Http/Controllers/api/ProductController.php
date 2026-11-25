@@ -616,6 +616,13 @@ class ProductController extends Controller
             return response()->json(['status' => false, 'error' => 'Unauthorized access to this product.'], 403);
         }
 
+        if ($request->filled('barcodes') && is_array($request->barcodes)) {
+            $filteredBarcodes = array_values(array_filter(array_map('trim', $request->barcodes)));
+            if (!empty($filteredBarcodes)) {
+                $request->merge(['barcode' => $filteredBarcodes[0]]);
+            }
+        }
+
         $rules = [
             'product_id'    => 'required|exists:products,id',
             'vendor_id'     => 'nullable|numeric',
@@ -738,6 +745,26 @@ class ProductController extends Controller
             'warranty'      => $validated['warranty'] ?? null,
             'expiry_date'   => $validated['expiry_date'] ?? null,
         ]);
+
+        if ($request->has('barcodes') && is_array($request->barcodes)) {
+            $barcodesList = array_values(array_filter(array_map('trim', $request->barcodes)));
+            try {
+                if (Schema::hasTable('product_barcodes')) {
+                    \App\Models\ProductBarcode::where('product_id', $product->id)->delete();
+                    if (count($barcodesList) > 1) {
+                        for ($i = 1; $i < count($barcodesList); $i++) {
+                            \App\Models\ProductBarcode::create([
+                                'product_id' => $product->id,
+                                'barcode'    => $barcodesList[$i],
+                                'client_uuid' => \Illuminate\Support\Str::uuid(),
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to sync product barcodes: ' . $e->getMessage());
+            }
+        }
 
         /* -------------------------------------------------
      | 8️⃣ Inventory Log
@@ -1263,6 +1290,11 @@ class ProductController extends Controller
         if ($product->branch_id != $branchId) {
             return response()->json(['status' => false, 'error' => 'Unauthorized access to this product.'], 403);
         }
+        try {
+            if (Schema::hasTable('product_barcodes')) {
+                $product->load('productBarcodes');
+            }
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'status'  => true,
