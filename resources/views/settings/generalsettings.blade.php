@@ -165,120 +165,81 @@
         }
 
         /* Modern Multi-step Form Styles */
-        @media screen and (max-width: 991px) {
-            .step-content {
-                display: none;
-            }
-
-            .step-content.active {
-                display: flex; /* Ensure it's flex as it's a row */
-            }
-
-            .mobile-steps {
-                margin-bottom: 25px;
-            }
-
-            .step-btns-wrapper {
-                display: flex;
-                justify-content: space-between;
-                gap: 8px;
-                background: #f8f9fa;
-                padding: 5px;
-                border-radius: 50px;
-                border: 1px solid #e8ebed;
-            }
-
-            .step-btn {
-                background: transparent;
-                color: #637381;
-                border-radius: 50px;
-                flex: 1;
-                font-size: 11px;
-                padding: 10px 5px;
-                border: none;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                white-space: nowrap;
-            }
-
-            .step-btn.active {
-                background: #ff9f43;
-                color: #fff;
-                box-shadow: 0 4px 10px rgba(255, 159, 67, 0.2);
-            }
-
-            .mobile-nav-btns {
-                display: flex;
-                justify-content: space-between;
-                gap: 15px;
-                margin-top: 25px;
-                padding-top: 20px;
-                border-top: 1px solid #f1f1f1;
-            }
-
-            .btn-prev {
-                background: #1B2850;
-                color: #fff;
-                border: none;
-                padding: 10px 25px;
-                border-radius: 8px;
-                font-weight: 600;
-                flex: 1;
-            }
-
-            .btn-next {
-                background: #ff9f43;
-                color: #fff;
-                border: none;
-                padding: 10px 25px;
-                border-radius: 8px;
-                font-weight: 600;
-                flex: 1;
-            }
-
-            .btn-submit-mobile {
-                background: #ff9f43;
-                color: #fff;
-                border: none;
-                padding: 10px 25px;
-                border-radius: 8px;
-                font-weight: 600;
-                flex: 1;
-            }
-
-            /* Hide desktop submit button in shop settings on mobile steps 1 & 2 */
-            #shop-settings .btn-submit:not(.btn-submit-mobile) {
-                display: none !important;
-            }
+        .step-content {
+            display: none;
         }
 
-        @media screen and (min-width: 992px) {
-            .mobile-steps,
-            .mobile-nav-btns {
-                display: none !important;
-            }
+        .step-content.active {
+            display: flex;
+            /* Ensure it's flex as it's a row */
+        }
 
-            .step-content {
-                display: flex !important;
-            }
+        .mobile-steps {
+            margin-bottom: 25px;
+        }
 
-            #shop-settings:not(.active) {
-                display: none !important;
-            }
+        .step-btns-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 50px;
+            border: 1px solid #e8ebed;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
 
-            #shop-settings.active {
-                display: flex;
-                flex-wrap: wrap;
-            }
+        .step-btns-wrapper::-webkit-scrollbar {
+            height: 4px;
+        }
 
-            #shop-settings .step-content {
-                display: contents !important;
-            }
+        .step-btns-wrapper::-webkit-scrollbar-thumb {
+            background-color: #ddd;
+            border-radius: 4px;
+        }
 
-            #shop-settings .desktop-submit {
-                width: 100%;
-                margin-top: 8px;
-            }
+        .step-btn {
+            background: transparent;
+            color: #637381;
+            border-radius: 50px;
+            flex: 1;
+            font-size: 13px;
+            padding: 10px 15px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .step-btn.active {
+            background: #ff9f43;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(255, 159, 67, 0.2);
+        }
+
+        #shop-settings:not(.active) {
+            display: none !important;
+        }
+
+        #shop-settings.active {
+            display: block;
+        }
+
+        /* Dark Mode Overrides for Tabs and Steps */
+        :root[data-theme="dark"] .step-btns-wrapper {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        :root[data-theme="dark"] .step-btn {
+            color: #d1d5db;
+        }
+
+        :root[data-theme="dark"] .step-btn.active {
+            background: #ff9f43;
+            color: #fff;
         }
     </style>
     <div class="content">
@@ -325,199 +286,221 @@
                 <div class="tab-content mt-4" id="settingsTabsContent">
                     <!-- ================= SHOP SETTINGS TAB ================= -->
                     <div class="tab-pane fade show active" id="shop-settings" role="tabpanel" aria-labelledby="shop-tab">
-                <div class="row">
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Shop Name<span class="manitory">*</span></label>
-                            <input type="text" id="shop_name" placeholder="Enter Title">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Shop Email<span class="manitory">*</span></label>
-                            <input type="text" id="email" placeholder="Enter email">
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Shop Phone<span class="manitory">*</span></label>
-                            <input type="text" id="phone" placeholder="Enter Phone">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Alternate Phone</label>
-                            <input type="text" id="alt_phone" name="alt_phone" placeholder="Enter Phone">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>GST Number</label>
-                            <input type="text" id="gst_num" placeholder="Enter GST Number">
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>State Code</label>
-                            <input type="text" id="state_code" placeholder="Enter State Code">
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Bank Name<span class="manitory">*</span></label>
-                            <input type="text" id="bank_name" placeholder="Enter Bank Name">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Branch<span class="manitory">*</span></label>
-                            <input type="text" id="branch" placeholder="Enter Branch">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>A/C No.<span class="manitory">*</span></label>
-                            <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>IFSC Code<span class="manitory">*</span></label>
-                            <input type="text" id="ifsc_code" placeholder="Enter IFSC Code">
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Shop Address<span class="manitory">*</span></label>
-                            <textarea id="address" placeholder="Enter Address" rows="3" class="form-control"></textarea>
-                            <div class="d-flex justify-content-between align-items-start mt-1">
-                                <small id="coordinateLookupStatus" class="text-muted" style="line-height:1.2;"></small>
-                                <button type="button" class="btn btn-sm btn-primary ms-2 flex-shrink-0" id="btnFetchCoordinates" style="padding: 2px 8px; font-size: 11px;">Get GPS from Address</button>
+                        <div class="mobile-steps">
+                            <div class="step-btns-wrapper">
+                                <button type="button" class="step-btn active" data-step="1">Basic Information</button>
+                                <button type="button" class="step-btn" data-step="2">System Preferences</button>
+                                <button type="button" class="step-btn" data-step="3">Media & Branding</button>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Shop Currency Symbol <span class="manitory">*</span></label>
-                            <select id="currency_symbol" class="form-select">
-                                <option value="₹" selected>₹ (Indian Rupee)</option>
-                                <option value="$">$ (US Dollar)</option>
-                                <option value="€">€ (Euro)</option>
-                                <option value="£">£ (British Pound)</option>
-                                <option value="¥">¥ (Japanese Yen)</option>
-                                <option value="₩">₩ (South Korean Won)</option>
-                                <option value="₽">₽ (Russian Ruble)</option>
-                                <option value="₺">₺ (Turkish Lira)</option>
-                                <option value="₫">₫ (Vietnamese Dong)</option>
-                                <option value="฿">฿ (Thai Baht)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label for="currency_position" class="form-label">
-                                Currency Symbol Position
-                            </label>
-                            <select class="form-select" id="currency_position" name="currency_position" required>
-
-                                <option value="left">Left (e.g. ₹100 or $100)</option>
-                                <option value="right">Right (e.g. 100₹ or 100$)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Low Stock Warning Quantity</label>
-                            <input type="number" id="low_stock" class="form-control"
-                                placeholder="Enter Low Stock Warning Quantity">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-6">
-                        <div class="form-group">
-                            <label>Shop Logo</label>
-                            <div class="image-upload">
-                                <input type="file" id="logo" accept="image/*">
-                                <div class="image-uploads">
-                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
-                                        alt="img">
-                                    <h4>Drag and drop a file to upload</h4>
+                        <!-- Step 1: Basic Information -->
+                        <div class="step-content step-1 active row">
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Shop Name<span class="manitory">*</span></label>
+                                    <input type="text" id="shop_name" placeholder="Enter Title">
                                 </div>
                             </div>
-                            <img id="logo_preview" src="" alt="Logo Preview"
-                                style="display:none; max-width: 100px; margin-top: 10px;">
-                        </div>
-                    </div>
 
-                    <div class="col-lg-3 col-6">
-                        <div class="form-group">
-                            <label>Shop Favicon</label>
-                            <div class="image-upload">
-                                <input type="file" id="favicon" accept="image/*">
-                                <div class="image-uploads">
-                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
-                                        alt="img">
-                                    <h4>Drag and drop a file to upload</h4>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Shop Email<span class="manitory">*</span></label>
+                                    <input type="text" id="email" placeholder="Enter email">
                                 </div>
                             </div>
-                            <img id="favicon_preview" src="" alt="Favicon Preview"
-                                style="display:none; max-width: 50px; margin-top: 10px;">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-6">
-                        <div class="form-group">
-                            <label>Shop QR Code Image</label>
-                            <div class="image-upload">
-                                <input type="file" id="qr_code" accept="image/*">
-                                <div class="image-uploads">
-                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
-                                        alt="img">
-                                    <h4>Drag and drop a file to upload</h4>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Shop Phone<span class="manitory">*</span></label>
+                                    <input type="text" id="phone" placeholder="Enter Phone">
                                 </div>
                             </div>
-                            <img id="qr_preview" src="" alt="QR Preview"
-                                style="display:none; max-width: 50px; margin-top: 10px;">
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Alternate Phone</label>
+                                    <input type="text" id="alt_phone" name="alt_phone" placeholder="Enter Phone">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>GST Number</label>
+                                    <input type="text" id="gst_num" placeholder="Enter GST Number" maxlength="15">
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>State Code</label>
+                                    <input type="text" id="state_code" placeholder="Enter State Code">
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Bank Name<span class="manitory">*</span></label>
+                                    <input type="text" id="bank_name" placeholder="Enter Bank Name">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Branch<span class="manitory">*</span></label>
+                                    <input type="text" id="branch" placeholder="Enter Branch">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>A/C No.<span class="manitory">*</span></label>
+                                    <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>IFSC Code<span class="manitory">*</span></label>
+                                    <input type="text" id="ifsc_code" placeholder="Enter IFSC Code">
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-sm-12">
+                                <div class="form-group">
+                                    <label>Shop Address<span class="manitory">*</span></label>
+                                    <textarea id="address" placeholder="Enter Address" rows="3" class="form-control"></textarea>
+                                    <div class="d-flex justify-content-between align-items-start mt-1">
+                                        <small id="coordinateLookupStatus" class="text-muted" style="line-height:1.2;"></small>
+                                        <button type="button" class="btn btn-sm btn-primary ms-2 flex-shrink-0" id="btnFetchCoordinates" style="padding: 2px 8px; font-size: 11px;">Get GPS from Address</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: System Preferences -->
+                        <div class="step-content step-2 row">
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Shop Currency Symbol <span class="manitory">*</span></label>
+                                    <select id="currency_symbol" class="form-select">
+                                        <option value="₹" selected>₹ (Indian Rupee)</option>
+                                        <option value="$">$ (US Dollar)</option>
+                                        <option value="€">€ (Euro)</option>
+                                        <option value="£">£ (British Pound)</option>
+                                        <option value="¥">¥ (Japanese Yen)</option>
+                                        <option value="₩">₩ (South Korean Won)</option>
+                                        <option value="₽">₽ (Russian Ruble)</option>
+                                        <option value="₺">₺ (Turkish Lira)</option>
+                                        <option value="₫">₫ (Vietnamese Dong)</option>
+                                        <option value="฿">฿ (Thai Baht)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label for="currency_position" class="form-label">
+                                        Currency Symbol Position
+                                    </label>
+                                    <select class="form-select" id="currency_position" name="currency_position" required>
+                                        <option value="left">Left (e.g. ₹100 or $100)</option>
+                                        <option value="right">Right (e.g. 100₹ or 100$)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Low Stock Warning Quantity</label>
+                                    <input type="number" id="low_stock" class="form-control"
+                                        placeholder="Enter Low Stock Warning Quantity">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Office Latitude</label>
+                                    <input type="text" id="office_latitude" class="form-control" placeholder="e.g. 21.1268432">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Office Longitude</label>
+                                    <input type="text" id="office_longitude" class="form-control" placeholder="e.g. 73.1051204">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Radius (m)</label>
+                                    <input type="number" id="office_radius" class="form-control" placeholder="e.g. 200" min="0" value="200">
+                                    <small class="text-muted">Staff must be within this distance from office GPS to clock in.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Media & Branding -->
+                        <div class="step-content step-3 row">
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Shop Logo</label>
+                                    <div class="image-upload">
+                                        <input type="file" id="logo" accept="image/*">
+                                        <div class="image-uploads">
+                                            <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
+                                                alt="img">
+                                            <h4>Drag and drop a file to upload</h4>
+                                        </div>
+                                    </div>
+                                    <img id="logo_preview" src="" alt="Logo Preview"
+                                        style="display:none; max-width: 100px; margin-top: 10px;">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Shop Favicon</label>
+                                    <div class="image-upload">
+                                        <input type="file" id="favicon" accept="image/*">
+                                        <div class="image-uploads">
+                                            <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
+                                                alt="img">
+                                            <h4>Drag and drop a file to upload</h4>
+                                        </div>
+                                    </div>
+                                    <img id="favicon_preview" src="" alt="Favicon Preview"
+                                        style="display:none; max-width: 50px; margin-top: 10px;">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Shop QR Code Image</label>
+                                    <div class="image-upload">
+                                        <input type="file" id="qr_code" accept="image/*">
+                                        <div class="image-uploads">
+                                            <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
+                                                alt="img">
+                                            <h4>Drag and drop a file to upload</h4>
+                                        </div>
+                                    </div>
+                                    <img id="qr_preview" src="" alt="QR Preview"
+                                        style="display:none; max-width: 50px; margin-top: 10px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4 align-items-center">
+                            <div class="col-6">
+                                <a href="javascript:void(0);" class="btn btn-submit btn-prev d-none"><i
+                                        class="fas fa-arrow-left me-1"></i> Previous</a>
+                            </div>
+                            <div class="col-6 d-flex justify-content-end gap-2">
+                                <a href="javascript:void(0);" class="btn btn-cancel">Cancel</a>
+                                <a href="javascript:void(0);" class="btn btn-submit btn-next">Next <i
+                                        class="fas fa-arrow-right ms-1"></i></a>
+                                <a href="javascript:void(0);" class="btn btn-submit btn-submit-mobile d-none">Submit</a>
+                                <button type="button" id="btn-setting-submit" class="d-none">Submit</button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Office Latitude</label>
-                            <input type="text" id="office_latitude" class="form-control" placeholder="e.g. 21.1268432">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Office Longitude</label>
-                            <input type="text" id="office_longitude" class="form-control" placeholder="e.g. 73.1051204">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-sm-6 col-6">
-                        <div class="form-group">
-                            <label>Radius (m)</label>
-                            <input type="number" id="office_radius" class="form-control" placeholder="e.g. 200" min="0" value="200">
-                            <small class="text-muted">Staff must be within this distance from office GPS to clock in.</small>
-                        </div>
-                    </div>
-
-
-
-                    <div class="col-lg-12">
-                        <a href="javascript:void(0);" class="btn btn-submit me-2">Submit</a>
-                    </div>
-                </div>
-            </div>
                                                             <!-- ================= COMPANY RULES TAB ================= -->
                     <div class="tab-pane fade" id="company-rules" role="tabpanel" aria-labelledby="rules-tab">
                         <div class="row">
@@ -1279,6 +1262,123 @@ toggleHRSubSections();
                 this.value = this.value.replace(/[^a-zA-Z\s]/g, "");
             });
 
+            // Multi-step Form Logic for Shop Settings
+            let currentStep = 1;
+            const totalSteps = 3;
+
+            function updateSteps() {
+                // Update Step Buttons
+                $('.step-btn').removeClass('active');
+                $(`.step-btn[data-step="${currentStep}"]`).addClass('active');
+
+                // Update Step Content
+                $('.step-content').removeClass('active');
+                $(`.step-${currentStep}`).addClass('active');
+
+                // Update Navigation Buttons
+                if (currentStep === 1) {
+                    $('.btn-prev').addClass('d-none');
+                    $('.btn-next').removeClass('d-none');
+                    $('.btn-submit-mobile').addClass('d-none');
+                } else if (currentStep === totalSteps) {
+                    $('.btn-prev').removeClass('d-none');
+                    $('.btn-next').addClass('d-none');
+                    $('.btn-submit-mobile').removeClass('d-none');
+                } else {
+                    $('.btn-prev').removeClass('d-none');
+                    $('.btn-next').removeClass('d-none');
+                    $('.btn-submit-mobile').addClass('d-none');
+                }
+
+                // Scroll to top of the tab content on step change for better UX
+                if ($("#settingsTabsContent").length) {
+                    $('html, body').animate({
+                        scrollTop: $("#settingsTabsContent").offset().top - 100
+                    }, 300);
+                }
+            }
+
+            // Validation rules for each step
+            const stepValidations = {
+                1: [
+                    { id: 'shop_name', name: 'Shop Name' },
+                    { id: 'email', name: 'Shop Email' },
+                    { id: 'phone', name: 'Shop Phone' },
+                    { id: 'bank_name', name: 'Bank Name' },
+                    { id: 'branch', name: 'Branch' },
+                    { id: 'ac_no', name: 'A/C No.' },
+                    { id: 'ifsc_code', name: 'IFSC Code' },
+                    { id: 'address', name: 'Shop Address' }
+                ],
+                2: [
+                    { id: 'currency_symbol', name: 'Currency Symbol' },
+                    { id: 'currency_position', name: 'Currency Position' }
+                ],
+                3: []
+            };
+
+            function validateCurrentStep() {
+                $('.step-content.active .text-danger').remove();
+
+                const rules = stepValidations[currentStep] || [];
+                let hasError = false;
+
+                rules.forEach(field => {
+                    const el = $("#" + field.id);
+                    const value = el.val();
+                    if (!value || String(value).trim() === '') {
+                        el.closest('.form-group').find('.text-danger').remove();
+                        el.after(
+                            `<div class="text-danger mt-1"><i class="fas fa-exclamation-circle"></i> ${field.name} is required</div>`
+                        );
+                        hasError = true;
+                    }
+                });
+
+                return !hasError;
+            }
+
+            $('.btn-next').on('click', function() {
+                if (currentStep < totalSteps) {
+                    if (validateCurrentStep()) {
+                        currentStep++;
+                        updateSteps();
+                    }
+                }
+            });
+
+            $('.btn-prev').on('click', function() {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateSteps();
+                }
+            });
+
+            $('.step-btn').on('click', function() {
+                const targetStep = parseInt($(this).data('step'));
+                if (targetStep < currentStep || targetStep === currentStep) {
+                    currentStep = targetStep;
+                    updateSteps();
+                } else if (targetStep > currentStep) {
+                    if (validateCurrentStep()) {
+                        currentStep = targetStep;
+                        updateSteps();
+                    }
+                }
+            });
+
+            // Handle submit button click (trigger hidden submit)
+            $('.btn-submit-mobile').on('click', function() {
+                $("#btn-setting-submit").click();
+            });
+
+            $('#shop-settings .btn-cancel').on('click', function(e) {
+                e.preventDefault();
+                loadGeneralSettings();
+                currentStep = 1;
+                updateSteps();
+            });
+
             // Fetch GST Details
             $("#gst_num").on("blur", function() {
                 const gst = $(this).val();
@@ -1311,7 +1411,7 @@ toggleHRSubSections();
             });
 
             // Update General Settings
-            $("#shop-settings .btn-submit").on("click", function(e) {
+            $("#btn-setting-submit").on("click", function(e) {
                 e.preventDefault(); // prevent form submission if there are errors
 
                 $(".text-danger").remove(); // clear previous errors
@@ -1382,12 +1482,16 @@ toggleHRSubSections();
                     }
                 });
 
-                // Check if logo and favicon are selected (optional: remove this if not mandatory)
-                let logo = $("#logo")[0].files[0];
-                let favicon = $("#favicon")[0].files[0];
-                let qr_code = $("#qr_code")[0].files[0];
-
-                if (hasError) return; // stop submission if errors found
+                if (hasError) {
+                    if ($('.step-1 .text-danger').length > 0) {
+                        currentStep = 1;
+                        updateSteps();
+                    } else if ($('.step-2 .text-danger').length > 0) {
+                        currentStep = 2;
+                        updateSteps();
+                    }
+                    return;
+                }
 
                 // Prepare FormData
                 let formData = new FormData();
