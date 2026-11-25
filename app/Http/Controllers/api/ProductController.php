@@ -17,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Milon\Barcode\DNS1D;
@@ -1443,6 +1444,12 @@ class ProductController extends Controller
         $generator     = new DNS1D();
         $barcodeImages = [];
         $barcodeItems  = collect();
+        $hasBarcodesTable = false;
+        try {
+            $hasBarcodesTable = Schema::hasTable('product_barcodes');
+        } catch (\Throwable $e) {
+            $hasBarcodesTable = false;
+        }
 
         foreach ($products as $product) {
             if (!empty($product->barcode)) {
@@ -1455,19 +1462,25 @@ class ProductController extends Controller
                 $barcodeImages[$item['id']] = $item['barcode_image'];
             }
 
-            // Add additional barcodes from product_barcodes table
-            $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
-            foreach ($additionalBarcodes as $addBc) {
-                if (!empty($addBc->barcode)) {
-                    $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-                    $item['id'] = $product->id . '_' . $addBc->id;
-                    $item['barcode'] = $addBc->barcode;
-                    $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
-                    $item['name'] = $item['display_name'];
-                    $item['value'] = $addBc->barcode;
-                    $item['img'] = $item['barcode_image'];
-                    $barcodeItems->push((object) $item);
-                    $barcodeImages[$item['id']] = $item['barcode_image'];
+            // Add additional barcodes from product_barcodes table if table exists
+            if ($hasBarcodesTable) {
+                try {
+                    $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
+                    foreach ($additionalBarcodes as $addBc) {
+                        if (!empty($addBc->barcode)) {
+                            $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+                            $item['id'] = $product->id . '_' . $addBc->id;
+                            $item['barcode'] = $addBc->barcode;
+                            $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                            $item['name'] = $item['display_name'];
+                            $item['value'] = $addBc->barcode;
+                            $item['img'] = $item['barcode_image'];
+                            $barcodeItems->push((object) $item);
+                            $barcodeImages[$item['id']] = $item['barcode_image'];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore if table query fails
                 }
             }
         }
@@ -1537,18 +1550,24 @@ class ProductController extends Controller
             $barcodes[] = $item;
         }
 
-        // Include additional barcodes
-        $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
-        foreach ($additionalBarcodes as $addBc) {
-            if (!empty($addBc->barcode)) {
-                $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
-                $item['barcode'] = $addBc->barcode;
-                $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
-                $item['name'] = $item['display_name'];
-                $item['value'] = $addBc->barcode;
-                $item['img'] = $item['barcode_image'];
-                $barcodes[] = $item;
+        // Include additional barcodes if table exists
+        try {
+            if (Schema::hasTable('product_barcodes')) {
+                $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
+                foreach ($additionalBarcodes as $addBc) {
+                    if (!empty($addBc->barcode)) {
+                        $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+                        $item['barcode'] = $addBc->barcode;
+                        $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                        $item['name'] = $item['display_name'];
+                        $item['value'] = $addBc->barcode;
+                        $item['img'] = $item['barcode_image'];
+                        $barcodes[] = $item;
+                    }
+                }
             }
+        } catch (\Throwable $e) {
+            // Ignore if table query fails
         }
 
         $view = $barcodeLayout === 'detailed'
