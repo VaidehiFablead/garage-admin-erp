@@ -441,6 +441,8 @@ class ProductController extends Controller
             // 'hsn_code' => ['required', 'string', 'max:255', Rule::unique('products', 'hsn_code')->where(fn($q) => $q->where('branch_id', $branchId)),],
             'hsn_code' => 'nullable',
             'barcode' => ['nullable', 'string', 'max:255', Rule::unique('products', 'barcode')->where(fn($q) => $q->where('branch_id', $branchId)),],
+            'barcodes'      => 'nullable|array',
+            'barcodes.*'    => 'nullable|string|max:255',
             'quantity'      => 'required|integer|min:0',
             'unit_id' => 'required|numeric',
             'status'        => 'nullable|in:active,inactive',
@@ -523,6 +525,14 @@ class ProductController extends Controller
             }
         }
 
+        $mainBarcode = $validated['barcode'] ?? null;
+        if (!empty($request->barcodes) && is_array($request->barcodes)) {
+            $filteredBarcodes = array_values(array_filter($request->barcodes));
+            if (!empty($filteredBarcodes)) {
+                $mainBarcode = $filteredBarcodes[0];
+            }
+        }
+
         $product = Product::create([
             'vendor_id'     => $validated['vendor_id'] ?? 1,
             'category_id'   => $validated['category_id'],
@@ -533,7 +543,7 @@ class ProductController extends Controller
             'price'         => $validated['price'],
             'SKU'           => $validated['SKU'],
             'hsn_code'      => $validated['hsn_code'] ?? null,
-            'barcode'       => $validated['barcode'] ?? null,
+            'barcode'       => $mainBarcode,
             'quantity'      => $validated['quantity'],
             'unit_id'       => $validated['unit_id'],
             'status'        => $validated['status'] ?? 'active',
@@ -542,6 +552,23 @@ class ProductController extends Controller
             'product_gst'   => !empty($gstData) ? json_encode($gstData) : null,
             'images'        => json_encode($imagePaths),
         ]);
+
+        if (!empty($request->barcodes) && is_array($request->barcodes)) {
+            $barcodesList = array_values(array_filter($request->barcodes));
+            if (count($barcodesList) > 1) {
+                try {
+                    for ($i = 1; $i < count($barcodesList); $i++) {
+                        \App\Models\ProductBarcode::create([
+                            'product_id' => $product->id,
+                            'barcode'    => $barcodesList[$i],
+                            'client_uuid' => \Illuminate\Support\Str::uuid(),
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error('Failed to create additional product barcodes: ' . $e->getMessage());
+                }
+            }
+        }
 
         /* -------------------------------------------------
      | 6️⃣ Inventory Log

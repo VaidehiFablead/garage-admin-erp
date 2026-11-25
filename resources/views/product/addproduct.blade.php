@@ -52,6 +52,51 @@
             background-color: #16213e;
             color: #fff;
         }
+
+        .barcode-input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .barcode-input-group .form-control {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .barcode-scan-btn {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ff9f43;
+            background: #fff;
+            color: #ff9f43;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .barcode-scan-btn:hover,
+        .barcode-scan-btn:focus {
+            background: #ff9f43;
+            color: #fff;
+            outline: none;
+        }
+
+        #barcode-qr-reader {
+            width: 100%;
+        }
+
+        #barcode-qr-reader video {
+            width: 100% !important;
+            height: auto !important;
+            border-radius: 8px;
+        }
     </style>
     <div class="content">
         <div class="page-header">
@@ -216,20 +261,37 @@
 
                         <div class="col-lg-3 col-sm-6 col-6">
                             <div class="form-group">
-                                <label>Barcode</label>
-                                <input type="text" name="barcode" id="barcode" class="form-control">
-                                <span class="error_barcode text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-6 col-6">
-                            <div class="form-group">
                                 <label>Description</label>
                                 <textarea class="form-control" name="description" id="description" rows="1"></textarea>
                                 <span class="error_description text-danger"></span>
                             </div>
                         </div>
 
-                        <div class="col-lg-6 col-sm-6 col-6">
+                        <div class="col-lg-6 col-sm-6 col-12">
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-qrcode me-1"></i> Barcode</label>
+                                <div id="barcode-container">
+                                    <div class="barcode-input-group mb-2 d-flex flex-wrap gap-2">
+                                        <input type="text" id="barcode-input-field" class="form-control barcode-input"
+                                            placeholder="Enter Barcode (e.g. 11MH66)">
+                                        <button type="button" class="btn btn-secondary add-barcode-btn"
+                                            style="background:#6c757d; color:#fff; border:none; border-radius:6px; padding:8px 12px; font-weight:600;">Add</button>
+                                        <button type="button" class="btn btn-warning auto-barcode-btn"
+                                            style="background:#ff9f43; color:#fff; border:none; border-radius:6px; padding:8px 12px; font-weight:600;">Auto</button>
+                                        <button type="button" class="barcode-scan-btn scan-barcode-btn"
+                                            id="openBarcodeScanner" title="Scan Barcode">
+                                            <i class="fa-solid fa-camera"></i>
+                                        </button>
+                                    </div>
+                                    <div id="barcode-badges" class="d-flex flex-wrap gap-2 mt-2">
+                                        <!-- Badges will be appended here -->
+                                    </div>
+                                </div>
+                                <span class="error_barcode text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 col-sm-6 col-12">
                             <div class="form-group">
                                 <label> Product Image</label>
                                 <div class="image-upload">
@@ -396,6 +458,29 @@
         </div>
     </div>
 
+    <!-- Barcode Scanner Modal -->
+    <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-labelledby="barcodeScannerModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="barcodeScannerModalLabel">Scan Barcode</h5>
+                    <button type="button" class="btn-close bg-white text-black" data-bs-dismiss="modal"
+                        aria-label="Close">x</button>
+                </div>
+                <div class="modal-body">
+                    <div id="barcode-qr-reader"></div>
+                    <div id="barcode-scan-message" class="text-center mt-2 small text-muted">
+                        Initializing camera...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 @push('js')
     <script>
@@ -481,8 +566,215 @@
             }
         });
         $(document).ready(function() {
+            // Barcode Management Logic
+            function addBarcode(val) {
+                const barcodeVal = (val || '').trim();
+                if (!barcodeVal) return;
+
+                const badgesContainer = document.getElementById('barcode-badges');
+                const inputField = document.getElementById('barcode-input-field');
+
+                // Check for duplicates
+                const existing = Array.from(badgesContainer.querySelectorAll('input[name="barcodes[]"]')).map(
+                    input => input.value);
+                if (existing.includes(barcodeVal)) {
+                    if (inputField) inputField.value = '';
+                    return;
+                }
+
+                const badge = document.createElement('div');
+                badge.className = 'badge bg-light text-dark border d-flex align-items-center p-2 barcode-badge';
+                badge.style.fontSize = '13px';
+                badge.innerHTML = `
+                    ${barcodeVal} 
+                    <span class="remove-badge ms-2 text-muted" style="cursor:pointer; font-size:16px; line-height:1;" title="Remove">&times;</span>
+                    <input type="hidden" name="barcodes[]" value="${barcodeVal}">
+                `;
+                badgesContainer.appendChild(badge);
+                if (inputField) inputField.value = '';
+                $('.error_barcode').text('');
+            }
+
+            $(document).on('click', '.add-barcode-btn', function() {
+                addBarcode($('#barcode-input-field').val());
+            });
+
+            $(document).on('click', '.remove-badge', function() {
+                $(this).closest('.barcode-badge').remove();
+            });
+
+            $(document).on('click', '.auto-barcode-btn', function() {
+                $('#barcode-input-field').val(Math.floor(1000000000000 + Math.random() * 9000000000000));
+            });
+
+            $(document).on('keydown', '#barcode-input-field', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    addBarcode($(this).val());
+                }
+            });
+
+            // Camera Barcode Scanner Logic
+            let barcodeScanner = null;
+            let barcodeScriptLoading = null;
+
+            function loadBarcodeScannerLibrary() {
+                if (typeof Html5Qrcode !== 'undefined') {
+                    return Promise.resolve();
+                }
+                if (barcodeScriptLoading) {
+                    return barcodeScriptLoading;
+                }
+                barcodeScriptLoading = new Promise(function(resolve, reject) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+                return barcodeScriptLoading;
+            }
+
+            function stopBarcodeScanner() {
+                if (!barcodeScanner) return;
+                try {
+                    if (barcodeScanner.isScanning) {
+                        barcodeScanner.stop().then(function() {
+                            barcodeScanner = null;
+                        }).catch(function() {
+                            barcodeScanner = null;
+                        });
+                    } else {
+                        barcodeScanner = null;
+                    }
+                } catch (e) {
+                    barcodeScanner = null;
+                }
+            }
+
+            function showManualBarcodeInput() {
+                $('#barcode-scan-message').hide();
+                $('#barcode-qr-reader').html(`
+                    <div style="text-align:center; padding: 25px 15px;">
+                        <p style="color:#666; font-size:14px; margin-bottom:12px;">
+                            Camera is not available.<br>Enter barcode manually below:
+                        </p>
+                        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                            <input type="text" id="manualBarcodeInput" class="form-control"
+                                placeholder="Enter barcode" style="max-width:240px; font-size:14px;">
+                            <button type="button" class="btn btn-warning" id="manualBarcodeSubmit" style="background:#ff9f43; color:#fff; border:none;">Add</button>
+                        </div>
+                        <div id="manualBarcodeError" class="text-danger" style="font-size:13px; margin-top:8px;"></div>
+                    </div>
+                `);
+            }
+
+            function submitManualBarcode() {
+                const barcode = $('#manualBarcodeInput').val().trim();
+                if (!barcode) {
+                    $('#manualBarcodeError').text('Please enter a barcode.');
+                    return;
+                }
+                addBarcode(barcode);
+                $('#barcodeScannerModal').modal('hide');
+            }
+
+            $(document).on('click', '#manualBarcodeSubmit', function() {
+                submitManualBarcode();
+            });
+
+            $(document).on('keydown', '#manualBarcodeInput', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitManualBarcode();
+                }
+            });
+
+            function startBarcodeScanner() {
+                loadBarcodeScannerLibrary().then(function() {
+                    $('#barcode-scan-message').show().text('Starting camera...').css('color', '');
+                    $('#barcode-qr-reader').html('').css('min-height', '250px');
+
+                    try {
+                        barcodeScanner = new Html5Qrcode("barcode-qr-reader");
+                    } catch (error) {
+                        console.error('Failed to initialize barcode scanner:', error);
+                        showManualBarcodeInput();
+                        return;
+                    }
+
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    };
+
+                    Html5Qrcode.getCameras().then(function(devices) {
+                        if (!devices || !devices.length) {
+                            stopBarcodeScanner();
+                            showManualBarcodeInput();
+                            return;
+                        }
+
+                        let cameraId = devices[0].id;
+                        for (let i = 0; i < devices.length; i++) {
+                            const label = (devices[i].label || '').toLowerCase();
+                            if (label.includes('back') || label.includes('rear')) {
+                                cameraId = devices[i].id;
+                                break;
+                            }
+                        }
+
+                        barcodeScanner.start(
+                            cameraId,
+                            config,
+                            function onScanSuccess(decodedText) {
+                                stopBarcodeScanner();
+                                $('#barcodeScannerModal').modal('hide');
+                                addBarcode(decodedText);
+                            },
+                            function onScanError() {}
+                        ).then(function() {
+                            $('#barcode-scan-message').show().text('Point camera at barcode').css('color', 'green');
+                        }).catch(function(error) {
+                            console.error('Camera start failed:', error);
+                            stopBarcodeScanner();
+                            showManualBarcodeInput();
+                        });
+                    }).catch(function(error) {
+                        console.error('Camera detection failed:', error);
+                        stopBarcodeScanner();
+                        showManualBarcodeInput();
+                    });
+                }).catch(function() {
+                    showManualBarcodeInput();
+                });
+            }
+
+            $(document).on('click', '#openBarcodeScanner', function() {
+                $('#barcodeScannerModal').modal('show');
+            });
+
+            $('#barcodeScannerModal').on('shown.bs.modal', function() {
+                $('#barcode-qr-reader').html('').css('min-height', '250px');
+                $('#barcode-scan-message').show().text('Initializing camera...').css('color', '');
+                startBarcodeScanner();
+            });
+
+            $('#barcodeScannerModal').on('hidden.bs.modal', function() {
+                stopBarcodeScanner();
+                $('#barcode-qr-reader').html('').css('min-height', '250px');
+                $('#barcode-scan-message').show().text('Initializing camera...').css('color', '');
+            });
+
             $(document).on('click', '.submit', function(e) {
                 e.preventDefault();
+
+                // If input field has pending text, auto-add to barcode badges
+                const pendingBarcode = $('#barcode-input-field').val().trim();
+                if (pendingBarcode) {
+                    addBarcode(pendingBarcode);
+                }
+
                 const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
                 // console.log(selectedSubAdminId);
                 var $btn = $(this); // cache the button
@@ -494,6 +786,12 @@
 
                 var authToken = localStorage.getItem("authToken");
                 let formData = new FormData($('#productForm')[0]);
+
+                // Also ensure first barcode is set as 'barcode' for backwards compatibility
+                const firstBarcode = $('input[name="barcodes[]"]').first().val();
+                if (firstBarcode && !formData.has('barcode')) {
+                    formData.append('barcode', firstBarcode);
+                }
 
                 // Remove product_gst if "without_gst" is selected
                 const gstOption = $('#gst_option').val();
