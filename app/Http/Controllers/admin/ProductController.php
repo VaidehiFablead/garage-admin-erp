@@ -72,6 +72,11 @@ class ProductController extends Controller
     public function edit_product($id)
     {
         $product = Product::with(['category', 'brand'])->findOrFail($id);
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('product_barcodes')) {
+                $product->load('productBarcodes');
+            }
+        } catch (\Throwable $e) {}
 
         $branchId = $this->resolveBranchId();
         if ($product->branch_id != $branchId) {
