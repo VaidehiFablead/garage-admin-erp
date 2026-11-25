@@ -98,6 +98,8 @@ Route::middleware(['auth.api'])->group(function () {
     Route::get('/product-quantity-history/{productId}', [ProductController::class, 'getQuantityHistory']);
     Route::get('/export-product', [ProductController::class, 'export_product']);
     Route::get('/export-product-pdf', [ProductController::class, 'export_product_pdf']);
+    Route::get('/export-all-barcodes-pdf', [ProductController::class, 'exportAllBarcodesPdf']);
+    Route::get('/product-barcode-pdf/{id}', [ProductController::class, 'downloadBarcodePdf']);
 
     Route::get('/order-report', [SalesController::class, 'orderReport']);
     Route::get('/getAllJobCards', [JobCardConroller::class, 'getAllJobCards'])->name('getAllJobCards');

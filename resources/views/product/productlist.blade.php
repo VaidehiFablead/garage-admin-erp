@@ -194,11 +194,12 @@
             }
 
             #exportAllChallan,
-            #exportPdf {
-                width: 48% !important;
-                flex: 0 0 48% !important;
-                max-width: 48% !important;
-                min-width: 48% !important;
+            #exportPdf,
+            #downloadAllBarcodes {
+                width: 31% !important;
+                flex: 0 0 31% !important;
+                max-width: 31% !important;
+                min-width: 31% !important;
                 margin: 0 !important;
                 padding: 6px 0px !important;
                 font-size: 13px !important;
@@ -206,7 +207,8 @@
 
             /* Optional: Adjust icon size */
             #exportAllChallan i,
-            #exportPdf i {
+            #exportPdf i,
+            #downloadAllBarcodes i {
                 font-size: 12px !important;
                 margin-right: 4px !important;
             }
@@ -526,6 +528,10 @@
                         <button id="exportPdf" class="btn btn-sm btn-danger col-6 col-md-auto">
                             <i class="fas fa-file-pdf me-1"></i> PDF
                         </button>
+                        <button id="downloadAllBarcodes" class="btn btn-sm col-6 col-md-auto"
+                            style="background:#1b2850; color:#fff; border:1px solid #1b2850;">
+                            <i class="fas fa-barcode me-1"></i> All Barcodes
+                        </button>
                     </div>
                 </div>
 
@@ -624,6 +630,11 @@
 
             function buildProductExpandableRowContent(product) {
                 let actionBtns = '';
+
+                let productName = (product.name || '').replace(/"/g, '&quot;');
+                actionBtns += `<a class="btn-icon-mobile print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${product.barcode || ''}" data-name="${productName}" title="Print Barcode">
+                    <i class="fas fa-print" style="color: #092C4C; font-size: 16px;"></i>
+                </a>`;
 
                 @if (app('hasPermission')(1, 'view'))
                     actionBtns += `<a class="btn btn-sm btn-primary me-3" style="background-color: #ff9f43; border-color: #ff9f43; color:white; font-size: 13px;" href="/inventory-View/${product.id}">
@@ -848,7 +859,10 @@
                                     quantityDisplay,
                                     // createdAt,
                                     `
-                                                @if (app('hasPermission')(1, 'view')) 
+                                                 <a class="me-3 print-barcode-btn" href="javascript:void(0);" data-id="${product.id}" data-barcode="${product.barcode || ''}" data-name="${productName}" title="Print Barcode">
+                                                     <i class="fas fa-print" style="color: #092C4C; font-size: 16px;"></i>
+                                                 </a>
+                                                 @if (app('hasPermission')(1, 'view')) 
                                                  <a class="me-3 btn btn-sm btn-primary" style="color:white; font-size: 13px;" href="/inventory-View/${product.id}">
                                                     History    
                                                 </a>
@@ -1198,6 +1212,126 @@
                         icon: "error",
                         title: "Error!",
                         text: "Export PDF failed. Please try again."
+                    });
+                }
+            });
+        });
+
+        // ===== Download All Barcodes PDF =====
+        $('#downloadAllBarcodes').click(function() {
+            let selectedCategory = $('#filterCategory').val() || '';
+            let selectedBrand = $('#filterBrand').val() || '';
+            let authToken = localStorage.getItem("authToken");
+
+            let url = `/api/export-all-barcodes-pdf?category_id=${selectedCategory}&brand_id=${selectedBrand}`;
+
+            $.ajax({
+                url: url,
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken
+                },
+                beforeSend: function() {
+                    Swal.fire({
+                        title: "Generating Barcodes PDF...",
+                        text: "Please wait",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function(response) {
+                    Swal.close();
+                    if (response.status && response.file_url) {
+                        let link = document.createElement('a');
+                        link.href = response.file_url;
+                        link.download = response.file_name || "All_Barcodes.pdf";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed!",
+                            text: response.message || "Could not generate barcodes PDF.",
+                            confirmButtonColor: "#ff9f43"
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.close();
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text: "Failed to generate barcodes PDF. Please try again.",
+                        confirmButtonColor: "#ff9f43"
+                    });
+                }
+            });
+        });
+
+        // ===== Print / Download Single Product Barcode =====
+        $(document).on('click', '.print-barcode-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let productId = $(this).data('id');
+            let barcode = String($(this).data('barcode') || '');
+            let name = $(this).data('name') || 'Product';
+            let authToken = localStorage.getItem("authToken");
+
+            if (!barcode || barcode.trim() === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Barcode',
+                    text: 'This product does not have a barcode assigned.',
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Generating Barcode PDF...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.ajax({
+                url: '/api/product-barcode-pdf/' + productId,
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken
+                },
+                success: function(response) {
+                    Swal.close();
+                    if (response.status && response.file_url) {
+                        // Open in new tab for direct printing and trigger download
+                        let printWin = window.open(response.file_url, '_blank');
+                        if (printWin) {
+                            printWin.focus();
+                        }
+                        let link = document.createElement('a');
+                        link.href = response.file_url;
+                        link.download = response.file_name || 'barcode.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed',
+                            text: response.message || 'Could not generate barcode PDF.',
+                            confirmButtonColor: '#ff9f43'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to generate barcode PDF.',
+                        confirmButtonColor: '#ff9f43'
                     });
                 }
             });

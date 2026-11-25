@@ -1314,4 +1314,274 @@ class ProductController extends Controller
             ]);
         }
     }
+
+    private function resolveBarcodeSettings($branchId): object
+    {
+        $branchId = is_numeric($branchId) ? (int) $branchId : null;
+
+        if ($branchId) {
+            return DB::table('settings')->where('branch_id', $branchId)->first()
+                ?? DB::table('settings')->first()
+                ?? (object) [
+                    'barcode_type' => 'barcode',
+                    'barcode_setting_type' => 'simple',
+                    'barcode_detail_option' => 'long',
+                ];
+        }
+
+        return DB::table('settings')->first()
+            ?? (object) [
+                'barcode_type' => 'barcode',
+                'barcode_setting_type' => 'simple',
+                'barcode_detail_option' => 'long',
+            ];
+    }
+
+    private function resolveBarcodeLayout(?object $settings): array
+    {
+        $type = $settings->barcode_setting_type ?? 'simple';
+        $detailOption = $settings->barcode_detail_option ?? 'long';
+
+        if ($type !== 'detailed') {
+            $type = 'simple';
+            $detailOption = null;
+        }
+
+        return [$type, $detailOption];
+    }
+
+    private function formatMoney(?float $amount, ?object $settings = null): string
+    {
+        if ($amount === null) {
+            return '-';
+        }
+
+        $symbol = trim((string) ($settings->currency_symbol ?? '₹'));
+        $position = $settings->currency_position ?? 'left';
+        $value = number_format($amount, 2);
+
+        return $position === 'left' ? $symbol . $value : $value . $symbol;
+    }
+
+    private function buildBarcodeLabelData(Product $product, ?object $variant, ?object $settings, string $layout): array
+    {
+        $displayName = $product->name ?? '';
+
+        $price = $product->price ?? null;
+        $mrp = $product->mrp ?? $price ?? null;
+        $purchasePrice = $product->purchase_price ?? null;
+        $barcode = $product->barcode ?? '';
+
+        return [
+            'id' => 'product_' . $product->id,
+            'type' => 'product',
+            'layout' => $layout,
+            'name' => $product->name ?? '',
+            'display_name' => $displayName,
+            'sku' => $product->SKU ?? '-',
+            'category' => $product->category->name ?? '-',
+            'category_name' => $product->category->name ?? '-',
+            'brand' => $product->brand->name ?? '-',
+            'unit' => $product->unit->unit_name ?? '-',
+            'size' => '-',
+            'color' => '-',
+            'price' => $price,
+            'mrp' => $mrp ?? $price,
+            'purchase_price' => $purchasePrice,
+            'price_text' => $this->formatMoney($price !== null ? (float) $price : null, $settings),
+            'mrp_text' => $this->formatMoney($mrp !== null ? (float) $mrp : ($price !== null ? (float) $price : null), $settings),
+            'purchase_price_text' => $this->formatMoney($purchasePrice !== null ? (float) $purchasePrice : null, $settings),
+            'barcode' => $barcode,
+            'barcode_image' => null,
+        ];
+    }
+
+    private function generateBarcodeImage(DNS1D $generator, string $value, string $layout, ?string $detailOption = null, ?string $barcodeType = 'barcode'): string
+    {
+        // If barcode type is QR code, generate QR code instead
+        if ($barcodeType === 'qrcode' || $barcodeType === 'QRCODE') {
+            $dns2d = new DNS2D();
+            return 'data:image/png;base64,' . $dns2d->getBarcodePNG($value, 'QRCODE', 4, 4);
+        }
+
+        // Generate traditional barcode
+        if ($layout === 'detailed' && $detailOption === 'short') {
+            return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 1.35, 34);
+        }
+
+        if ($layout === 'detailed' && $detailOption === 'long') {
+            return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 1.8, 48);
+        }
+
+        return 'data:image/png;base64,' . $generator->getBarcodePNG($value, 'C128', 2, 55);
+    }
+
+    public function exportAllBarcodesPdf(Request $request)
+    {
+        $user = Auth::guard('api')->user();
+
+        $branchId = match (strtolower($user->role ?? '')) {
+            'admin'     => $request->selectedSubAdminId ?: $user->id,
+            'sub-admin' => $user->id,
+            'staff'     => $user->branch_id,
+            default     => $user->id ?? 1,
+        };
+
+        $products = Product::with(['category', 'brand', 'unit'])
+            ->select(['id', 'name', 'SKU', 'barcode', 'price', 'category_id', 'brand_id', 'unit_id'])
+            ->where('isDeleted', 0)
+            ->where('branch_id', $branchId)
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->when($request->brand_id,    fn($q) => $q->where('brand_id',    $request->brand_id))
+            ->latest('id')
+            ->get();
+
+        $settings = $this->resolveBarcodeSettings($branchId);
+        [$barcodeLayout, $barcodeDetailOption] = $this->resolveBarcodeLayout($settings);
+        $barcodeType = $settings->barcode_type ?? 'barcode';
+
+        $generator     = new DNS1D();
+        $barcodeImages = [];
+        $barcodeItems  = collect();
+
+        foreach ($products as $product) {
+            if (!empty($product->barcode)) {
+                $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+                $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                $item['name'] = $item['display_name'];
+                $item['value'] = $item['barcode'];
+                $item['img'] = $item['barcode_image'];
+                $barcodeItems->push((object) $item);
+                $barcodeImages[$item['id']] = $item['barcode_image'];
+            }
+
+            // Add additional barcodes from product_barcodes table
+            $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
+            foreach ($additionalBarcodes as $addBc) {
+                if (!empty($addBc->barcode)) {
+                    $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+                    $item['id'] = $product->id . '_' . $addBc->id;
+                    $item['barcode'] = $addBc->barcode;
+                    $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                    $item['name'] = $item['display_name'];
+                    $item['value'] = $addBc->barcode;
+                    $item['img'] = $item['barcode_image'];
+                    $barcodeItems->push((object) $item);
+                    $barcodeImages[$item['id']] = $item['barcode_image'];
+                }
+            }
+        }
+
+        $view = $barcodeLayout === 'detailed'
+            ? ($barcodeDetailOption === 'short'
+                ? 'product.all_barcodes_pdf_detailed_short'
+                : 'product.all_barcodes_pdf_detailed_long')
+            : 'product.all_barcodes_pdf';
+
+        $pdf = Pdf::loadView($view, [
+            'products'      => $barcodeItems,
+            'barcodeImages' => $barcodeImages,
+            'settings'      => $settings,
+            'barcodeLayout' => $barcodeLayout,
+            'barcodeDetailOption' => $barcodeDetailOption,
+            'barcodeType'   => $barcodeType,
+        ])->setPaper('A4', 'portrait');
+
+        $fileName     = 'All_Barcodes_' . now()->format('Ymd_His') . '.pdf';
+        $folder       = 'product-barcodes';
+        $relativePath = "{$folder}/{$fileName}";
+
+        Storage::disk('public')->makeDirectory($folder);
+        Storage::disk('public')->put($relativePath, $pdf->output());
+
+        $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+        return response()->json([
+            'status'    => true,
+            'message'   => 'All barcodes PDF generated successfully.',
+            'file_url'  => $fileUrl,
+            'file_name' => $fileName,
+        ]);
+    }
+
+    public function downloadBarcodePdf($id)
+    {
+        $user    = Auth::guard('api')->user();
+        $product = Product::with(['category', 'brand', 'unit'])->findOrFail($id);
+
+        $branchId = match (strtolower($user->role ?? '')) {
+            'admin'     => $user->id,
+            'sub-admin' => $user->id,
+            'staff'     => $user->branch_id,
+            default     => $user->id ?? 1,
+        };
+
+        $settings = $this->resolveBarcodeSettings($branchId);
+        [$barcodeLayout, $barcodeDetailOption] = $this->resolveBarcodeLayout($settings);
+        $barcodeType = $settings->barcode_type ?? 'barcode';
+
+        $currencySymbol = trim(
+            html_entity_decode($settings->currency_symbol ?? '₹', ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        );
+        $currencyPosition = $settings->currency_position ?? 'left';
+
+        $generator  = new DNS1D();
+        $barcodes   = [];
+
+        if (!empty($product->barcode)) {
+            $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+            $item['barcode_image'] = $this->generateBarcodeImage($generator, $item['barcode'], $barcodeLayout, $barcodeDetailOption, $barcodeType);
+            $item['name'] = $item['display_name'];
+            $item['value'] = $item['barcode'];
+            $item['img'] = $item['barcode_image'];
+            $barcodes[] = $item;
+        }
+
+        // Include additional barcodes
+        $additionalBarcodes = \App\Models\ProductBarcode::where('product_id', $product->id)->get();
+        foreach ($additionalBarcodes as $addBc) {
+            if (!empty($addBc->barcode)) {
+                $item = $this->buildBarcodeLabelData($product, null, $settings, $barcodeLayout);
+                $item['barcode'] = $addBc->barcode;
+                $item['barcode_image'] = $this->generateBarcodeImage($generator, $addBc->barcode, $barcodeLayout, $barcodeDetailOption, $barcodeType);
+                $item['name'] = $item['display_name'];
+                $item['value'] = $addBc->barcode;
+                $item['img'] = $item['barcode_image'];
+                $barcodes[] = $item;
+            }
+        }
+
+        $view = $barcodeLayout === 'detailed'
+            ? ($barcodeDetailOption === 'short'
+                ? 'product.barcode_pdf_detailed_short'
+                : 'product.barcode_pdf_detailed_long')
+            : 'product.barcode_pdf';
+
+        $pdf = Pdf::loadView($view, [
+            'product'          => $product,
+            'barcodes'         => $barcodes,
+            'settings'         => $settings,
+            'currencySymbol'   => $currencySymbol,
+            'currencyPosition' => $currencyPosition,
+            'barcodeLayout'    => $barcodeLayout,
+            'barcodeDetailOption' => $barcodeDetailOption,
+            'barcodeType'      => $barcodeType,
+        ])->setPaper('A4', 'portrait');
+
+        $fileName     = 'Barcode_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $product->name) . '_' . now()->format('Ymd_His') . '.pdf';
+        $folder       = 'product-barcodes';
+        $relativePath = "{$folder}/{$fileName}";
+
+        Storage::disk('public')->makeDirectory($folder);
+        Storage::disk('public')->put($relativePath, $pdf->output());
+
+        $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+        return response()->json([
+            'status'    => true,
+            'message'   => 'Barcode PDF generated successfully.',
+            'file_url'  => $fileUrl,
+            'file_name' => $fileName,
+        ]);
+    }
 }

@@ -52,6 +52,11 @@ class Product extends Model
         return $this->belongsTo(Brand::class, 'brand_id');
     }
 
+    public function productBarcodes()
+    {
+        return $this->hasMany(ProductBarcode::class, 'product_id');
+    }
+
     // protected static function booted()
     // {
     //     static::creating(function ($product) {
