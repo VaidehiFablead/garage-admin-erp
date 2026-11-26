@@ -10,7 +10,7 @@
             </div>
             <div class="back-button">
                 <a href="{{ route('plans.planlist') }}" class="btn btn-primary back-button">
-                    <i class="fa fa-arrow-left"></i> Back
+                    <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
             </div>
         </div>
@@ -54,6 +54,12 @@
                             <input type="number" name="total_amount" id="total_amount" class="form-control" step="0.01" min="0" readonly>
                             <input type="hidden" name="total_price" id="total_price">
                             <span class="error_total_amount text-danger"></span>
+                        </div>
+                                                
+                        <div class="col-md-3">
+                            <label class="form-label">Renewal Price</label>
+                            <input type="number" name="renewal_price" id="renewal_price" class="form-control" step="0.01" min="0">
+                            <span class="error_renewal_price text-danger"></span>
                         </div>
 
                         <div class="col-md-3">
@@ -226,6 +232,7 @@ $('#start_date, #end_date, #price, #discount_percent').on('change keyup input', 
                     $('#plan_id').val(plan.id);
                     $('#name').val(plan.name);
                     $('#price').val(plan.price);
+                    $('#renewal_price').val(plan.renewal_price !== null && plan.renewal_price !== undefined ? plan.renewal_price : '');
                     $('#discount_percent').val(plan.discount_percent !== null && plan.discount_percent !== undefined ? plan.discount_percent : '');
                     $('#final_price').val(plan.final_price !== null && plan.final_price !== undefined ? plan.final_price : '');
                     var tot = plan.total_amount || plan.total_price || '';
@@ -279,7 +286,7 @@ $('#start_date, #end_date, #price, #discount_percent').on('change keyup input', 
 
                 $('.error_name, .error_price, .error_discount_percent, .error_final_price, .error_total_amount, .error_start_date, .error_end_date,' +
                     '.error_duration, .error_is_active, .error_user_limit, ' +
-                    '.error_branch_limit, .error_storage_limit,.error_subtitle, .error_features').text('');
+                    '.error_branch_limit, .error_storage_limit,.error_subtitle, .error_features, .error_renewal_price').text('');
 
                 var formData = new FormData($('#planForm')[0]);
 

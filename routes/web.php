@@ -471,6 +471,10 @@ Route::middleware(['check.license'])->group(function () {
     Route::delete('/delete-plan/{plan}', [PlanController::class,'destroy'])->name('plans.destroy');
     Route::get('/my-plan', [PlanController::class,'myplan'])->name('plans.myplan');
     Route::get('/plan-details', [PlanController::class, 'myPlanDetails'])->name('plans.details');
+    Route::get('/plans/upgrade-options', [PlanController::class, 'getUpgradePlans'])->name('plans.upgrade.options');
+    Route::post('/plans/razorpay/create-order', [PlanController::class, 'createRazorpayOrder'])->name('plans.razorpay.createOrder');
+    Route::post('/plans/razorpay/verify', [PlanController::class, 'verifyRazorpayPayment'])->name('plans.razorpay.verify');
+    Route::get('/plans/invoice/pdf/{id?}', [PlanController::class, 'downloadInvoicePdf'])->name('plans.invoice.pdf');
     });
 });
 
