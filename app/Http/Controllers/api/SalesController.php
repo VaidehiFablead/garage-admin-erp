@@ -83,37 +83,34 @@ class SalesController extends Controller
 
         $sub_admin_id = $request->input('sub_admin_id') ?? $request->input('selectedSubAdminId') ?? session('selectedSubAdminId');
 
+        $productsQuery = Product::where('isDeleted', 0)
+            ->when($categoryId !== 'all', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+
         if (!empty($sub_admin_id) && $sub_admin_id != 1) {
             // ✅ If sub_admin_id is given (sub-admin branch selected)
-            $products = Product::where('category_id', $categoryId)
-                ->where('isDeleted', 0)
-                ->where(function ($q) use ($sub_admin_id) {
+            $products = $productsQuery->where(function ($q) use ($sub_admin_id) {
                     $q->where('branch_id', $sub_admin_id)
                       ->orWhere('branch_id', 1);
                 })
                 ->get();
         } elseif (!empty($userId) && !empty($userRole == 'sub-admin')) {
             // ✅ Otherwise, use logged-in user's branch_id
-            $products = Product::where('category_id', $categoryId)
-                ->where('isDeleted', 0)
-                ->where(function ($q) use ($userId) {
+            $products = $productsQuery->where(function ($q) use ($userId) {
                     $q->where('branch_id', $userId)
                       ->orWhere('branch_id', 1);
                 })
                 ->get();
         } elseif (!empty($userRole == 'staff')) {
             // ✅ Staff
-            $products = Product::where('category_id', $categoryId)
-                ->where('isDeleted', 0)
-                ->where(function ($q) use ($branchId) {
+            $products = $productsQuery->where(function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId)
                       ->orWhere('branch_id', 1);
                 })
                 ->get();
         } else {
-            $products = Product::where('category_id', $categoryId)
-                ->where('isDeleted', 0)
-                ->where('branch_id', $userId)
+            $products = $productsQuery->where('branch_id', $userId)
                 ->get();
         }
         // dd($products);
@@ -327,7 +324,9 @@ class SalesController extends Controller
     ? 'quotation'
     : 'sales',
                 'payment_status' => $status,
-                'remark' => $request->remark ?? '',
+                'shipping' => $request->shipping ?? 0,
+                'misc_charges' => $request->misc_charges ?? 0,
+                'remark' => $request->remark ?? $request->remarks ?? '',
                 'gst_option' => $request->gst_option ?? '',
 
 
