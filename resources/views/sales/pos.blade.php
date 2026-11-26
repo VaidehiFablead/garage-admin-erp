@@ -3672,18 +3672,24 @@
                 });
             });
 
-            $(".owl-carousel").owlCarousel({
-                items: 5,
-                loop: false,
-                nav: true,
-                dots: false,
-                margin: 10
-            });
+            if (typeof $.fn.owlCarousel === 'function' && $(".owl-carousel").length) {
+                try {
+                    $(".owl-carousel").owlCarousel({
+                        items: 5,
+                        loop: false,
+                        nav: true,
+                        dots: false,
+                        margin: 10
+                    });
+                } catch (e) {
+                    console.warn("owlCarousel init error:", e);
+                }
+            }
 
-            // Handle category click
-            $(".tabs li").click(function() {
+            // Handle category click (delegated)
+            $(document).on('click', '.tabs li', function() {
                 var categoryId = $(this).attr('id');
-
+                if (!categoryId) return;
 
                 // Remove active class from all tabs and tab contents
                 $(".tabs li").removeClass('active');
@@ -3699,13 +3705,11 @@
                 if ($tabContent.length) {
                     $tabContent.addClass('active');
 
-
                     // Check if content already loaded
                     if ($tabContent.find('.productset').length === 0) {
                         loadProductsByCategory(categoryId);
                     }
                 } else {
-
                     // Create new tab content if not found
                     $('.tabs_container').append('<div class="tab_content active" data-tab="' + categoryId + '"></div>');
                     loadProductsByCategory(categoryId);
@@ -3714,34 +3718,39 @@
 
             // Function to load products by category
             function loadProductsByCategory(categoryId) {
-                const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+                const rawSubAdminId = localStorage.getItem("selectedSubAdminId");
+                let selectedSubAdminId = (rawSubAdminId && rawSubAdminId !== 'null' && rawSubAdminId !== 'undefined' && rawSubAdminId !== '1') ? rawSubAdminId : '';
                 let url = `/api/getProductsByCategory/${categoryId}`;
 
                 if (selectedSubAdminId) {
                     url += `?sub_admin_id=${encodeURIComponent(selectedSubAdminId)}`;
                 }
 
+                var token = localStorage.getItem("authToken");
+                var ajaxHeaders = {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                };
+                if (token && token !== "null" && token !== "undefined") {
+                    ajaxHeaders["Authorization"] = "Bearer " + token;
+                }
+
                 $.ajax({
-                    // url: "/api/getProductsByCategory/" + categoryId,
                     url: url,
                     type: "GET",
                     dataType: "json",
-                    headers: {
-                        "Authorization": "Bearer " + authToken,
-                    },
+                    headers: ajaxHeaders,
                     success: function(response) {
-                        const currencySymbol = response.currency_symbol || 'Ã¢â€šÂ¹';
+                        const currencySymbol = response.currency_symbol || '₹';
                         const currencyPosition = response.currency_position || 'left';
 
-
-                        if (response.status) {
+                        if (response.status && response.data) {
                             renderProducts(response.data, categoryId, currencySymbol, currencyPosition);
                         } else {
                             renderProducts([], categoryId, currencySymbol, currencyPosition);
                         }
                     },
                     error: function(xhr, status, error) {
-
+                        console.error("Failed to load products for category:", categoryId, error);
                         renderProducts([], categoryId);
                     }
                 });
@@ -3752,14 +3761,12 @@
 
                 var productsHtml = '';
 
-                if (products.length === 0) {
-                    productsHtml = '<div class="col-12"><p>No products found in this category</p></div>';
+                if (!products || products.length === 0) {
+                    productsHtml = '<div class="col-12"><p class="text-muted p-3">No products found in this category</p></div>';
                 } else {
                     products.forEach(function(product) {
                         // Default image
                         let productImage = "{{ env('ImagePath') }}/admin/assets/img/product/noimage.png";
-                        // console.log('ImagePath' + productImage);
-
 
                         // Handle different image formats
                         if (product.image) {
@@ -3841,17 +3848,14 @@
                 var $tabContent = $('.tab_content[data-tab="' + categoryId + '"]');
                 if ($tabContent.length) {
                     $tabContent.html('<div class="row">' + productsHtml + '</div>');
-
                 } else {
-
+                    $('.tabs_container').append('<div class="tab_content active" data-tab="' + categoryId + '"><div class="row">' + productsHtml + '</div></div>');
                 }
             }
 
-
-
             // Load products for the first category by default
             var firstCategory = $(".tabs li:first");
-            if (firstCategory.length) {
+            if (firstCategory.length && firstCategory.attr('id')) {
                 var firstCategoryId = firstCategory.attr('id');
                 firstCategory.addClass('active');
                 var firstTabContent = $('.tab_content[data-tab="' + firstCategoryId + '"]');
@@ -3859,12 +3863,17 @@
                 if (firstTabContent.length) {
                     firstTabContent.addClass('active');
                 } else {
-                    // Create tab content if it doesn't exist
                     $('.tabs_container').append('<div class="tab_content active" data-tab="' + firstCategoryId + '"></div>');
                 }
 
                 // Load data for first category
                 loadProductsByCategory(firstCategoryId);
+            } else {
+                $('#mainBranchToggle').prop('checked', true);
+                if ($('.tab_content[data-tab="all"]').length === 0) {
+                    $('.tabs_container').append('<div class="tab_content active" data-tab="all"></div>');
+                }
+                loadProductsByCategory('all');
             }
 
 

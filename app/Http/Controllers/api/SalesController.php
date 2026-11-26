@@ -71,49 +71,72 @@ class SalesController extends Controller
     // In your controller
     public function getProductsByCategory(Request $request, $categoryId)
     {
-        $user = Auth::guard('api')->user();
-        // dd($user);
+        $user = null;
+        try {
+            $user = Auth::guard('api')->user();
+        } catch (\Throwable $e) {}
+        if (!$user) {
+            try {
+                $user = Auth::guard('web')->user();
+            } catch (\Throwable $e) {}
+        }
+        if (!$user) {
+            $user = auth()->user();
+        }
+
         $userId = $user->id ?? null;
         $branchId = $user->branch_id ?? null;
-        $userRole = $user->role ?? null;
+        $userRole = strtolower($user->role ?? '');
 
         $settings = DB::table('settings')->first();
         $currencySymbol = $settings->currency_symbol ?? '₹';
         $currencyPosition = $settings->currency_position ?? 'left';
 
         $sub_admin_id = $request->input('sub_admin_id') ?? $request->input('selectedSubAdminId') ?? session('selectedSubAdminId');
+        if ($sub_admin_id === 'null' || $sub_admin_id === 'undefined' || empty($sub_admin_id)) {
+            $sub_admin_id = null;
+        }
 
         $productsQuery = Product::where('isDeleted', 0)
             ->when($categoryId !== 'all', function ($q) use ($categoryId) {
                 $q->where('category_id', $categoryId);
             });
 
+        $branchIdToUse = null;
         if (!empty($sub_admin_id) && $sub_admin_id != 1) {
-            // ✅ If sub_admin_id is given (sub-admin branch selected)
-            $products = $productsQuery->where(function ($q) use ($sub_admin_id) {
-                    $q->where('branch_id', $sub_admin_id)
+            $branchIdToUse = $sub_admin_id;
+        } elseif ($userRole === 'sub-admin' || $userRole === 'sub_admin' || $userRole === 'subadmin') {
+            $branchIdToUse = $branchId ?: $userId;
+        } elseif ($userRole === 'staff') {
+            $branchIdToUse = $branchId;
+        } elseif ($userRole === 'admin') {
+            $branchIdToUse = (!empty($sub_admin_id) && $sub_admin_id != 1) ? $sub_admin_id : $userId;
+        } else {
+            $branchIdToUse = (!empty($sub_admin_id) && $sub_admin_id != 1) ? $sub_admin_id : ($branchId ?: $userId);
+        }
+
+        if (!empty($branchIdToUse) && $branchIdToUse != 1) {
+            // If branch selected or user belongs to a branch
+            $products = (clone $productsQuery)->where(function ($q) use ($branchIdToUse) {
+                    $q->where('branch_id', $branchIdToUse)
                       ->orWhere('branch_id', 1);
                 })
                 ->get();
-        } elseif (!empty($userId) && !empty($userRole == 'sub-admin')) {
-            // ✅ Otherwise, use logged-in user's branch_id
-            $products = $productsQuery->where(function ($q) use ($userId) {
-                    $q->where('branch_id', $userId)
-                      ->orWhere('branch_id', 1);
-                })
-                ->get();
-        } elseif (!empty($userRole == 'staff')) {
-            // ✅ Staff
-            $products = $productsQuery->where(function ($q) use ($branchId) {
-                    $q->where('branch_id', $branchId)
-                      ->orWhere('branch_id', 1);
+        } elseif (!empty($branchIdToUse)) {
+            $products = (clone $productsQuery)->where(function ($q) use ($branchIdToUse) {
+                    $q->where('branch_id', $branchIdToUse)
+                      ->orWhereNull('branch_id');
                 })
                 ->get();
         } else {
-            $products = $productsQuery->where('branch_id', $userId)
-                ->get();
+            $products = (clone $productsQuery)->get();
         }
-        // dd($products);
+
+        // Fallback: If no products found under this branch, fetch products for this category without branch filter
+        if ($products->isEmpty()) {
+            $products = (clone $productsQuery)->get();
+        }
+
         return response()->json([
             'status' => true,
             'currency_symbol' => $currencySymbol,
