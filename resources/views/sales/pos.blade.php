@@ -85,11 +85,174 @@
         color: #ff9f43;
     }
 
+    .pos-top-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .pos-gst-options.custom-gst-group {
+        display: inline-flex;
+        align-items: center;
+        background-color: #f3f4f6;
+        border-radius: 50px;
+        padding: 3px;
+        border: 1px solid #e5e7eb;
+        gap: 0;
+    }
+    .custom-gst-btn {
+        margin: 0;
+        cursor: pointer;
+    }
+    .custom-gst-btn input {
+        display: none;
+    }
+    .custom-gst-btn span {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+    .custom-gst-btn input:checked + span {
+        background-color: #fff;
+        color: #111827;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .custom-pill-group {
+        display: inline-flex;
+        align-items: center;
+    }
+    .custom-pill-btn {
+        margin: 0;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .custom-pill-btn input {
+        display: none;
+    }
+    .custom-pill-btn span {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+        background-color: #fff;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .custom-pill-btn input:checked + span {
+        color: #f97316;
+        border-color: #f97316;
+        background-color: #fff;
+    }
+    .pos-action-pills-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+    .pos-action-pills-grid .pos-action-pill {
+        width: 100% !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        padding: 6px 6px !important;
+        font-size: 12px !important;
+        justify-content: center !important;
+        border-radius: 6px !important;
+        display: inline-flex;
+        align-items: center !important;
+        gap: 6px !important;
+        background: #fff !important;
+        border: 1px solid #d8d6de !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        color: #5e5873 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+    .pos-action-pills-grid .pos-action-pill:hover {
+        background: #f8f9fa !important;
+        border-color: #ff9f43 !important;
+        color: #ff9f43 !important;
+    }
+    .pos-action-pills-grid .pos-action-pill i {
+        color: #ff9f43 !important;
+        font-size: 11px !important;
+    }
+    .pos-action-pills-grid .pos-action-pill.active {
+        background: #fff3e8 !important;
+        border-color: #ff9f43 !important;
+        color: #ff9f43 !important;
+    }
+    .payment-panel-handle {
+        text-align: center;
+        padding: 6px 0;
+        cursor: pointer;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 8px;
+        user-select: none;
+    }
+    .payment-panel-handle .handle-pill {
+        display: inline-block;
+        width: 36px;
+        height: 4px;
+        background: #d8d6de;
+        border-radius: 2px;
+        margin-bottom: 2px;
+    }
+    .payment-panel-handle .handle-hint {
+        display: block;
+        font-size: 11px;
+        color: #8892a4;
+    }
+    .setvaluecash ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+    .setvaluecash ul li {
+        flex: 1 1 calc(33.333% - 6px);
+        min-width: 70px;
+    }
+    .setvaluecash ul li a {
+        border: 1px solid #e9ecef;
+        color: #495057;
+        font-size: 11px;
+        font-weight: 600;
+        min-height: 44px;
+        border-radius: 6px;
+        padding: 5px 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+    .setvaluecash ul li a.active {
+        background-color: #1b2850 !important;
+        color: #ffffff !important;
+        border-color: #1b2850 !important;
+    }
+    .setvaluecash ul li a.active i {
+        color: #ffffff !important;
+    }
+    .setvaluecash ul li a:hover {
+        border-color: #1b2850;
+    }
+
     .payment_panel {
-        position: fixed;
-        bottom: 0;
         background-color: white;
-        width: 32%;
+        width: 100%;
+        margin-top: 10px;
     }
 
     .body_space {
@@ -278,67 +441,104 @@
 
     <div class="row">
 
-        <div class="gst-header" style="display: flex; align-items: center; justify-content: space-between;">
-
-            <div class="d-flex">
-                <label class="custom-radio-label" style="margin-right: 1rem;">
-                    <input type="radio" name="gst_option" id="without_gst" value="without" checked />
-                    Without GST
-                </label>
-
-                <label class="custom-radio-label">
-                    <input type="radio" name="gst_option" id="with_gst" value="with" />
-                    With GST
-                </label>
-            </div>
-
-            <a href="{{ route('product.add') }}" class="btn btn-primary py-1"><i class="fas fa-plus me-1"></i> Add Items</a>
-
-        </div>
-
-
-
-
-
-
         <div class="col-lg-7 col-sm-12 tabs_wrapper">
 
-            <ul class="tabs border-0 mb-4">
-                @php
-                $hasProducts = false;
-                @endphp
+            <div class="pos-top-controls mb-2 mb-md-3">
+                <div class="pos-gst-options custom-gst-group">
+                    <label class="custom-gst-btn" tabindex="0">
+                        <input type="radio" name="gst_option" id="without_gst" value="without" checked />
+                        <span>Without GST</span>
+                    </label>
+                    <label class="custom-gst-btn" tabindex="0">
+                        <input type="radio" name="gst_option" id="with_gst" value="with" />
+                        <span>With GST</span>
+                    </label>
+                </div>
+            </div>
 
-                @foreach($categories as $cat)
-                @php
-                $currentBranch = $branchIdToUse ?? (session('selectedSubAdminId') ?: 1);
-                $availableProducts = $cat->products()
-                    ->where('isDeleted', 0)
-                    ->where(function ($q) use ($currentBranch) {
-                        if (!empty($currentBranch) && $currentBranch != 1) {
-                            $q->where('branch_id', $currentBranch)
-                              ->orWhere('branch_id', 1);
-                        } else {
-                            $q->where('branch_id', 1)->orWhereNull('branch_id');
-                        }
-                    })
-                    ->get();
-                if ($availableProducts->isEmpty()) {
-                    $availableProducts = $cat->products()->where('isDeleted', 0)->get();
-                }
-                @endphp
-
-                @if($availableProducts && $availableProducts->count() > 0)
-                @php
-                $hasProducts = true;
-                @endphp
-                <li id="{{ $cat->id }}">
-                    <div class="product-details">
-                        <h6 style="text-transform: capitalize;">{{ $cat->name }}</h6>
+            <div class="scanner-search-wrap search_custom_product mb-2 mb-md-3">
+                <div class="header-search d-flex align-items-center position-relative w-100" style="gap: 8px;">
+                    <!-- Scanner Button -->
+                    <button type="button" id="scanBarcodeBtn" class="btn"
+                        style="background: #f8f9fa; border: 1px solid #ced4da; border-radius: 6px; color: #495057; display: inline-flex; align-items: center; justify-content: center; width: 38px; min-width: 38px; height: 38px; flex-shrink: 0; padding: 0; cursor: pointer;"
+                        title="Scan Barcode">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            fill="currentColor" class="bi bi-qr-code-scan" viewBox="0 0 16 16">
+                            <path d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5M.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5M4 4h1v1H4z" />
+                            <path d="M7 2H2v5h5zM3 3h3v3H3zm2 8H4v1h1z" />
+                            <path d="M7 9H2v5h5zm-4 1h3v3H3zm8-6h1v1h-1z" />
+                            <path d="M9 2h5v5H9zm1 1v3h3V3zM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8zm2 2H9V9h1zm4 2h-1v1h-2v1h3zm-4 2v-1H8v1z" />
+                            <path d="M12 9h2V8h-2z" />
+                        </svg>
+                    </button>
+                    <!-- Search Icon and Input -->
+                    <div class="position-relative flex-grow-1 pos-search-input-box" style="min-width: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 5;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="customerSearch1"
+                            class="form-control" placeholder="Search..."
+                            autocomplete="off" style="height: 38px; font-size: 14px; padding-left: 36px; border-radius: 6px; border: 1px solid #ced4da; width: 100%;">
+                        <!-- Search Results -->
+                        <div id="searchResults1"
+                            class="list-group bg-white position-absolute rounded shadow mt-1"
+                            style="z-index: 1050; max-height: 300px; overflow-y: auto; display: none; width: 100%; top: 100%; left: 0;">
+                        </div>
                     </div>
-                </li>
-                @endif
-                @endforeach
-            </ul>
+                    <!-- + Add Product Button -->
+                    <a href="{{ route('product.add') }}" class="btn btn-sm pos-action-btn"
+                        style="background-color: #ff9f43; color: white; white-space: nowrap; border-radius: 6px; height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; font-weight: 500;">
+                        + Add Product
+                    </a>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2 mb-md-4">
+                <div class="custom-pill-group mb-0" style="margin-right: 15px; flex-shrink: 0;">
+                    <label class="custom-pill-btn" tabindex="0">
+                        <input class="form-check-input" type="checkbox" id="mainBranchToggle">
+                        <span>All Products</span>
+                    </label>
+                </div>
+
+                <ul class="tabs border-0 mb-0 flex-grow-1" style="display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    @php
+                    $hasProducts = false;
+                    @endphp
+
+                    @foreach($categories as $cat)
+                    @php
+                    $currentBranch = $branchIdToUse ?? (session('selectedSubAdminId') ?: 1);
+                    $availableProducts = $cat->products()
+                        ->where('isDeleted', 0)
+                        ->where(function ($q) use ($currentBranch) {
+                            if (!empty($currentBranch) && $currentBranch != 1) {
+                                $q->where('branch_id', $currentBranch)
+                                  ->orWhere('branch_id', 1);
+                            } else {
+                                $q->where('branch_id', 1)->orWhereNull('branch_id');
+                            }
+                        })
+                        ->get();
+                    if ($availableProducts->isEmpty()) {
+                        $availableProducts = $cat->products()->where('isDeleted', 0)->get();
+                    }
+                    @endphp
+
+                    @if($availableProducts && $availableProducts->count() > 0)
+                    @php
+                    $hasProducts = true;
+                    @endphp
+                    <li id="{{ $cat->id }}">
+                        <div class="product-details">
+                            <h6 style="text-transform: capitalize;">{{ $cat->name }}</h6>
+                        </div>
+                    </li>
+                    @endif
+                    @endforeach
+                </ul>
+            </div>
 
             @if(!$hasProducts)
             <div class="text-center my-4">
@@ -359,23 +559,6 @@
                 <div class="card-body body_space">
                     <div class="row" style="padding: 20px;">
                         <div class="col-lg-12">
-                            <div
-                                class="header-search d-flex align-items-center position-relative me-3 mb-3 search_custom_product">
-                                <!-- Search Icon -->
-                                <img src="{{ env('ImagePath') . '/admin/assets/img/icons/search.svg' }}" alt="Search"
-                                    style="position: absolute; left: 12px; width: 18px; height: 18px; z-index: 10; opacity: 0.6;">
-
-                                <!-- Input Field -->
-                                <input type="text" id="customerSearch1"
-                                    class="form-control form-control-sm rounded px-3 ps-5" placeholder="Search..."
-                                    autocomplete="off" style="height: 38px; font-size: 14px;">
-
-                                <!-- Search Results -->
-                                <div id="searchResults1"
-                                    class="list-group bg-white position-absolute rounded shadow mt-1 w-100"
-                                    style="z-index: 1050; max-height: 300px; overflow-y: auto; display: none; top: 100%; left: 0;">
-                                </div>
-                            </div>
                             <div class="row">
 
 
@@ -522,34 +705,195 @@
                     </div>
                     <div class="card-body pt-0 pb-2 body_space_two">
 
-                        <div class="col-lg-12">
-                            <div class="select-split ">
-                                <div class="select-group w-100">
-                                    <label for="discount">Discount (₹)</label>
-                                    <input type="number" class="form-control" placeholder="Discount ₹" name="discount"
-                                        id="discount">
-                                    <span class="error_discount"></span>
+                        <!-- Action Pills Grid (3 Columns) -->
+                        <div class="col-lg-12 px-0">
+                            <div class="pos-action-pills-grid">
+                                <a href="javascript:void(0);" id="toggle_delivery_cost"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="Delivery Cost">
+                                    <span>Delivery Cost</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+
+                                <a href="javascript:void(0);" id="toggle_tds"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="TDS">
+                                    <span>TDS</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+
+                                <a href="javascript:void(0);" id="toggle_other_charges"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="Add Other Charges">
+                                    <span>Other Charges</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+
+                                <a href="javascript:void(0);" id="toggle_labour_items"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="Add Labour Items">
+                                    <span>Labour</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+
+                                <a href="javascript:void(0);" id="toggle_overall_discount"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="Overall Discount">
+                                    <span>Discount</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+
+                                <div class="pos-action-pill-wrapper w-100" style="display: flex; align-items: center;">
+                                    <button type="button" id="openAddRemarksBtn"
+                                        class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                        title="Add Remarks">
+                                        <span>Remarks</span>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+
+                                <a href="javascript:void(0);" id="toggle_exchange_charges"
+                                    class="btn btn-outline-secondary btn-sm pos-action-pill w-100"
+                                    title="Exchange">
+                                    <span>Exchange</span>
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Cost Section -->
+                        <div class="row mt-2" id="delivery_cost_section" style="display: none;">
+                            <div class="col-lg-12">
+                                <div class="select-split">
+                                    <div class="select-group w-100">
+                                        <label for="shipping" class="mb-1" style="font-size: 13px; font-weight: 500;">Delivery Cost</label>
+                                        <input type="number" class="form-control" placeholder="Delivery Cost"
+                                            name="shipping" id="shipping" min="0" step="0.01">
+                                        <span class="error_shipping text-danger"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- TDS Section -->
+                        <div class="row mt-2" id="tds_section" style="display: none;">
+                            <div class="col-lg-6 col-6">
+                                <div class="select-group w-100">
+                                    <label for="tds_percentage" style="font-size: 12px; font-weight: 500;">TDS Percentage (%)</label>
+                                    <input type="number" class="form-control" name="tds_percentage"
+                                        id="tds_percentage" placeholder="0" min="0" max="100" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-6">
+                                <div class="select-group w-100">
+                                    <label for="tds_amount" style="font-size: 12px; font-weight: 500;">TDS Amount</label>
+                                    <input type="text" class="form-control" name="tds_amount" id="tds_amount"
+                                        min="0" value="0.00" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other Charges Section -->
+                        <div class="row mt-2" id="other_charges_section" style="display: none;">
+                            <div class="col-lg-12">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="mb-0" style="font-size: 13px; font-weight: 500;">Other Charges</label>
+                                    <button type="button" id="addOtherChargeBtn" class="btn btn-outline-secondary btn-sm" style="border-radius: 6px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border-color: #d8d6de; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" title="Add Other Charge">
+                                        <i class="fas fa-plus" style="color: #ff9f43;"></i>
+                                    </button>
+                                </div>
+                                <div id="otherChargesContainer" class="d-flex flex-column gap-2">
+                                    <div class="other-charge-row d-flex align-items-center gap-2">
+                                        <input type="text" class="form-control other-charge-name" placeholder="Charge Name">
+                                        <input type="number" class="form-control other-charge-amount" placeholder="Amount" min="0" step="0.01">
+                                        <button type="button" class="btn btn-outline-danger btn-sm removeOtherChargeBtn" style="border-radius: 6px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="misc_charges" id="misc_charges" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Labour Charges Section -->
+                        <div class="row mt-2" id="labour_charges_section" style="display: none;">
+                            <div class="col-lg-12">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="mb-0" style="font-size: 13px; font-weight: 500;">Labour Charge</label>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#labourItemModal" style="border-radius: 6px; font-size: 11px;">
+                                        <i class="fas fa-plus text-primary me-1"></i> Add Labour
+                                    </button>
+                                </div>
+                                <div id="labourChargesContainer" class="d-flex flex-column gap-1"></div>
+                                <input type="hidden" name="labour_amount" id="labour_amount" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Overall Discount Section -->
+                        <div class="row mt-2 overall-discount-container" id="overall_discount_section" style="display: none;">
+                            <div class="col-lg-6 col-6">
+                                <div class="select-group w-100">
+                                    <label for="overall_discount_percentage" style="font-size: 12px; font-weight: 500;">Discount (%)</label>
+                                    <input type="number" class="form-control" name="discount_percentage"
+                                        id="overall_discount_percentage" placeholder="0" min="0" max="100" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-6">
+                                <div class="select-group w-100">
+                                    <label for="discount" style="font-size: 12px; font-weight: 500;">Discount Amount</label>
+                                    <input type="number" class="form-control" name="discount"
+                                        id="discount" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exchange Charges Section -->
+                        <div class="mt-2" id="exchange_charges_wrapper" style="display: none;">
+                            <div class="card p-2 mb-0" style="background: #fff8f0; border: 1px dashed #ff9f43; border-radius: 8px;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong style="color: #ff9f43; font-size: 13px;"><i class="fas fa-recycle me-1"></i> Exchange Details</strong>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="text" class="form-control form-control-sm" id="pos_exchange_material" placeholder="Item Name">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" class="form-control form-control-sm" id="pos_exchange_amount" name="exchange_amount" placeholder="Value (₹)" min="0" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Hidden remarks textarea --}}
+                        <textarea name="remark" id="remark" style="display:none;"></textarea>
+                        <textarea name="remarks" id="remarks" style="display:none;"></textarea>
+                        <textarea name="terms_condition" id="terms_condition" style="display:none;">{{ $setting->terms_condition_eng ?? '' }}</textarea>
+
+                        <!-- Totals Summary List -->
                         <div class="setvalue">
                             <ul>
                                 <li>
-
-                                    <h5>Subtotal</h5>
+                                    <h5>Total (Product)</h5>
                                     <h6 style="color: green;">
                                         @if($currency_position === 'right')
                                         <span class="subtotal-value">0.00</span>{{ $currency_symbol }}
                                         @else
-
                                         {{ $currency_symbol }}<span class="subtotal-value">0.00</span>
                                         @endif
                                     </h6>
-                                    <input type="hidden" name="subtotal" value="" class="tax-hidden">
+                                    <input type="hidden" name="subtotal" value="0.00" class="tax-hidden">
                                 </li>
 
-                                <li>
+                                <li class="gst-summary-row" style="display: none;">
+                                    <h5>Total GST Amount</h5>
+                                    <h6 class="gst-total-amount">
+                                        @if($currency_position === 'right')
+                                        <span>0.00</span>{{ $currency_symbol }}
+                                        @else
+                                        {{ $currency_symbol }}<span>0.00</span>
+                                        @endif
+                                    </h6>
+                                </li>
+
+                                <li class="discount-summary-row" style="display: none;">
                                     <h5>Discount Amount</h5>
                                     <h6 class="discount-amount">
                                         @if($currency_position === 'right')
@@ -561,20 +905,59 @@
                                     <input type="hidden" name="discount_amount" value="0.00" class="tax-hidden">
                                 </li>
 
-                                <li>
-                                    <h5>Price After Discount</h5>
-                                    <h6 class="price-after-discount">
+                                <li class="shipping-summary-row" style="display: none;">
+                                    <h5>Delivery Cost</h5>
+                                    <h6 class="shipping-cost-summary">
                                         @if($currency_position === 'right')
                                         <span>0.00</span>{{ $currency_symbol }}
                                         @else
                                         {{ $currency_symbol }}<span>0.00</span>
                                         @endif
                                     </h6>
-                                    <input type="hidden" name="price_after_discount" value="0.00" class="tax-hidden">
+                                </li>
+
+                                <li class="other-charges-summary-row" style="display: none;">
+                                    <h5>Other Charges</h5>
+                                    <h6>
+                                        <span id="other-charges-cost-display">0.00</span>
+                                    </h6>
+                                </li>
+
+                                <li class="labour-summary-row" style="display: none;">
+                                    <h5>Labour Charge</h5>
+                                    <h6 class="labour-total-amount">
+                                        @if($currency_position === 'right')
+                                        <span>0.00</span>{{ $currency_symbol }}
+                                        @else
+                                        {{ $currency_symbol }}<span>0.00</span>
+                                        @endif
+                                    </h6>
+                                </li>
+
+                                <li class="tds-summary-row" style="display: none;">
+                                    <h5>TDS (<span class="tds-percentage-summary">0.00</span>%)</h5>
+                                    <h6 class="tds-amount-summary">
+                                        @if($currency_position === 'right')
+                                        <span>0.00</span>{{ $currency_symbol }}
+                                        @else
+                                        {{ $currency_symbol }}<span>0.00</span>
+                                        @endif
+                                    </h6>
+                                </li>
+
+                                <li class="exchange-summary-row" style="display: none;">
+                                    <h5>Exchange Value</h5>
+                                    <h6 class="exchange-amount-summary" style="color: #ff9f43;">
+                                        @if($currency_position === 'right')
+                                        - <span>0.00</span>{{ $currency_symbol }}
+                                        @else
+                                        - {{ $currency_symbol }}<span>0.00</span>
+                                        @endif
+                                    </h6>
                                 </li>
 
                                 @foreach($taxRates as $tax)
-                                <li class="taxList">
+                                <li class="taxList" style="display: none;">
                                     <h5>{{ $tax->tax_name }} ({{ $tax->tax_rate }}%) Tax</h5>
                                     <h6 class="tax-value" data-rate="{{ $tax->tax_rate }}"
                                         data-symbol="{{ $currency_symbol }}" data-position="{{ $currency_position }}">
@@ -596,7 +979,9 @@
                                         {{ $currency_symbol }}<span class="total-amount">0.00</span>
                                         @endif
                                     </h6>
-                                    <input type="hidden" name="total" value="" class="tax-hidden">
+                                    <input type="hidden" name="total" value="0.00" class="tax-hidden">
+                                    <input type="hidden" name="grand_total" id="grand_total_form" value="0.00">
+                                    <input type="hidden" name="price_after_discount" value="0.00" class="tax-hidden">
                                 </li>
 
                                 <li class="error-message-container">
@@ -605,284 +990,283 @@
                             </ul>
                         </div>
 
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-2">
-                                    <label for="payment_date">Date</label>
-                                    <input type="date" name="payment_date" id="payment_date" class="form-control"
-                                        value="{{ date('Y-m-d') }}">
-                                </div>
+                        <!-- Modern Payment Panel (Collapsible with Handle) -->
+                        <div class="payment_panel pos-pay-collapsed" id="paymentPanel">
+                            <!-- Drag handle -->
+                            <div id="paymentPanelHandle" class="payment-panel-handle" title="Show or hide payment options">
+                                <span class="handle-pill"></span>
+                                <span class="handle-hint">⬆ drag to reveal products ⬇</span>
+                                <span class="pos-pay-title">Payment Method</span>
+                                <span class="pos-pay-value-wrap">
+                                    <span id="posPaySummary">Cash</span>
+                                    <span class="handle-caret"><i class="fas fa-chevron-down"></i></span>
+                                </span>
                             </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group mb-2">
-                                    <label for="warranty_date">Warranty Date</label>
-                                    <input type="date" name="warranty_date" id="warranty_date" class="form-control"
-                                        value="{{ date('Y-m-d', strtotime('+3 years')) }}">
-                                </div>
-                            </div>
-                            <!-- Paid By -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-2">
-                                    <label for="paid_by">Paid By</label>
-                                    <select name="paid_by" id="paid_by" class="form-control">
-                                        <option value="Cash">Cash</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Cash_online">Cash + Online</option>
-                                        <option value="EMI">EMI</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <div id="paymentPanelBody">
+                                <div class="setvaluecash mt-1" id="paymentSection">
+                                    <ul>
+                                        <li id="payLaterOption">
+                                            <a href="javascript:void(0);" class="paymentmethod">
+                                                <input type="radio" name="payment_method" value="pending" hidden>
+                                                <i class="fas fa-history" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                Pay Later
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="paymentmethod active">
+                                                <input type="radio" name="payment_method" value="cash" hidden checked>
+                                                <i class="fas fa-money-bill-wave" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                Cash
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="paymentmethod">
+                                                <input type="radio" name="payment_method" value="debit card" hidden>
+                                                <i class="fas fa-credit-card" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                Debit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="paymentmethod">
+                                                <input type="radio" name="payment_method" value="cash+online" hidden>
+                                                <i class="fas fa-money-check-alt" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                Cash+Online
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="paymentmethod">
+                                                <input type="radio" name="payment_method" value="scan" hidden>
+                                                <i class="fas fa-qrcode" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                Scan
+                                            </a>
+                                        </li>
+                                        <li id="emiPaymentOption">
+                                            <a href="javascript:void(0);" class="paymentmethod">
+                                                <input type="radio" name="payment_method" value="emi" hidden>
+                                                <i class="fas fa-calendar-alt" style="font-size: 16px; display: block; margin-bottom: 4px;"></i>
+                                                EMI
+                                            </a>
+                                        </li>
+                                    </ul>
 
+                                    <input type="hidden" name="paid_by" id="paid_by" value="Cash">
+                                    <input type="hidden" name="cash_type" id="cash_type" value="cash_Fully">
+                                    <input type="hidden" name="online_type" id="online_type" value="Fully">
+                                    <input type="hidden" name="cash_online_type" id="cash_online_type" value="cash_online_Fully">
 
-
-                            <!-- Cash Payment Type -->
-                            <div class="col-md-4" id="cash_type_container" style="display: none;">
-                                <div class="form-group mb-2">
-                                    <label for="cash_type">Cash Payment</label>
-                                    <select name="cash_type" id="cash_type" class="form-control">
-                                        <option value="">-- Select --</option>
-                                        <option value="cash_Fully">Fully</option>
-                                        <option value="cash_partially">Partially</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Cash + Online Payment Type -->
-                            <div class="col-md-4" id="cash_online_type_container" style="display: none;">
-                                <div class="form-group mb-2">
-                                    <label for="cash_online_type">Cash + Online</label>
-                                    <select name="cash_online_type" id="cash_online_type" class="form-control">
-                                        <option value="">-- Select --</option>
-                                        <option value="cash_online_Fully">Fully</option>
-                                        <option value="cash_online_Partially">Partially</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Fully -->
-                            <div class="col-12" id="cash_online_fully_fields" style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_online_cash_amount">Cash Amount</label>
-                                            <input type="number" name="cash_online_cash_amount"
-                                                id="cash_online_cash_amount" class="form-control"
-                                                placeholder="Enter cash amount">
-                                            <span
-                                                class="text-danger">{{ $errors->first('cash_online_cash_amount') }}</span>
+                                    <!-- Compact Date & Warranty Date row -->
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-md-6 col-6">
+                                            <div class="form-group mb-1">
+                                                <label for="payment_date" style="font-size: 12px; font-weight: 500;">Payment Date</label>
+                                                <input type="date" name="payment_date" id="payment_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_online_upi_amount">Online Amount</label>
-                                            <input type="number" name="cash_online_upi_amount"
-                                                id="cash_online_upi_amount" class="form-control"
-                                                placeholder="Enter online amount" readonly>
-                                            <span
-                                                class="text-danger">{{ $errors->first('cash_online_upi_amount') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Partially -->
-                            <div class="col-12" id="cash_online_partial_fields" style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_online_partial_cash">Cash Amount</label>
-                                            <input type="number" name="cash_online_partial_cash"
-                                                id="cash_online_partial_cash" class="form-control"
-                                                placeholder="Enter cash amount">
-                                            <span
-                                                class="text-danger">{{ $errors->first('cash_online_partial_cash') }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_online_partial_upi">Online Amount</label>
-                                            <input type="number" name="cash_online_partial_upi"
-                                                id="cash_online_partial_upi" class="form-control"
-                                                placeholder="Enter online amount">
-                                            <span
-                                                class="text-danger">{{ $errors->first('cash_online_partial_upi') }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_online_remaining">Remaining Amount</label>
-                                            <input type="number" name="cash_online_remaining" id="cash_online_remaining"
-                                                class="form-control" placeholder="Remaining amount" readonly>
-                                            <span
-                                                class="text-danger">{{ $errors->first('cash_online_remaining') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <!-- Cash Fully Payment Fields -->
-                            <div class="col-12" id="cash_fully_fields" style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_amount">Cash Amount</label>
-                                            <input type="number" name="cash_amount" id="cash_amount"
-                                                class="form-control" placeholder="Enter cash amount">
+                                        <div class="col-md-6 col-6">
+                                            <div class="form-group mb-1">
+                                                <label for="warranty_date" style="font-size: 12px; font-weight: 500;">Warranty Date</label>
+                                                <input type="date" name="warranty_date" id="warranty_date" class="form-control form-control-sm" value="{{ date('Y-m-d', strtotime('+3 years')) }}">
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="upi_amount">Online Amount</label>
-                                            <input type="float" name="upi_amount" id="upi_amount" class="form-control"
-                                                placeholder="Enter online amount" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cash Partially Payment Fields -->
-                            <div class="col-12" id="cash_partially_fields" style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_partial_amount">Cash Amount</label>
-                                            <input type="number" name="cash_partial_amount" id="cash_partial_amount"
-                                                class="form-control" placeholder="Enter cash amount" min="0">
-                                            <span class="text-danger cash_partial_error d-none"></span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-2">
-                                            <label for="cash_remaining_amount">Remaining Amount</label>
-                                            <input type="number" name="cash_remaining_amount" id="cash_remaining_amount"
-                                                class="form-control" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-
-
-                            <!-- Online Payment Type -->
-                            <div class="col-md-4" id="online_type_container" style="display: none;">
-                                <div class="form-group mb-2">
-                                    <label for="online_type">Online Payment</label>
-                                    <select name="online_type" id="online_type" class="form-control">
-                                        <option value="">-- Select --</option>
-                                        <option value="Fully">Fully</option>
-                                        <option value="Partially">Partially</option>
-                                    </select>
-                                </div>
-                            </div>
-
-
-                            <!-- This Payment (Grand Total) -->
-                            <div class="col-md-4" id="full_payment_block">
-                                <div class="form-group mb-2">
-                                    <label for="grand_total_form" class="font-weight-bold">Total</label>
-                                    <input type="number" step="0.01" name="grand_total" id="grand_total_form"
-                                        class="form-control" value="0.00" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!-- Partial & Remaining Amounts Together -->
-                        <div class="row" id="partial_remaining_container" style="display: none;">
-                            <!-- Partial Amount -->
-                            <div class="col-md-6">
-                                <div class="form-group mb-2">
-                                    <label for="partial_amount">Partial Amount</label>
-                                    <input type="number" step="0.01" name="partial_amount" id="partial_amount"
-                                        class="form-control" value="0.00" min="0">
-                                </div>
-                            </div>
-
-                            <!-- Remaining Amount -->
-                            <div class="col-md-6">
-                                <div class="form-group mb-2">
-                                    <label for="remaining_amount">Remaining Amount</label>
-                                    <input type="number" step="0.01" name="remaining_amount" id="remaining_amount"
-                                        class="form-control" value="0.00" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EMI Details (hidden by default) -->
-                        <div class="row" id="emi_container" style="display: none;">
-                            <!-- EMI Amount -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-2">
-                                    <label for="emi_amount">EMI Amount</label>
-                                    <input type="number" step="0.01" name="emi_amount" id="emi_amount"
-                                        class="form-control" value="0.00">
-                                </div>
-                            </div>
-
-                            <!-- EMI Duration -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-2">
-                                    <label for="emi_duration">EMI Duration (Months)</label>
-                                    <input type="number" id="emi_duration" name="emi_duration" class="form-control"
-                                        min="1" max="12">
-                                </div>
-                            </div>
-
-                            <!-- Calculated EMI -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-2">
-                                    <label for="calculated_emi">Monthly Installment</label>
-                                    <input type="number" step="0.01" name="calculated_emi" id="calculated_emi"
-                                        class="form-control" value="0.00" readonly>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-12 mt-2">
-                            <div class="form-group mb-1">
-                                <label for="remark">Remark</label>
-                                <textarea name="remark" id="remark" class="form-control" rows="2"
-                                    placeholder="Enter remark"></textarea>
-                            </div>
-                        </div>
-
-
-                        <div class="payment_panel">
-
-
-                            <div class="row align-items-center mb-2">
-                                 <div class="col-auto">
-                                    <div class="bill-generate py-2">
-                                        <input type="hidden" id="bill_generate" name="bill_generate" value="bill_generate">
-                                        <button type="button" class="btn py-1" style=" background: #1b2850; color: white; ">
-                                            Generate Bill
+                                    <div id="paymentDetailActions" class="payment-detail-actions mt-2" style="display:none;">
+                                        <button type="button" id="cancelPaymentDetails" class="payment-detail-cancel me-2">
+                                            Cancel
                                         </button>
                                     </div>
 
+                                    <!-- Paid Type (Fully / Partially) -->
+                                    <div id="posPaidTypeBox" style="margin-top:10px;">
+                                        <div class="form-group mb-2" id="posPaidTypeDropdownGroup">
+                                            <label for="posPaidType" style="font-size: 12px; font-weight: 500;">Paid Type</label>
+                                            <select id="posPaidType" class="form-control">
+                                                <option value="fully" selected>Fully</option>
+                                                <option value="partially">Partially</option>
+                                            </select>
+                                            <span class="error_paidtype text-danger"></span>
+                                        </div>
+                                        <div id="posPaidAmountFields" style="display:none;">
+                                            <div class="row g-2">
+                                                <div class="col-md-6 col-6">
+                                                    <div class="form-group mb-2">
+                                                        <label for="posPaidAmount" style="font-size: 12px; font-weight: 500;">Enter Amount</label>
+                                                        <input type="number" class="form-control" id="posPaidAmount" name="partial_amount" placeholder="0.00" min="0" step="0.01">
+                                                        <input type="hidden" name="cash_partial_amount" id="cash_partial_amount" value="">
+                                                        <span class="error_paidamount text-danger"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-6">
+                                                    <div class="form-group">
+                                                        <label for="posPendingAmount" style="font-size: 12px; font-weight: 500;">Pending Amount</label>
+                                                        <input type="number" class="form-control" id="posPendingAmount" name="remaining_amount" placeholder="0.00" readonly>
+                                                        <input type="hidden" id="cash_remaining_amount" value="0.00">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cash + Online Fields -->
+                                    <div id="cashOnlineBox" style="display:none; margin-top:10px;">
+                                        <div class="row g-2">
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">Cash Amount</label>
+                                                    <input type="number" class="form-control" id="posCashOnlineCashAmount" name="cash_online_cash_amount" placeholder="Enter Cash Amount" min="0" step="0.01">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">Online Amount</label>
+                                                    <input type="number" class="form-control" id="posCashOnlineOnlineAmount" name="cash_online_upi_amount" placeholder="Enter Online Amount" value="0" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- EMI Fields -->
+                                    <div id="emiBox" style="display:none; margin-top:10px;">
+                                        <div class="row g-2">
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">Down Payment (Optional)</label>
+                                                    <input type="number" class="form-control" id="emiDownPayment" placeholder="₹ Amount" min="0" step="0.01">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">Loan Amount</label>
+                                                    <input type="number" class="form-control" id="emiLoanAmount" name="emi_amount" placeholder="Auto Calculate" min="0" step="0.01" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">EMI Duration (Months)</label>
+                                                    <select class="form-control" id="emiTenure" name="emi_duration">
+                                                        <option value="">Select Tenure</option>
+                                                        <option value="3">3 Months</option>
+                                                        <option value="6">6 Months</option>
+                                                        <option value="9">9 Months</option>
+                                                        <option value="12">12 Months</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-6">
+                                                <div class="form-group">
+                                                    <label style="font-size: 12px; font-weight: 500;">Monthly Installment</label>
+                                                    <input type="number" class="form-control" id="emiMonthlyAmount" name="calculated_emi" placeholder="Auto Calculate" min="0" step="0.01" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <span class="error_peymentmethod"></span>
                                 </div>
-                                <div class="col">
-                                    <div class="btn-totallabel">
-                                        <h6>Total Amount : 60.00$</h6>
-                                        <h5>Pay Now <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16"
-                                                style="margin-bottom: 0.1rem;">
-                                                <path fill-rule="evenodd"
-                                                    d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
-                                            </svg></h5>
+
+                                <div class="row align-items-center mt-3 g-2">
+                                    <div class="col-auto">
+                                        <div class="bill-generate">
+                                            <input type="hidden" id="bill_generate" name="bill_generate" value="bill_generate">
+                                            <button type="button" class="btn" style="background: #1b2850; color: white; padding: 10px 18px; font-weight: 500; border-radius: 6px;">
+                                                Generate Bill
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="btn-totallabel" tabindex="0" style="margin: 0; cursor: pointer;">
+                                            <h6>Total Amount : ₹0.00</h6>
+                                            <h5>Pay Now
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16" style="margin-bottom: 0.1rem;">
+                                                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+                                                </svg>
+                                            </h5>
+                                        </div>
                                     </div>
                                 </div>
-                               
                             </div>
-
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remarks & T&C Modal -->
+    <div class="modal fade" id="remarksModal" tabindex="-1" aria-labelledby="remarksModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="remarksModalLabel">T&C and Remarks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">x</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="termsConditionModalTextarea" style="font-weight: 500; color: #5e5873;">
+                            Terms & Conditions
+                        </label>
+                        <textarea id="termsConditionModalTextarea" class="form-control" rows="4" placeholder="Enter terms & conditions...">{{ $setting->terms_condition_eng ?? '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="remarksModalTextarea" style="font-weight: 500; color: #5e5873;">
+                            Remarks <span class="text-muted" style="font-size:12px;">(Optional)</span>
+                        </label>
+                        <textarea id="remarksModalTextarea" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn text-white" id="saveRemarksBtn" style="background-color: #ff9f43;">Save</button>
+                    <button type="button" class="btn btn-secondary btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Labour Item Modal -->
+    <div class="modal fade" id="labourItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="labourItemForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="labourItemModalLabel">Add Labour Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label>Labour Name <span class="text-danger">*</span></label>
+                            <input type="text" name="item_name" id="labour_item_name" class="form-control" placeholder="Enter labour name" required>
+                            <span class="text-danger" id="labour_item_name_error"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Labour Price <span class="text-danger">*</span></label>
+                            <input type="number" name="price" id="labour_item_price" class="form-control" placeholder="Enter price" step="0.01" min="0" required>
+                            <span class="text-danger" id="labour_item_price_error"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Modal -->
+    <div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-labelledby="barcodeScannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="barcodeScannerModalLabel">Scan Barcode</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">x</button>
+                </div>
+                <div class="modal-body">
+                    <div id="qr-reader" style="width:100%; min-height:300px;"></div>
+                    <div id="scan-message" class="text-center mt-2 small text-muted">Initializing camera...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -983,6 +1367,77 @@
 
 
 
+        function refreshPosPaymentUi() {
+            let activeRadio = $("input[name='payment_method']:checked");
+            let method = activeRadio.val() || 'cash';
+            let grandTotal = parseFloat($("input[name='total']").val()) || 0;
+
+            // Update header summary text
+            let summaryLabel = 'Cash';
+            if (method === 'pending') summaryLabel = 'Pay Later';
+            else if (method === 'debit card') summaryLabel = 'Debit';
+            else if (method === 'cash+online') summaryLabel = 'Cash+Online';
+            else if (method === 'scan') summaryLabel = 'Scan';
+            else if (method === 'emi') summaryLabel = 'EMI';
+            $("#posPaySummary").text(summaryLabel);
+
+            // Sync hidden paid_by
+            let paidByMap = {
+                'pending': 'Pending',
+                'cash': 'Cash',
+                'debit card': 'Online',
+                'cash+online': 'Cash_online',
+                'scan': 'Online',
+                'emi': 'EMI'
+            };
+            $("#paid_by").val(paidByMap[method] || 'Cash');
+
+            if (method === 'pending') {
+                $("#paymentDetailActions").hide();
+                $("#posPaidTypeBox, #cashOnlineBox, #emiBox").hide();
+            } else if (method === 'emi') {
+                $("#paymentDetailActions").show();
+                $("#posPaidTypeBox, #cashOnlineBox").hide();
+                $("#emiBox").show();
+
+                let downPayment = parseFloat($("#emiDownPayment").val()) || 0;
+                let loanAmount = Math.max(0, grandTotal - downPayment);
+                $("#emiLoanAmount").val(loanAmount.toFixed(2));
+                let tenure = parseInt($("#emiTenure").val()) || 0;
+                let monthlyEmi = tenure > 0 ? (loanAmount / tenure) : 0;
+                $("#emiMonthlyAmount").val(monthlyEmi.toFixed(2));
+            } else if (method === 'cash+online') {
+                $("#paymentDetailActions").show();
+                $("#posPaidTypeBox, #emiBox").hide();
+                $("#cashOnlineBox").show();
+
+                let cashPart = parseFloat($("#posCashOnlineCashAmount").val()) || 0;
+                let onlinePart = Math.max(0, grandTotal - cashPart);
+                $("#posCashOnlineOnlineAmount").val(onlinePart.toFixed(2));
+            } else {
+                // Cash, Debit, Scan
+                $("#paymentDetailActions").show();
+                $("#cashOnlineBox, #emiBox").hide();
+                $("#posPaidTypeBox").show();
+
+                let paidType = $("#posPaidType").val();
+                if (paidType === 'partially') {
+                    $("#posPaidAmountFields").show();
+                    let paid = parseFloat($("#posPaidAmount").val()) || 0;
+                    let pending = Math.max(0, grandTotal - paid);
+                    $("#posPendingAmount").val(pending.toFixed(2));
+                    $("#cash_partial_amount").val(paid.toFixed(2));
+                    $("#cash_remaining_amount").val(pending.toFixed(2));
+                } else {
+                    $("#posPaidAmountFields").hide();
+                    $("#posPaidAmount").val(grandTotal.toFixed(2));
+                    $("#posPendingAmount").val("0.00");
+                    $("#cash_partial_amount").val(grandTotal.toFixed(2));
+                    $("#cash_remaining_amount").val("0.00");
+                }
+            }
+        }
+
         function calculateTotals() {
             const firstTaxElement = $(".tax-value").first();
             const currencySymbol = firstTaxElement.data("symbol") || '{{ $currency_symbol }}';
@@ -991,74 +1446,142 @@
             let subtotal = 0;
 
             selectedItems.forEach(item => {
-                // Try to find group price for this exact product
                 let groupProduct = groupPrices.find(gp => gp.product_id == String(item.productId) && gp.id == item.id);
-
-                // Use group price if match found, else fallback to item's original price
                 let price = groupProduct ? parseFloat(groupProduct.price) : parseFloat(item.price || 0);
                 let quantity = parseInt(item.quantity) || 0;
-
                 subtotal += price * quantity;
             });
 
-            $(".setvalue li:nth-child(1) h6").html(formatCurrency(subtotal.toFixed(2), currencySymbol, currencyPosition));
+            $(".subtotal-value").html(formatCurrency(subtotal.toFixed(2), currencySymbol, currencyPosition));
             $("input[name='subtotal']").val(subtotal.toFixed(2));
 
-            if (subtotal > 0) {
-                let totalTax = 0;
-                let gstOption = $("input[name='gst_option']:checked").val();
+            let totalTax = 0;
+            let gstOption = $("input[name='gst_option']:checked").val();
 
-                let discountAmount = 0;
-                const selectedGroup = $("#discount_group option:selected");
-                if (selectedGroup.val()) {
-                    const discountType = selectedGroup.data("type");
-                    const discountValue = parseFloat(selectedGroup.data("value")) || 0;
-                    discountAmount = discountType === "Percentage" ? subtotal * (discountValue / 100) : discountValue;
-                } else {
-                    // discountAmount = subtotal * (parseFloat($("#discount").val()) || 0) / 100;
-                    discountAmount = parseFloat($("#discount").val()) || 0;
-                }
-                if (discountAmount > subtotal) discountAmount = subtotal;
+            // Overall Discount calculation
+            let discountAmount = 0;
+            let discountPerc = parseFloat($("#overall_discount_percentage").val()) || 0;
+            let discountFixed = parseFloat($("#discount").val()) || 0;
+            if (discountPerc > 0 && subtotal > 0) {
+                discountAmount = subtotal * (discountPerc / 100);
+            } else if (discountFixed > 0) {
+                discountAmount = discountFixed;
+            }
+            if (discountAmount > subtotal) discountAmount = subtotal;
 
-                subtotal = subtotal - discountAmount;
-                if (gstOption === "with") {
-                    $(".taxList").each(function() {
-                        const taxRate = parseFloat($(this).find(".tax-value").data("rate")) / 100;
-                        const taxAmount = subtotal * taxRate;
-                        const taxEl = $(this).find(".tax-value");
-                        const symbol = taxEl.data("symbol") || currencySymbol;
-                        const position = taxEl.data("position") || currencyPosition;
-                        taxEl.html(formatCurrency(taxAmount.toFixed(2), symbol, position));
-                        $(this).show();
-                        totalTax += taxAmount;
-                    });
-                } else {
-                    $(".taxList").hide().find(".tax-value").html(formatCurrency("0.00", currencySymbol, currencyPosition));
-                    totalTax = 0;
-                }
+            let priceAfterDiscount = Math.max(0, subtotal - discountAmount);
 
-                
-                
-
-                const priceAfterDiscount = subtotal;
-                const total = subtotal + totalTax;
-
-                $(".discount-amount").html(formatCurrency(discountAmount.toFixed(2), currencySymbol, currencyPosition));
-                $("input[name='discount_amount']").val(discountAmount.toFixed(2));
-                $(".price-after-discount").html(formatCurrency(priceAfterDiscount.toFixed(2), currencySymbol, currencyPosition));
-                $("input[name='price_after_discount']").val(priceAfterDiscount.toFixed(2));
-                $(".total-value h6").html(formatCurrency(total.toFixed(2), currencySymbol, currencyPosition));
-                $(".btn-totallabel h6").html('Total Amount : ' + formatCurrency(total.toFixed(2), currencySymbol, currencyPosition));
-                $("input[name='total']").val(total.toFixed(2));
-                $("input[name='grand_total']").val(total.toFixed(2));
-
+            // Taxes calculation
+            if (gstOption === "with" && priceAfterDiscount > 0) {
+                $(".taxList").each(function() {
+                    const taxRate = parseFloat($(this).find(".tax-value").data("rate")) / 100;
+                    const taxAmount = priceAfterDiscount * taxRate;
+                    const taxEl = $(this).find(".tax-value");
+                    const symbol = taxEl.data("symbol") || currencySymbol;
+                    const position = taxEl.data("position") || currencyPosition;
+                    taxEl.html(formatCurrency(taxAmount.toFixed(2), symbol, position));
+                    $(this).show();
+                    totalTax += taxAmount;
+                });
             } else {
                 $(".taxList").hide().find(".tax-value").html(formatCurrency("0.00", currencySymbol, currencyPosition));
-                $(".discount-amount, .price-after-discount, .total-value h6, .btn-totallabel h6").html(formatCurrency("0.00", currencySymbol, currencyPosition));
-                $("input[name='discount_amount'], input[name='price_after_discount'], input[name='total'], input[name='grand_total']").val("0.00");
+                totalTax = 0;
             }
-        }
 
+            // Delivery cost
+            let shipping = parseFloat($("#shipping").val()) || 0;
+
+            // Other charges
+            let otherChargesTotal = 0;
+            $(".other-charge-amount").each(function() {
+                otherChargesTotal += parseFloat($(this).val()) || 0;
+            });
+            $("#misc_charges").val(otherChargesTotal.toFixed(2));
+
+            // Labour charge
+            let labourTotal = parseFloat($("#labour_amount").val()) || 0;
+
+            // TDS
+            let tdsPercentage = parseFloat($("#tds_percentage").val()) || 0;
+            let tdsAmount = 0;
+            if (tdsPercentage > 0 && priceAfterDiscount > 0) {
+                tdsAmount = priceAfterDiscount * (tdsPercentage / 100);
+                $("#tds_amount").val(tdsAmount.toFixed(2));
+            } else {
+                tdsAmount = parseFloat($("#tds_amount").val()) || 0;
+            }
+
+            // Exchange
+            let exchangeAmount = parseFloat($("#pos_exchange_amount").val()) || 0;
+
+            // Grand Total
+            let total = 0;
+            if (subtotal > 0 || shipping > 0 || otherChargesTotal > 0 || labourTotal > 0) {
+                total = priceAfterDiscount + totalTax + shipping + otherChargesTotal + labourTotal - tdsAmount - exchangeAmount;
+                if (total < 0) total = 0;
+            }
+
+            // Update UI Summary rows
+            if (totalTax > 0) {
+                $(".gst-summary-row").show();
+                $(".gst-total-amount").html(formatCurrency(totalTax.toFixed(2), currencySymbol, currencyPosition));
+            } else {
+                $(".gst-summary-row").hide();
+            }
+
+            if (discountAmount > 0) {
+                $(".discount-summary-row").show();
+                $(".discount-amount").html(formatCurrency(discountAmount.toFixed(2), currencySymbol, currencyPosition));
+                $("input[name='discount_amount']").val(discountAmount.toFixed(2));
+            } else {
+                $(".discount-summary-row").hide();
+                $("input[name='discount_amount']").val("0.00");
+            }
+
+            if (shipping > 0) {
+                $(".shipping-summary-row").show();
+                $(".shipping-cost-summary").html(formatCurrency(shipping.toFixed(2), currencySymbol, currencyPosition));
+            } else {
+                $(".shipping-summary-row").hide();
+            }
+
+            if (otherChargesTotal > 0) {
+                $(".other-charges-summary-row").show();
+                $("#other-charges-cost-display").html(formatCurrency(otherChargesTotal.toFixed(2), currencySymbol, currencyPosition));
+            } else {
+                $(".other-charges-summary-row").hide();
+            }
+
+            if (labourTotal > 0) {
+                $(".labour-summary-row").show();
+                $(".labour-total-amount").html(formatCurrency(labourTotal.toFixed(2), currencySymbol, currencyPosition));
+            } else {
+                $(".labour-summary-row").hide();
+            }
+
+            if (tdsAmount > 0) {
+                $(".tds-summary-row").show();
+                $(".tds-percentage-summary").text(tdsPercentage.toFixed(2));
+                $(".tds-amount-summary").html(formatCurrency(tdsAmount.toFixed(2), currencySymbol, currencyPosition));
+            } else {
+                $(".tds-summary-row").hide();
+            }
+
+            if (exchangeAmount > 0) {
+                $(".exchange-summary-row").show();
+                $(".exchange-amount-summary span").text(exchangeAmount.toFixed(2));
+            } else {
+                $(".exchange-summary-row").hide();
+            }
+
+            $(".total-value h6").html(formatCurrency(total.toFixed(2), currencySymbol, currencyPosition));
+            $(".btn-totallabel h6").html('Total Amount : ' + formatCurrency(total.toFixed(2), currencySymbol, currencyPosition));
+            $("input[name='total']").val(total.toFixed(2));
+            $("input[name='grand_total']").val(total.toFixed(2));
+            $("input[name='price_after_discount']").val(priceAfterDiscount.toFixed(2));
+
+            refreshPosPaymentUi();
+        }
         function renderSelectedItems() {
             let $productTable = $(".product-table");
 
@@ -1687,6 +2210,9 @@
                     items: orderItems,
                     selectedSubAdminId: selectedSubAdminId,
                     remark: remark,
+                    shipping: parseFloat($('#shipping').val()) || 0,
+                    misc_charges: parseFloat($('#misc_charges').val()) || 0,
+                    labour_amount: parseFloat($('#labour_amount').val()) || 0,
                     gst_option: gstOption,
                     userType: userType
 
@@ -2123,6 +2649,9 @@
                     items: orderItems,
                     selectedSubAdminId: selectedSubAdminId,
                     remark: remark,
+                    shipping: parseFloat($('#shipping').val()) || 0,
+                    misc_charges: parseFloat($('#misc_charges').val()) || 0,
+                    labour_amount: parseFloat($('#labour_amount').val()) || 0,
                     gst_option: gstOption,
                     userType: userType,
                     bill_generate: bill_generate
@@ -2505,7 +3034,259 @@
                     $btn.prop("disabled", true).text("Added");
 
                     // Update UI & totals
-                    updateTotalItems();
+                    
+
+            // --- POS Action Pills Handlers ---
+            $(document).on('click', '#toggle_delivery_cost', function(e) {
+                e.preventDefault();
+                let $sec = $("#delivery_cost_section");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                    $("#shipping").val('');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                    $("#shipping").focus();
+                }
+                calculateTotals();
+            });
+
+            $(document).on('click', '#toggle_tds', function(e) {
+                e.preventDefault();
+                let $sec = $("#tds_section");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                    $("#tds_percentage, #tds_amount").val('');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                    $("#tds_percentage").focus();
+                }
+                calculateTotals();
+            });
+
+            $(document).on('click', '#toggle_other_charges', function(e) {
+                e.preventDefault();
+                let $sec = $("#other_charges_section");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                }
+                calculateTotals();
+            });
+
+            $(document).on('click', '#addOtherChargeBtn', function() {
+                let rowHtml = `
+                    <div class="other-charge-row d-flex align-items-center gap-2">
+                        <input type="text" class="form-control other-charge-name" placeholder="Charge Name">
+                        <input type="number" class="form-control other-charge-amount" placeholder="Amount" min="0" step="0.01">
+                        <button type="button" class="btn btn-outline-danger btn-sm removeOtherChargeBtn" style="border-radius: 6px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                $("#otherChargesContainer").append(rowHtml);
+            });
+
+            $(document).on('click', '.removeOtherChargeBtn', function() {
+                $(this).closest('.other-charge-row').remove();
+                calculateTotals();
+            });
+
+            $(document).on('input', '.other-charge-amount', function() {
+                calculateTotals();
+            });
+
+            $(document).on('click', '#toggle_labour_items', function(e) {
+                e.preventDefault();
+                let $sec = $("#labour_charges_section");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                }
+                calculateTotals();
+            });
+
+            $(document).on('submit', '#labourItemForm', function(e) {
+                e.preventDefault();
+                let name = $("#labour_item_name").val().trim();
+                let price = parseFloat($("#labour_item_price").val()) || 0;
+                if (!name || price <= 0) return;
+
+                let rowHtml = `
+                    <div class="labour-item-row d-flex justify-content-between align-items-center p-1 border rounded mb-1" data-price="${price}">
+                        <span style="font-size: 12px;">${name} - ₹${price.toFixed(2)}</span>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 remove-labour-row" style="font-size: 13px;"><i class="fas fa-times"></i></button>
+                    </div>`;
+                $("#labourChargesContainer").append(rowHtml);
+                $("#labourItemModal").modal('hide');
+                $("#labour_item_name, #labour_item_price").val('');
+                $("#labour_charges_section").show();
+                $("#toggle_labour_items i").removeClass('fa-plus').addClass('fa-minus');
+
+                let currentLabour = 0;
+                $(".labour-item-row").each(function() {
+                    currentLabour += parseFloat($(this).data('price')) || 0;
+                });
+                $("#labour_amount").val(currentLabour.toFixed(2));
+                calculateTotals();
+            });
+
+            $(document).on('click', '.remove-labour-row', function() {
+                $(this).closest('.labour-item-row').remove();
+                let currentLabour = 0;
+                $(".labour-item-row").each(function() {
+                    currentLabour += parseFloat($(this).data('price')) || 0;
+                });
+                $("#labour_amount").val(currentLabour.toFixed(2));
+                calculateTotals();
+            });
+
+            $(document).on('click', '#toggle_overall_discount', function(e) {
+                e.preventDefault();
+                let $sec = $("#overall_discount_section");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                    $("#overall_discount_percentage, #discount").val('');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                    $("#discount").focus();
+                }
+                calculateTotals();
+            });
+
+            $(document).on('click', '#openAddRemarksBtn', function(e) {
+                e.preventDefault();
+                $("#remarksModal").modal('show');
+            });
+
+            $(document).on('click', '#saveRemarksBtn', function() {
+                let terms = $("#termsConditionModalTextarea").val();
+                let remark = $("#remarksModalTextarea").val();
+                $("#terms_condition").val(terms);
+                $("#remark, #remarks").val(remark);
+                $("#remarksModal").modal('hide');
+            });
+
+            $(document).on('click', '#toggle_exchange_charges', function(e) {
+                e.preventDefault();
+                let $sec = $("#exchange_charges_wrapper");
+                let $icon = $(this).find('i');
+                if ($sec.is(':visible')) {
+                    $sec.hide();
+                    $icon.removeClass('fa-minus').addClass('fa-plus');
+                    $("#pos_exchange_material, #pos_exchange_amount").val('');
+                } else {
+                    $sec.show();
+                    $icon.removeClass('fa-plus').addClass('fa-minus');
+                    $("#pos_exchange_material").focus();
+                }
+                calculateTotals();
+            });
+
+            $(document).on('input', '#shipping, #tds_percentage, #discount, #pos_exchange_amount', function() {
+                calculateTotals();
+            });
+
+            $(document).on('input', '#overall_discount_percentage', function() {
+                let perc = parseFloat($(this).val()) || 0;
+                let subtotal = parseFloat($("input[name='subtotal']").val()) || 0;
+                if (perc > 0 && subtotal > 0) {
+                    let discAmt = subtotal * (perc / 100);
+                    $("#discount").val(discAmt.toFixed(2));
+                } else {
+                    $("#discount").val('');
+                }
+                calculateTotals();
+            });
+
+            // Payment Panel Handle toggle
+            $(document).on('click', '#paymentPanelHandle', function() {
+                $('#paymentPanel').toggleClass('pos-pay-collapsed');
+            });
+
+            // Payment Methods Selection
+            $(document).on('click', '.paymentmethod', function(e) {
+                e.preventDefault();
+                $('.paymentmethod').removeClass('active');
+                $(this).addClass('active');
+                $(this).find('input[type="radio"]').prop('checked', true);
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('change', '#posPaidType', function() {
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('input', '#posPaidAmount', function() {
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('input', '#posCashOnlineCashAmount', function() {
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('input change', '#emiDownPayment, #emiTenure', function() {
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('click', '#cancelPaymentDetails', function() {
+                $('.paymentmethod').removeClass('active');
+                $('.paymentmethod input[value="cash"]').closest('.paymentmethod').addClass('active');
+                $('.paymentmethod input[value="cash"]').prop('checked', true);
+                $("#posPaidType").val('fully');
+                $("#posPaidAmount, #posPendingAmount, #posCashOnlineCashAmount, #posCashOnlineOnlineAmount, #emiDownPayment, #emiLoanAmount, #emiMonthlyAmount").val('');
+                refreshPosPaymentUi();
+            });
+
+            $(document).on('click', '#scanBarcodeBtn', function() {
+                $('#barcodeScannerModal').modal('show');
+            });
+
+            // All Products Checkbox / Category sync
+            $(document).on('change', '#mainBranchToggle', function() {
+                if ($(this).is(':checked')) {
+                    $('.tabs li').removeClass('active');
+                    $('.tabs_container .tab_content').removeClass('active');
+                    if ($('.tab_content[data-tab="all"]').length === 0) {
+                        $('.tabs_container').append('<div class="tab_content active" data-tab="all"></div>');
+                    } else {
+                        $('.tab_content[data-tab="all"]').addClass('active');
+                    }
+                    loadProductsByCategory('all');
+                } else {
+                    const firstCategory = $('.tabs li:first');
+                    if (firstCategory.length) {
+                        firstCategory.addClass('active');
+                        const catId = firstCategory.attr('id');
+                        $('.tabs_container .tab_content').removeClass('active');
+                        if ($(`.tab_content[data-tab="${catId}"]`).length === 0) {
+                            $('.tabs_container').append(`<div class="tab_content active" data-tab="${catId}"></div>`);
+                        } else {
+                            $(`.tab_content[data-tab="${catId}"]`).addClass('active');
+                        }
+                        loadProductsByCategory(catId);
+                    }
+                }
+            });
+
+            $(document).on('click', '.tabs li', function() {
+                $('#mainBranchToggle').prop('checked', false);
+            });
+
+            updateTotalItems();
                 } else {
                     Swal.fire({
                         icon: 'info',
