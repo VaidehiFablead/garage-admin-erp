@@ -832,10 +832,10 @@
                                 `;
 
                                 // Image URL
-                                const imagePath = "{{ env('ImagePath') }}";
+                                const imagePath = ("{{ env('ImagePath') ?: image_path() }}").replace(/\/+$/, '');
                                 let imageUrl = brand.logo ?
-                                    `${imagePath}/storage/${brand.logo}` :
-                                    `${imagePath}admin/assets/img/product/noimage.png`;
+                                    `${imagePath}/storage/${String(brand.logo).replace(/^\/+/, '')}` :
+                                    `${imagePath}/admin/assets/img/product/noimage.png`;
 
                                 tableBody.push([
                                     // Column 1: Brand Name with image AND collapsible details
@@ -1123,10 +1123,10 @@
                                     </button>
                                 `;
 
-                                const imagePath = "{{ env('ImagePath') }}";
+                                const imagePath = ("{{ env('ImagePath') ?: image_path() }}").replace(/\/+$/, '');
                                 let imageUrl = brand.logo ?
-                                    `${imagePath}/storage/${brand.logo}` :
-                                    `${imagePath}admin/assets/img/product/noimage.png`;
+                                    `${imagePath}/storage/${String(brand.logo).replace(/^\/+/, '')}` :
+                                    `${imagePath}/admin/assets/img/product/noimage.png`;
 
                                 window.brandDataMap[brand.id] = {
                                     id: brand.id,

@@ -310,10 +310,10 @@
 
                 @foreach($categories as $cat)
                 @php
-                $availableProducts = $cat->products->where('quantity', '>', 0);
+                $availableProducts = $cat->products;
                 @endphp
 
-                @if($availableProducts->count())
+                @if($availableProducts && $availableProducts->count() > 0)
                 @php
                 $hasProducts = true;
                 @endphp
@@ -1095,6 +1095,19 @@
             selectedItems = new Map();
             var authToken = localStorage.getItem("authToken");
             const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+
+            @if(auth()->user() && auth()->user()->role === 'admin')
+                const currentSessionSubAdminId = "{{ session('selectedSubAdminId') }}";
+                if (selectedSubAdminId && selectedSubAdminId !== "1" && selectedSubAdminId !== currentSessionSubAdminId) {
+                    $.post('/set-subadmin-session', {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        subAdminId: selectedSubAdminId
+                    }, function() {
+                        window.location.reload();
+                    });
+                    return;
+                }
+            @endif
             // Initialize tax rows as hidden on page load
             $(".taxList").hide();
 

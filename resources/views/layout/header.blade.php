@@ -680,6 +680,14 @@
                             const optionExists = response.data.some(item => item.id == savedId);
                             if (optionExists) {
                                 $('#subBrandSelect').val(savedId).trigger('change.select2');
+                                @if(empty(session('selectedSubAdminId')))
+                                if (savedId != "1") {
+                                    $.post('/set-subadmin-session', {
+                                        _token: $('meta[name="csrf-token"]').attr('content'),
+                                        subAdminId: savedId
+                                    });
+                                }
+                                @endif
                                 setTimeout(() => {
                                     loadFilteredDashboardData(savedId);
                                 }, 500);
@@ -741,7 +749,7 @@
 
             //     }
             // }
-            if (selectedId == "1") {
+            if (selectedId == "1" || selectedText === "Main Branch") {
 
                 $.post('/clear-subadmin-session', {
                     _token: $('meta[name="csrf-token"]').attr('content')
@@ -752,13 +760,17 @@
 
                 });
 
-            } else {
+            } else if (selectedId) {
 
                 localStorage.setItem('selectedSubAdminId', selectedId);
 
-                loadFilteredDashboardData(selectedId).then(() => {
-                    // window.location.href = '/dashboard';
-                    window.location.reload();
+                $.post('/set-subadmin-session', {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    subAdminId: selectedId
+                }, function () {
+                    loadFilteredDashboardData(selectedId).then(() => {
+                        window.location.reload();
+                    });
                 });
 
             }

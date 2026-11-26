@@ -71,6 +71,7 @@ Route::post('/clear-subadmin-session', function () {
     session()->forget('selectedSubAdminId');
     return response()->json(['status' => 'cleared']);
 });
+Route::post('/set-subadmin-session', [AuthController::class, 'subadmin_session'])->name('subadmin_session');
 
 Route::middleware(['guest:web'])->group(function () {
     Route::get('/', [AuthController::class, 'signin'])->name('auth.signin');

@@ -462,53 +462,61 @@ class SalesController extends Controller
         return view('sales/salesreport');
     }
 
-    public function pos()
+    public function pos(Request $request)
     {
         $user = auth()->user();
         $userRole = $user->role ?? '';
         $userId = $user->id ?? null;
         $userBranchId = $user->branch_id ?? null;
-        $subAdminId = session('selectedSubAdminId') ?? $user->id;
-        $setting = Setting::first();
-        // $discountGroups = DiscountGroup::where('isDeleted', 0)->get();
+        $subAdminId = $request->query('sub_admin_id') ?? $request->query('subAdminId') ?? session('selectedSubAdminId');
+        if (!empty($subAdminId)) {
+            session(['selectedSubAdminId' => $subAdminId]);
+        }
+
+        // Decide which branch_id to use
+        if ($userRole === 'sub-admin' && $userId) {
+            $branchIdToUse = $userId;
+        } elseif ($userRole === 'admin' && !empty($subAdminId) && $subAdminId != 1) {
+            $branchIdToUse = $subAdminId;
+        } elseif (strtolower($userRole) === 'staff' && $userBranchId) {
+            $branchIdToUse = $userBranchId;
+        } else {
+            $branchIdToUse = (!empty($subAdminId) && $subAdminId != 1) ? $subAdminId : $userId;
+        }
+
+        $setting = Setting::where('branch_id', $branchIdToUse)->first() ?? Setting::first();
 
         $currency_symbol = $setting->currency_symbol ?? '₹'; // fallback if null
         $currency_position = $setting->currency_position ?? 'left'; // fallback if null
-        if (!empty($userRole == 'sub-admin') && $userId) {
-            $categories = Category::where('isDeleted', 0)->where('branch_id', $userId)->get();
-            $taxRates = TaxRate::where('status', 'active')->where('branch_id', $userId)->get();
-            $customers = User::where('role', 'customer')->where('branch_id', $userId)->where('isDeleted', 0)->get();
-        } else if (!empty($userRole == 'admin') && !empty($subAdminId)) {
-            $categories = Category::where('isDeleted', 0)->where('branch_id', $subAdminId)->get();
-            $taxRates = TaxRate::where('status', 'active')->where('branch_id', $subAdminId)->get();
-            $customers = User::where('role', 'customer')->where('branch_id', $subAdminId)->where('isDeleted', 0)->get();
-        } else if (strtolower($userRole) == 'staff') {
-            $categories = Category::where('isDeleted', 0)->where('branch_id', $userBranchId)->get();
-            $taxRates = TaxRate::where('status', 'active')->where('branch_id', $userBranchId)->get();
-            $customers = User::where('role', 'customer')->where('isDeleted', 0)->where('branch_id', $userBranchId)->get();
-        } else {
-            $categories = Category::where('isDeleted', 0)->where('branch_id', $userId)->get();
-            $taxRates = TaxRate::where('status', 'active')->where('branch_id', $userId)->get();
-            $customers = User::where('role', 'customer')->where('isDeleted', 0)->where('branch_id', $userId)->get();
-        }
+
+        $categories = Category::where('isDeleted', 0)
+            ->where('branch_id', $branchIdToUse)
+            ->orderBy('id', 'desc')
+            ->get();
+        $taxRates = TaxRate::where('status', 'active')
+            ->where('branch_id', $branchIdToUse)
+            ->get();
+        $customers = User::where('role', 'customer')
+            ->where('branch_id', $branchIdToUse)
+            ->where('isDeleted', 0)
+            ->get();
 
         $vendors = User::query()
             ->select('id', 'name', 'phone', 'branch_id as subbranch_id')
             ->where('role', 'vendor')
-            ->where('branch_id', $subAdminId)
+            ->where('branch_id', $branchIdToUse)
             ->get();
 
         $staff = User::query()
             ->select('id', 'name', 'phone', 'branch_id as subbranch_id')
             ->whereIn('role', ['Staff', 'staff'])
-            ->where('branch_id', $subAdminId)
+            ->where('branch_id', $branchIdToUse)
             ->get();
 
-            $model = AutoCarModel::query()
-            ->select('id', 'model_name',)
-            ->where('branch_id', $subAdminId)
+        $model = AutoCarModel::query()
+            ->select('id', 'model_name')
+            ->where('branch_id', $branchIdToUse)
             ->get();
-
 
         return view('sales.pos', compact('categories', 'taxRates', 'customers', 'vendors', 'currency_symbol', 'currency_position', 'setting', 'staff', 'model'));
     }
