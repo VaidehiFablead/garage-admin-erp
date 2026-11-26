@@ -644,7 +644,7 @@
         list-style: none;
     }
     .setvaluecash ul li {
-        flex: 1 1 calc(16.66% - 6px);
+        flex: 1 1 0;
         min-width: 60px;
     }
     .setvaluecash ul li a {
@@ -1525,6 +1525,7 @@
                                                 Scan
                                             </a>
                                         </li>
+                                        {{-- 
                                         <li id="emiPaymentOption">
                                             <a href="javascript:void(0);" class="paymentmethod">
                                                 <input type="radio" name="payment_method" value="emi" hidden>
@@ -1532,6 +1533,7 @@
                                                 EMI
                                             </a>
                                         </li>
+                                        --}}
                                     </ul>
 
                                     <input type="hidden" name="paid_by" id="paid_by" value="Cash">
@@ -1610,6 +1612,7 @@
                                         </div>
                                     </div>
 
+                                    {{-- 
                                     <!-- EMI Fields -->
                                     <div id="emiBox" style="display:none; margin-top:10px;">
                                         <div class="row g-2">
@@ -1645,6 +1648,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    --}}
 
                                     <span class="error_peymentmethod"></span>
                                 </div>
