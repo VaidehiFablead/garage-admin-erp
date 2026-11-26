@@ -83,23 +83,32 @@ class SalesController extends Controller
 
         $sub_admin_id = $request->input('sub_admin_id') ?? $request->input('selectedSubAdminId') ?? session('selectedSubAdminId');
 
-        if (!empty($sub_admin_id)) {
-            // ✅ If sub_admin_id is given
+        if (!empty($sub_admin_id) && $sub_admin_id != 1) {
+            // ✅ If sub_admin_id is given (sub-admin branch selected)
             $products = Product::where('category_id', $categoryId)
                 ->where('isDeleted', 0)
-                ->where('branch_id', $sub_admin_id)
+                ->where(function ($q) use ($sub_admin_id) {
+                    $q->where('branch_id', $sub_admin_id)
+                      ->orWhere('branch_id', 1);
+                })
                 ->get();
         } elseif (!empty($userId) && !empty($userRole == 'sub-admin')) {
             // ✅ Otherwise, use logged-in user's branch_id
             $products = Product::where('category_id', $categoryId)
                 ->where('isDeleted', 0)
-                ->where('branch_id', $userId)
+                ->where(function ($q) use ($userId) {
+                    $q->where('branch_id', $userId)
+                      ->orWhere('branch_id', 1);
+                })
                 ->get();
         } elseif (!empty($userRole == 'staff')) {
-            // ✅ No branch filter
+            // ✅ Staff
             $products = Product::where('category_id', $categoryId)
                 ->where('isDeleted', 0)
-                ->where('branch_id', $branchId)
+                ->where(function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId)
+                      ->orWhere('branch_id', 1);
+                })
                 ->get();
         } else {
             $products = Product::where('category_id', $categoryId)

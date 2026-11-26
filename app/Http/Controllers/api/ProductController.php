@@ -496,12 +496,18 @@ class ProductController extends Controller
      -------------------------------------------------*/
         $user = Auth::guard('api')->user();
 
-        $branchId = match (strtolower($user->role)) {
-            'admin'     => $user->id,
-            'sub-admin' => $user->branch_id ?? $user->id,
-            'staff'     => $user->branch_id,
-            default     => $user->id,
-        };
+        $targetBranchId = $request->sub_admin_id ?? $request->sub_branch_id ?? $request->branch_id ?? session('selectedSubAdminId');
+
+        if ($user && $user->role === 'admin' && !empty($targetBranchId) && $targetBranchId != "1") {
+            $branchId = (int) $targetBranchId;
+        } else {
+            $branchId = match (strtolower($user->role ?? '')) {
+                'admin'     => $user->id,
+                'sub-admin' => $user->branch_id ?? $user->id,
+                'staff'     => $user->branch_id,
+                default     => $user->id,
+            };
+        }
 
         /* -------------------------------------------------
      | 4️⃣ Availability Logic
