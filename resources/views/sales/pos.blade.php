@@ -460,6 +460,7 @@
                 <div class="header-search d-flex align-items-center position-relative w-100" style="gap: 8px;">
                     <!-- Scanner Button -->
                     <button type="button" id="scanBarcodeBtn" class="btn"
+                        data-bs-toggle="modal" data-bs-target="#barcodeScannerModal"
                         style="background: #f8f9fa; border: 1px solid #ced4da; border-radius: 6px; color: #495057; display: inline-flex; align-items: center; justify-content: center; width: 38px; min-width: 38px; height: 38px; flex-shrink: 0; padding: 0; cursor: pointer;"
                         title="Scan Barcode">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
@@ -1278,8 +1279,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
     <script>
         // ==================== BARCODE SCANNER ====================
+        window.selectedItems = window.selectedItems || new Map();
+        var selectedItems = window.selectedItems;
         let html5QrCode = null;
         let isProcessingBarcode = false;
+
+        function triggerCartUpdate() {
+            if (typeof updateTotalItems === 'function') {
+                updateTotalItems();
+            } else {
+                if (typeof renderSelectedItems === 'function') renderSelectedItems();
+                if (typeof calculateTotals === 'function') calculateTotals();
+                $(".totalitem h4").text("Total items : " + selectedItems.size);
+            }
+        }
 
         function playBeep() {
             try {
@@ -1393,21 +1406,25 @@
                 return;
             }
 
+            const formats = (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.QR_CODE
+            ] : undefined;
+
             const config = {
                 fps: 10,
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.UPC_E,
-                    Html5QrcodeSupportedFormats.QR_CODE
-                ],
                 qrbox: { width: 250, height: 250 }
             };
+            if (formats) {
+                config.formatsToSupport = formats;
+            }
 
-            $('#scan-message').text('Starting camera...');
+            $('#scan-message').text('Starting camera...').css('color', '');
 
             html5QrCode.start(
                 { facingMode: "environment" },
@@ -1459,12 +1476,15 @@
                 </div>
             `);
 
+            setTimeout(() => { $('#manualBarcodeInput').focus(); }, 150);
+
             $('#qr-reader').off('click', '#manualBarcodeSubmit').on('click', '#manualBarcodeSubmit', function() {
                 handleManualBarcode();
             });
 
             $('#qr-reader').off('keydown', '#manualBarcodeInput').on('keydown', '#manualBarcodeInput', function(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     handleManualBarcode();
                 }
             });
@@ -1579,7 +1599,7 @@
                 if (nextQty <= item.stock) {
                     item.quantity = nextQty;
                     selectedItems.set(stringId, item);
-                    updateTotalItems();
+                    triggerCartUpdate();
                 } else {
                     Swal.fire({
                         icon: 'warning',
@@ -1602,9 +1622,32 @@
                     quantity: 1,
                     stock: stock
                 });
-                updateTotalItems();
+                triggerCartUpdate();
             }
         }
+
+        // Modal triggers for Barcode Scanner
+        $(document).on('click', '#scanBarcodeBtn', function(e) {
+            e.preventDefault();
+            const modalEl = document.getElementById('barcodeScannerModal');
+            if (modalEl) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                } else {
+                    $('#barcodeScannerModal').appendTo("body").modal('show');
+                }
+            }
+        });
+
+        $(document).on('shown.bs.modal', '#barcodeScannerModal', function() {
+            setTimeout(startScanner, 300);
+        });
+
+        $(document).on('hidden.bs.modal', '#barcodeScannerModal', function() {
+            stopScanner();
+            $('#qr-reader').html('').css('min-height', '300px');
+            $('#scan-message').text('Initializing camera...').show().css('color', '');
+        });
     </script>
     <script>
         // let selectedItems = new Map();
@@ -2076,6 +2119,7 @@
                 renderSelectedItems();
                 calculateTotals();
             }
+            window.updateTotalItems = updateTotalItems;
 
             // Format currency helper
             function formatCurrency(amount, symbol, position) {
@@ -3365,7 +3409,17 @@
                     $btn.prop("disabled", true).text("Added");
 
                     // Update UI & totals
-                    
+                    updateTotalItems();
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Already Added',
+                        text: 'This product is already in the list!',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
 
             // --- POS Action Pills Handlers ---
             $(document).on('click', '#toggle_delivery_cost', function(e) {
@@ -3582,20 +3636,6 @@
                 refreshPosPaymentUi();
             });
 
-            $(document).on('click', '#scanBarcodeBtn', function() {
-                $('#barcodeScannerModal').appendTo("body").modal('show');
-            });
-
-            $('#barcodeScannerModal').on('shown.bs.modal', function() {
-                setTimeout(startScanner, 400);
-            });
-
-            $('#barcodeScannerModal').on('hidden.bs.modal', function() {
-                stopScanner();
-                $('#qr-reader').html('').css('min-height', '300px');
-                $('#scan-message').text('Initializing camera...').show().css('color', '');
-            });
-
             // All Products Checkbox / Category sync
             $(document).on('change', '#mainBranchToggle', function() {
                 if ($(this).is(':checked')) {
@@ -3625,18 +3665,6 @@
 
             $(document).on('click', '.tabs li', function() {
                 $('#mainBranchToggle').prop('checked', false);
-            });
-
-            updateTotalItems();
-                } else {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Already Added',
-                        text: 'This product is already in the list!',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'OK'
-                    });
-                }
             });
 
             // Optional: Hide dropdown on outside click
