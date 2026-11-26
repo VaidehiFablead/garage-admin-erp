@@ -81,7 +81,7 @@ class SalesController extends Controller
         $currencySymbol = $settings->currency_symbol ?? '₹';
         $currencyPosition = $settings->currency_position ?? 'left';
 
-        $sub_admin_id = $request->input('sub_admin_id');
+        $sub_admin_id = $request->input('sub_admin_id') ?? $request->input('selectedSubAdminId') ?? session('selectedSubAdminId');
 
         if (!empty($sub_admin_id)) {
             // ✅ If sub_admin_id is given
@@ -119,7 +119,7 @@ class SalesController extends Controller
                     'price' => $product->price,
                     'quantity' => $product->quantity,
                     'image' => $product->images,
-                    'category_name' => $product->category->name,
+                    'category_name' => optional($product->category)->name ?? 'Uncategorized',
                     'categoryId' => $product->category_id,
                 ];
             })

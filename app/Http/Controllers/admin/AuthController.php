@@ -35,6 +35,13 @@ class AuthController extends Controller
         return view('forgetpassword');
     }
 
+    public function subadmin_session(Request $request)
+    {
+        $subAdminId = $request->input('subAdminId');
+        session(['selectedSubAdminId' => $subAdminId]);
+        return response()->json(['status' => 'success']);
+    }
+
     public function dashboard(Request $request)
     {
         
