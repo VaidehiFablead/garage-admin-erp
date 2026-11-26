@@ -1231,17 +1231,44 @@ class ProductController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $branchId = match (strtolower($user->role)) {
-            'admin'     => $user->id,
-            'sub-admin' => $user->branch_id ?? $user->id,
-            'staff'     => $user->branch_id,
-            default     => $user->id,
-        };
+        $targetBranchId = $request->sub_branch_id ?? $request->sub_admin_id ?? $request->selectedSubAdminId;
+
+        if (!empty($targetBranchId) && $targetBranchId != "1") {
+            $branchId = $targetBranchId;
+        } else {
+            $branchId = match (strtolower($user->role ?? '')) {
+                'admin'     => $user->id ?? 1,
+                'sub-admin' => $user->branch_id ?? $user->id ?? 1,
+                'staff'     => $user->branch_id ?? 1,
+                default     => $user->id ?? 1,
+            };
+        }
 
         $taxRates = TaxRate::where('isDeleted', 0)
             ->where('status', 'active')
             ->where('branch_id', $branchId)
             ->get(['id', 'tax_name', 'tax_rate']);
+
+        // Fallback: If no tax rates found for this branch, load main branch / default tax rates
+        if ($taxRates->isEmpty()) {
+            $taxRates = TaxRate::where('isDeleted', 0)
+                ->where('status', 'active')
+                ->where(function ($q) use ($user) {
+                    $q->where('branch_id', 1)
+                      ->orWhereNull('branch_id');
+                    if ($user && $user->id) {
+                        $q->orWhere('branch_id', $user->id);
+                    }
+                })
+                ->get(['id', 'tax_name', 'tax_rate']);
+        }
+
+        // If still empty, load any active tax rates
+        if ($taxRates->isEmpty()) {
+            $taxRates = TaxRate::where('isDeleted', 0)
+                ->where('status', 'active')
+                ->get(['id', 'tax_name', 'tax_rate']);
+        }
 
         return response()->json([
             'status' => true,
@@ -1253,22 +1280,38 @@ class ProductController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        // dd($user);
+        $targetBranchId = $request->sub_branch_id ?? $request->sub_admin_id ?? $request->selectedSubAdminId;
 
-        $branchId = match (strtolower($user->role)) {
-            'admin'     => $user->id,
-            'sub-admin' => $user->branch_id ?? $user->id,
-            'staff'     => $user->branch_id,
-            default     => $user->id,
-        };
-
-        // dd($branchId);
+        if (!empty($targetBranchId) && $targetBranchId != "1") {
+            $branchId = $targetBranchId;
+        } else {
+            $branchId = match (strtolower($user->role ?? '')) {
+                'admin'     => $user->id ?? 1,
+                'sub-admin' => $user->branch_id ?? $user->id ?? 1,
+                'staff'     => $user->branch_id ?? 1,
+                default     => $user->id ?? 1,
+            };
+        }
 
         $units = Unit::where('is_delete', 0)
             ->where('created_by', $branchId)
             ->get(['id', 'unit_name']);
 
-            // dd($units);
+        if ($units->isEmpty()) {
+            $units = Unit::where('is_delete', 0)
+                ->where(function ($q) use ($user) {
+                    $q->where('created_by', 1)
+                      ->orWhereNull('created_by');
+                    if ($user && $user->id) {
+                        $q->orWhere('created_by', $user->id);
+                    }
+                })
+                ->get(['id', 'unit_name']);
+        }
+
+        if ($units->isEmpty()) {
+            $units = Unit::where('is_delete', 0)->get(['id', 'unit_name']);
+        }
 
         return response()->json([
             'status' => true,
