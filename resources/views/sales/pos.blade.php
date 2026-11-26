@@ -187,28 +187,245 @@
         border-color: #ff9f43 !important;
         color: #ff9f43 !important;
     }
+    /* ── Payment Panel & Drag Handle (Matching main-erp-product) ── */
+    .payment_panel {
+        position: fixed;
+        bottom: 0;
+        background-color: white;
+        z-index: 999;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+        border-radius: 12px 12px 0 0;
+        box-sizing: border-box;
+    }
+
+    .page-wrapper .content {
+        padding-bottom: 240px !important;
+    }
+
     .payment-panel-handle {
-        text-align: center;
-        padding: 6px 0;
-        cursor: pointer;
-        border-top: 1px solid #f0f0f0;
-        border-bottom: 1px solid #f0f0f0;
-        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 6px 12px 4px;
+        cursor: grab;
+        background: linear-gradient(to bottom, #f0f2f5, #e8eaf0);
+        border-radius: 12px 12px 0 0;
+        border-bottom: 1px solid #d8dce6;
         user-select: none;
+        position: relative;
     }
-    .payment-panel-handle .handle-pill {
-        display: inline-block;
-        width: 36px;
+
+    .payment-panel-handle:active {
+        cursor: grabbing;
+    }
+
+    .handle-pill {
+        width: 40px;
         height: 4px;
-        background: #d8d6de;
-        border-radius: 2px;
-        margin-bottom: 2px;
+        background: #b0b8cc;
+        border-radius: 99px;
+        flex-shrink: 0;
     }
-    .payment-panel-handle .handle-hint {
-        display: block;
-        font-size: 11px;
+
+    .handle-hint {
+        font-size: 10px;
         color: #8892a4;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
     }
+
+    .panel-min-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #e2e6ed;
+        border: none;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #555;
+        transition: background 0.2s;
+        padding: 0;
+    }
+
+    .panel-min-btn:hover {
+        background: #cdd3dd;
+    }
+
+    #paymentPanelBody {
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        padding: 10px 14px 14px;
+    }
+
+    #paymentPanelBody.panel-collapsed {
+        max-height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    #paymentPanel .pos-pay-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6e6b7b;
+        white-space: nowrap;
+    }
+
+    #paymentPanel .pos-pay-value-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 2px 8px 2px 7px;
+        min-height: 24px;
+    }
+
+    #paymentPanel #posPaySummary {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1b2850;
+        letter-spacing: 0;
+        white-space: nowrap;
+    }
+
+    #paymentPanel #posPaySummary::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: #22c55e;
+        flex-shrink: 0;
+        display: inline-block;
+    }
+
+    #paymentPanel .handle-caret {
+        color: #8892a4;
+        font-size: 10px;
+        line-height: 1;
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+
+    #paymentPanel:not(.pos-pay-collapsed) .handle-caret {
+        transform: rotate(180deg);
+    }
+
+    /* Desktop: NEVER collapse payment section, keep original handle hint */
+    @media screen and (min-width: 992px) {
+        #paymentPanel .pos-pay-title,
+        #paymentPanel .pos-pay-value-wrap {
+            display: none !important;
+        }
+        #paymentPanel .handle-hint {
+            display: inline !important;
+        }
+        #paymentPanel.pos-pay-collapsed #paymentSection,
+        #paymentPanel.pos-pay-collapsed #paymentPanelBody {
+            display: block !important;
+        }
+    }
+
+    /* Mobile / Responsive: collapsible payment bar with method pill */
+    @media screen and (max-width: 991.98px) {
+        #paymentPanel .handle-hint {
+            display: none !important;
+        }
+        #paymentPanel #paymentPanelHandle {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 8px 14px 6px !important;
+            background: #fff !important;
+            border-bottom: 1px solid #f1f2f6 !important;
+            border-radius: 14px 14px 0 0 !important;
+            cursor: pointer !important;
+            gap: 10px !important;
+        }
+        #paymentPanel #paymentPanelHandle .handle-pill {
+            width: 36px !important;
+            height: 4px !important;
+            background: #d1d5db !important;
+            border-radius: 99px !important;
+            flex-shrink: 0 !important;
+        }
+        #paymentPanel .pos-pay-title {
+            display: inline-block !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #4b5563 !important;
+            white-space: nowrap !important;
+            margin-right: auto !important;
+            margin-left: 6px !important;
+        }
+        #paymentPanel .pos-pay-value-wrap {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: #f9fafb !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 6px !important;
+            padding: 4px 10px !important;
+            min-height: 28px !important;
+        }
+        #paymentPanel #posPaySummary {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #111827 !important;
+            white-space: nowrap !important;
+        }
+        #paymentPanel #posPaySummary::before {
+            content: "" !important;
+            width: 8px !important;
+            height: 8px !important;
+            border-radius: 2px !important;
+            background: #22c55e !important;
+            flex-shrink: 0 !important;
+            display: inline-block !important;
+        }
+        #paymentPanel .handle-caret {
+            color: #6b7280 !important;
+            font-size: 11px !important;
+            line-height: 1 !important;
+            transition: transform 0.2s ease !important;
+            display: inline-block !important;
+        }
+        #paymentPanel:not(.pos-pay-collapsed) .handle-caret {
+            transform: rotate(180deg) !important;
+        }
+        #paymentPanel.pos-pay-collapsed #paymentSection,
+        #paymentPanel.pos-pay-collapsed #paymentPanelBody {
+            display: none !important;
+        }
+        #paymentPanel {
+            position: fixed !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 50px !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            border-radius: 14px 14px 0 0 !important;
+            background-color: white !important;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.12) !important;
+            z-index: 1040 !important;
+            max-height: calc(100vh - 100px) !important;
+            overflow-y: auto !important;
+        }
+    }
+
     .setvaluecash ul {
         display: flex;
         flex-wrap: wrap;
@@ -218,17 +435,17 @@
         list-style: none;
     }
     .setvaluecash ul li {
-        flex: 1 1 calc(33.333% - 6px);
-        min-width: 70px;
+        flex: 1 1 calc(16.66% - 6px);
+        min-width: 60px;
     }
     .setvaluecash ul li a {
         border: 1px solid #e9ecef;
         color: #495057;
         font-size: 11px;
         font-weight: 600;
-        min-height: 44px;
+        min-height: 38px;
         border-radius: 6px;
-        padding: 5px 6px;
+        padding: 4px 6px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -249,10 +466,24 @@
         border-color: #1b2850;
     }
 
-    .payment_panel {
-        background-color: white;
-        width: 100%;
-        margin-top: 10px;
+    .payment-detail-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+    }
+    .payment-detail-cancel {
+        border: 1px solid #ea5455;
+        background: #fff;
+        color: #ea5455;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 12px;
+        cursor: pointer;
+    }
+    .payment-detail-cancel:hover {
+        background: #ea5455;
+        color: #fff;
     }
 
     .body_space {
@@ -441,7 +672,7 @@
 
     <div class="row">
 
-        <div class="col-lg-7 col-sm-12 tabs_wrapper">
+        <div class="col-lg-7 col-sm-12 tabs_wrapper" id="pos-left-panel">
 
             <div class="pos-top-controls mb-2 mb-md-3">
                 <div class="pos-gst-options custom-gst-group">
@@ -554,7 +785,7 @@
 
             </div>
         </div>
-        <div class="col-lg-5 col-sm-12 ">
+        <div class="col-lg-5 col-sm-12" id="pos-right-panel">
 
             <div class="card card-order">
                 <div class="card-body body_space">
@@ -1002,6 +1233,11 @@
                                     <span id="posPaySummary">Cash</span>
                                     <span class="handle-caret"><i class="fas fa-chevron-down"></i></span>
                                 </span>
+                                <button type="button" id="paymentPanelMinBtn" class="panel-min-btn d-none" title="Minimise / Restore">
+                                    <svg id="panelMinIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708z" />
+                                    </svg>
+                                </button>
                             </div>
 
                             <div id="paymentPanelBody">
@@ -1166,25 +1402,15 @@
                                     <span class="error_peymentmethod"></span>
                                 </div>
 
-                                <div class="row align-items-center mt-3 g-2">
-                                    <div class="col-auto">
-                                        <div class="bill-generate">
-                                            <input type="hidden" id="bill_generate" name="bill_generate" value="bill_generate">
-                                            <button type="button" class="btn" style="background: #1b2850; color: white; padding: 10px 18px; font-weight: 500; border-radius: 6px;">
-                                                Generate Bill
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="btn-totallabel" tabindex="0" style="margin: 0; cursor: pointer;">
-                                            <h6>Total Amount : ₹0.00</h6>
-                                            <h5>Pay Now
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16" style="margin-bottom: 0.1rem;">
-                                                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
-                                                </svg>
-                                            </h5>
-                                        </div>
-                                    </div>
+                                <input type="hidden" id="bill_generate" name="bill_generate" value="bill_generate">
+                                <div class="btn-totallabel bill-generate" tabindex="0" style="cursor: pointer; background: #1b2850; border-radius: 8px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; color: #fff; margin-top: 14px;">
+                                    <h6 style="margin: 0; color: #fff; font-size: 14px; font-weight: 600;">Total Amount : ₹0.00</h6>
+                                    <h5 style="margin: 0; color: #fff; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                                        Generate Bill
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16" style="margin-bottom: 0.1rem;">
+                                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+                                        </svg>
+                                    </h5>
                                 </div>
                             </div>
                         </div>
@@ -3597,11 +3823,6 @@
                 calculateTotals();
             });
 
-            // Payment Panel Handle toggle
-            $(document).on('click', '#paymentPanelHandle', function() {
-                $('#paymentPanel').toggleClass('pos-pay-collapsed');
-            });
-
             // Payment Methods Selection
             $(document).on('click', '.paymentmethod', function(e) {
                 e.preventDefault();
@@ -4018,6 +4239,168 @@
                 }
             });
 
+        });
+    </script>
+
+    <script>
+        /* =====================================================
+           Payment Panel — Drag Handle + Minimize/Restore
+           (Same functionality & code as main-erp-product)
+           ===================================================== */
+        (function() {
+            var panel = document.getElementById('paymentPanel');
+            var handle = document.getElementById('paymentPanelHandle');
+            var body = document.getElementById('paymentPanelBody');
+            var minBtn = document.getElementById('paymentPanelMinBtn');
+            var minIcon = document.getElementById('panelMinIcon');
+
+            if (!panel || !handle) return;
+
+            var isDragging = false;
+            var startY = 0;
+            var startTop = 0;
+            var isCollapsed = false;
+
+            /* ── Only apply dragging when the panel is position:fixed (and NOT on responsive/mobile where it is a bottom bar) ── */
+            function isPanelFixed() {
+                if (window.innerWidth <= 991.98) return false;
+                return getComputedStyle(panel).position === 'fixed';
+            }
+
+            /* ── Responsive tap/click handle to toggle payment options on mobile ── */
+            handle.addEventListener('click', function(e) {
+                if (window.innerWidth > 991.98) return;
+                if (e.target.closest && e.target.closest('#paymentPanelMinBtn')) return;
+                panel.classList.toggle('pos-pay-collapsed');
+                if (typeof window.updatePaySummary === 'function') {
+                    window.updatePaySummary();
+                }
+            });
+
+            /* ── Initialise top position ── */
+            function initPanelTop() {
+                if (!isPanelFixed()) return;
+                if (!panel.style.top) {
+                    var rect = panel.getBoundingClientRect();
+                    panel.style.top = rect.top + 'px';
+                    panel.style.bottom = 'auto';
+                }
+            }
+
+            /* ── Mouse drag ── */
+            handle.addEventListener('mousedown', function(e) {
+                if (!isPanelFixed()) return;
+                if (minBtn && (e.target === minBtn || minBtn.contains(e.target))) return;
+                initPanelTop();
+                isDragging = true;
+                startY = e.clientY;
+                startTop = parseInt(panel.style.top, 10) || panel.getBoundingClientRect().top;
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                var delta = e.clientY - startY;
+                var newTop = startTop + delta;
+                // Clamp: don't drag above 60px or below (viewport - 60px)
+                newTop = Math.max(60, Math.min(window.innerHeight - 60, newTop));
+                panel.style.top = newTop + 'px';
+                panel.style.bottom = 'auto';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.style.userSelect = '';
+                }
+            });
+
+            /* ── Touch drag ── */
+            handle.addEventListener('touchstart', function(e) {
+                if (!isPanelFixed()) return;
+                if (minBtn && (e.target === minBtn || minBtn.contains(e.target))) return;
+                initPanelTop();
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                startTop = parseInt(panel.style.top, 10) || panel.getBoundingClientRect().top;
+            }, {
+                passive: true
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                var delta = e.touches[0].clientY - startY;
+                var newTop = startTop + delta;
+                newTop = Math.max(60, Math.min(window.innerHeight - 60, newTop));
+                panel.style.top = newTop + 'px';
+                panel.style.bottom = 'auto';
+            }, {
+                passive: true
+            });
+
+            document.addEventListener('touchend', function() {
+                isDragging = false;
+            });
+
+            /* ── Minimize / Restore button ── */
+            var expandIcon =
+                '<path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708z"/>';
+            var collapseIcon =
+                '<path d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>';
+
+            if (minBtn) {
+                minBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    isCollapsed = !isCollapsed;
+                    if (isCollapsed) {
+                        body.style.maxHeight = body.scrollHeight + 'px';
+                        requestAnimationFrame(function() {
+                            body.classList.add('panel-collapsed');
+                        });
+                        minIcon.innerHTML = collapseIcon;
+                    } else {
+                        body.classList.remove('panel-collapsed');
+                        body.style.maxHeight = body.scrollHeight + 'px';
+                        setTimeout(function() {
+                            body.style.maxHeight = '';
+                        }, 320);
+                        minIcon.innerHTML = expandIcon;
+                    }
+                });
+            }
+        })();
+
+        // Synchronize Payment Panel Width and Position with Right Column
+        function updatePaymentPanelWidth() {
+            var $rightPanel = $('#pos-right-panel');
+            var $panel = $('#paymentPanel');
+            if (!$rightPanel.length || !$panel.length) return;
+
+            if ($(window).width() > 991.98) {
+                var rect = $rightPanel[0].getBoundingClientRect();
+                $panel.css({
+                    'width': rect.width + 'px',
+                    'left': rect.left + 'px',
+                    'right': 'auto'
+                });
+            } else {
+                $panel.css({
+                    'width': '',
+                    'left': '',
+                    'right': '',
+                    'top': '',
+                    'bottom': ''
+                });
+            }
+        }
+        $(window).on('resize', updatePaymentPanelWidth);
+        $(window).on('scroll', updatePaymentPanelWidth);
+        $(document).ready(function() {
+            setTimeout(updatePaymentPanelWidth, 150);
+            if (typeof window.updatePaySummary === 'function') {
+                window.updatePaySummary();
+            }
         });
     </script>
 
