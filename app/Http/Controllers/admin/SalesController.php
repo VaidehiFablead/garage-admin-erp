@@ -568,7 +568,37 @@ class SalesController extends Controller
             })
             ->get();
 
-        return view('sales.pos', compact('categories', 'taxRates', 'customers', 'vendors', 'currency_symbol', 'currency_position', 'setting', 'staff', 'model', 'branchIdToUse'));
+        $evaluateOrderFormat = function ($format, $sample = 1) {
+            if (empty($format)) {
+                return '';
+            }
+            $yyyy = date('Y');
+            $yy   = date('y');
+            $mm   = date('m');
+            $dd   = date('d');
+
+            $result = (string) $format;
+            $result = str_replace('{YYYY}', $yyyy, $result);
+            $result = str_replace('{YY}', $yy, $result);
+            $result = str_replace('{MM}', $mm, $result);
+            $result = str_replace('{DD}', $dd, $result);
+
+            $result = str_replace('{00000}', str_pad($sample, 5, '0', STR_PAD_LEFT), $result);
+            $result = str_replace('{0000}', str_pad($sample, 4, '0', STR_PAD_LEFT), $result);
+            $result = str_replace('{000}', str_pad($sample, 3, '0', STR_PAD_LEFT), $result);
+            $result = str_replace('{00}', str_pad($sample, 2, '0', STR_PAD_LEFT), $result);
+            $result = str_replace(['{0}', '{1}', '{NUMBER}'], $sample, $result);
+
+            return $result;
+        };
+
+        $withGstFormat = $setting->with_gst_format ?? 'INV-GST-{YYYY}-{0000}';
+        $withoutGstFormat = $setting->without_gst_format ?? 'INV-{YYYY}-{0000}';
+        $nextSaleWithoutGstNo = $evaluateOrderFormat($withoutGstFormat, 1);
+        $nextSaleWithGstNo = $evaluateOrderFormat($withGstFormat, 1);
+        $nextSaleNo = $nextSaleWithoutGstNo;
+
+        return view('sales.pos', compact('categories', 'taxRates', 'customers', 'vendors', 'currency_symbol', 'currency_position', 'setting', 'staff', 'model', 'branchIdToUse', 'nextSaleNo', 'nextSaleWithoutGstNo', 'nextSaleWithGstNo', 'withGstFormat', 'withoutGstFormat'));
     }
     public function sale_report($ids)
     {
