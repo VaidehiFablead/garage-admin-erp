@@ -380,10 +380,10 @@
                         </td>
 
                         <td style="padding:8px; text-align:right;">
-                            @if($setting->currency_position === 'right')
-                                {{ $item->price }}{{ $setting->currency_symbol }}
+                            @if(($setting->currency_position ?? 'left') === 'right')
+                                {{ $item->price }}{{ $setting->currency_symbol ?? '₹' }}
                             @else
-                                {{ $setting->currency_symbol }}{{ $item->price }}
+                                {{ $setting->currency_symbol ?? '₹' }}{{ $item->price }}
                             @endif
                         </td>
 
@@ -392,10 +392,10 @@
                         </td>
 
                         <td style="padding:8px; text-align:right;">
-                            @if($setting->currency_position === 'right')
-                                {{ $item->total_amount }}{{ $setting->currency_symbol }}
+                            @if(($setting->currency_position ?? 'left') === 'right')
+                                {{ $item->total_amount }}{{ $setting->currency_symbol ?? '₹' }}
                             @else
-                                {{ $setting->currency_symbol }}{{ $item->total_amount }}
+                                {{ $setting->currency_symbol ?? '₹' }}{{ $item->total_amount }}
                             @endif
                         </td>
                     </tr>

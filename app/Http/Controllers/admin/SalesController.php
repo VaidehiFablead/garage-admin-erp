@@ -40,7 +40,9 @@ class SalesController extends Controller
         $selectedSubAdminId = $request->query('selectedSubAdminId') ?? session('selectedSubAdminId') ?? $user->id;
 
         // ✅ branch-wise setting
-        $setting = Setting::where('branch_id', $selectedSubAdminId)->first();
+        $setting = Setting::where('branch_id', $selectedSubAdminId)->first()
+            ?? Setting::where('branch_id', 1)->first()
+            ?? Setting::first();
 
         try {
             $query = Order::with(['user:id,name,phone', 'biller:id,name'])
@@ -242,8 +244,10 @@ class SalesController extends Controller
         $view_id = $id;
         $sales = Order::with('carModel')->find($view_id);
         $user = Auth::user();
-        $subAdminId = session('selectedSubAdminId') ?? $user->id;
-        $setting = Setting::where('branch_id', $subAdminId)->first();
+        $subAdminId = $sales->branch_id ?? session('selectedSubAdminId') ?? ($user ? $user->id : 1);
+        $setting = Setting::where('branch_id', $subAdminId)->first()
+            ?? Setting::where('branch_id', 1)->first()
+            ?? Setting::first();
 
         if (!$sales) {
             return redirect()->route('sales.list')->with('error', 'Order not found.');
@@ -272,8 +276,14 @@ class SalesController extends Controller
         $view_id = $id;
         $sales = Order::with('carModel')->find($view_id);
         $user = Auth::user();
-        $subAdminId = session('selectedSubAdminId') ?? $user->id;
-        $setting = Setting::where('branch_id', $subAdminId)->first();
+        $subAdminId = $sales->branch_id ?? session('selectedSubAdminId') ?? ($user ? $user->id : 1);
+        $setting = Setting::where('branch_id', $subAdminId)->first()
+            ?? Setting::where('branch_id', 1)->first()
+            ?? Setting::first()
+            ?? new Setting([
+                'currency_symbol' => '₹',
+                'currency_position' => 'left',
+            ]);
 
         if (!$sales) {
             return redirect()->route('sales.list')->with('error', 'Order not found.');
@@ -284,10 +294,12 @@ class SalesController extends Controller
 
         // Helper function for currency formatting
         $formatCurrency = function ($amount) use ($setting) {
-            $amount = number_format($amount, 2);
-            return $setting->currency_position === 'right'
-                ? $amount . $setting->currency_symbol
-                : $setting->currency_symbol . $amount;
+            $amount = number_format((float) $amount, 2);
+            $symbol = $setting->currency_symbol ?? '₹';
+            $position = $setting->currency_position ?? 'left';
+            return $position === 'right'
+                ? $amount . $symbol
+                : $symbol . $amount;
         };
 
         // ✅ Subtotal
@@ -367,8 +379,14 @@ class SalesController extends Controller
         $view_id = $id;
         $sales = Order::with('carModel')->find($view_id);
         $user = Auth::user();
-        $subAdminId = session('selectedSubAdminId') ?? $user->id;
-        $setting = Setting::where('branch_id', $subAdminId)->first();
+        $subAdminId = $sales->branch_id ?? session('selectedSubAdminId') ?? ($user ? $user->id : 1);
+        $setting = Setting::where('branch_id', $subAdminId)->first()
+            ?? Setting::where('branch_id', 1)->first()
+            ?? Setting::first()
+            ?? new Setting([
+                'currency_symbol' => '₹',
+                'currency_position' => 'left',
+            ]);
 
         if (!$sales) {
             return redirect()->route('sales.list')->with('error', 'Order not found.');
@@ -379,10 +397,12 @@ class SalesController extends Controller
 
         // Helper function for currency formatting
         $formatCurrency = function ($amount) use ($setting) {
-            $amount = number_format($amount, 2);
-            return $setting->currency_position === 'right'
-                ? $amount . $setting->currency_symbol
-                : $setting->currency_symbol . $amount;
+            $amount = number_format((float) $amount, 2);
+            $symbol = $setting->currency_symbol ?? '₹';
+            $position = $setting->currency_position ?? 'left';
+            return $position === 'right'
+                ? $amount . $symbol
+                : $symbol . $amount;
         };
 
         // ✅ Subtotal
