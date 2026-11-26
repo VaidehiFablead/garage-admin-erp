@@ -222,6 +222,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('updateBrand', [BrandController::class, 'updateBrand'])->name('updateBrand');
 
     Route::get('getProductsByCategory/{id}', [SalesController::class, 'getProductsByCategory'])->name('getProductsByCategory');
+    Route::get('/product-by-barcode/{barcode}', [SalesController::class, 'getByBarcode'])->name('getByBarcode');
 
     Route::get('/product-view/{id}', [ProductController::class, 'getProductDetails']);
 
