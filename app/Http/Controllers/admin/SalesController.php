@@ -489,36 +489,66 @@ class SalesController extends Controller
         $currency_symbol = $setting->currency_symbol ?? '₹'; // fallback if null
         $currency_position = $setting->currency_position ?? 'left'; // fallback if null
 
+        // Categories for POS: categories belonging to this branch OR main branch OR that have products
         $categories = Category::where('isDeleted', 0)
-            ->where('branch_id', $branchIdToUse)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1)
+                  ->orWhereNull('branch_id')
+                  ->orWhereHas('products', function ($p) use ($branchIdToUse) {
+                      $p->where('isDeleted', 0)
+                        ->where(function ($sub) use ($branchIdToUse) {
+                            $sub->where('branch_id', $branchIdToUse)
+                                ->orWhere('branch_id', 1);
+                        });
+                  });
+            })
             ->orderBy('id', 'desc')
             ->get();
+
         $taxRates = TaxRate::where('status', 'active')
-            ->where('branch_id', $branchIdToUse)
+            ->where('isDeleted', 0)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1);
+            })
             ->get();
+
         $customers = User::where('role', 'customer')
-            ->where('branch_id', $branchIdToUse)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1);
+            })
             ->where('isDeleted', 0)
             ->get();
 
         $vendors = User::query()
             ->select('id', 'name', 'phone', 'branch_id as subbranch_id')
             ->where('role', 'vendor')
-            ->where('branch_id', $branchIdToUse)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1);
+            })
             ->get();
 
         $staff = User::query()
             ->select('id', 'name', 'phone', 'branch_id as subbranch_id')
             ->whereIn('role', ['Staff', 'staff'])
-            ->where('branch_id', $branchIdToUse)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1);
+            })
             ->get();
 
         $model = AutoCarModel::query()
             ->select('id', 'model_name')
-            ->where('branch_id', $branchIdToUse)
+            ->where(function ($q) use ($branchIdToUse) {
+                $q->where('branch_id', $branchIdToUse)
+                  ->orWhere('branch_id', 1);
+            })
             ->get();
 
-        return view('sales.pos', compact('categories', 'taxRates', 'customers', 'vendors', 'currency_symbol', 'currency_position', 'setting', 'staff', 'model'));
+        return view('sales.pos', compact('categories', 'taxRates', 'customers', 'vendors', 'currency_symbol', 'currency_position', 'setting', 'staff', 'model', 'branchIdToUse'));
     }
     public function sale_report($ids)
     {

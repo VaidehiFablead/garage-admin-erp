@@ -310,7 +310,21 @@
 
                 @foreach($categories as $cat)
                 @php
-                $availableProducts = $cat->products;
+                $currentBranch = $branchIdToUse ?? (session('selectedSubAdminId') ?: 1);
+                $availableProducts = $cat->products()
+                    ->where('isDeleted', 0)
+                    ->where(function ($q) use ($currentBranch) {
+                        if (!empty($currentBranch) && $currentBranch != 1) {
+                            $q->where('branch_id', $currentBranch)
+                              ->orWhere('branch_id', 1);
+                        } else {
+                            $q->where('branch_id', 1)->orWhereNull('branch_id');
+                        }
+                    })
+                    ->get();
+                if ($availableProducts->isEmpty()) {
+                    $availableProducts = $cat->products()->where('isDeleted', 0)->get();
+                }
                 @endphp
 
                 @if($availableProducts && $availableProducts->count() > 0)
