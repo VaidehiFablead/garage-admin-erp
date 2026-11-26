@@ -1266,7 +1266,7 @@
                     <div id="scan-message" class="text-center mt-2 small text-muted">Initializing camera...</div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn text-white" style="background: #1b2850; padding: 8px 24px;" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -1275,6 +1275,337 @@
     @endsection
     @push('js')
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <script>
+        // ==================== BARCODE SCANNER ====================
+        let html5QrCode = null;
+        let isProcessingBarcode = false;
+
+        function playBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                function beep(time, freq) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = "square";
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + time);
+                    gain.gain.setValueAtTime(1, audioCtx.currentTime + time);
+                    osc.start(audioCtx.currentTime + time);
+                    osc.stop(audioCtx.currentTime + time + 0.2);
+                }
+                beep(0, 1200);
+                beep(0.25, 1500);
+            } catch (e) {
+                console.log("Audio beep not supported or blocked");
+            }
+        }
+
+        async function onScanSuccess(decodedText) {
+            if (isProcessingBarcode) return;
+            isProcessingBarcode = true;
+
+            decodedText = (decodedText || '').trim();
+            console.log("Scan success:", decodedText);
+
+            playBeep();
+
+            document.activeElement && document.activeElement.blur();
+            $('#scan-message').text('Processing...').css('color', 'orange');
+
+            try {
+                const product = await fetchProductByBarcode(decodedText);
+                if (product) {
+                    try {
+                        addProductToCart(product);
+                        $('#scan-message').text('Added: ' + (product.name || decodedText)).css('color', 'green');
+                    } catch (cartError) {
+                        $('#scan-message').text('Error adding: ' + cartError.message).css('color', 'red');
+                    }
+                } else {
+                    $('#scan-message').text('Product not found: ' + decodedText).css('color', 'red');
+                }
+            } catch (error) {
+                console.error("Scan processing error:", error);
+                $('#scan-message').text('Error fetching product').css('color', 'red');
+            } finally {
+                setTimeout(() => {
+                    isProcessingBarcode = false;
+                    $('#scan-message').text('Point camera at barcode').css('color', 'green');
+                }, 1500);
+            }
+        }
+
+        function onScanError(errorMessage) {
+            // silent scan debug
+        }
+
+        function stopScanner() {
+            if (!html5QrCode) return;
+            if (html5QrCode.isScanning) {
+                html5QrCode.stop()
+                    .then(() => { html5QrCode = null; })
+                    .catch(err => {
+                        console.error("Stop error:", err);
+                        html5QrCode = null;
+                    });
+            } else {
+                html5QrCode = null;
+            }
+            $('#scan-message').text('');
+        }
+
+        function waitForLibrary(callback, retries = 20) {
+            if (typeof Html5Qrcode !== "undefined") {
+                callback();
+            } else if (retries > 0) {
+                setTimeout(() => waitForLibrary(callback, retries - 1), 200);
+            } else {
+                $('#scan-message').text('Scanner library failed to load. Please refresh.').css('color', 'red');
+                showManualBarcodeInput();
+            }
+        }
+
+        function startScanner() {
+            waitForLibrary(function() {
+                if (html5QrCode) {
+                    let stopPromise = html5QrCode.isScanning ? html5QrCode.stop() : Promise.resolve();
+                    stopPromise.then(() => {
+                        html5QrCode = null;
+                        initScanner();
+                    }).catch(() => {
+                        html5QrCode = null;
+                        initScanner();
+                    });
+                } else {
+                    initScanner();
+                }
+            });
+        }
+
+        function initScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            } catch (e) {
+                console.error("Failed to create Html5Qrcode:", e);
+                showManualBarcodeInput();
+                return;
+            }
+
+            const config = {
+                fps: 10,
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ],
+                qrbox: { width: 250, height: 250 }
+            };
+
+            $('#scan-message').text('Starting camera...');
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).then(() => {
+                $('#scan-message').text('Point camera at barcode').css('color', 'green');
+            }).catch(err => {
+                console.warn("Rear camera failed, trying fallback...", err);
+                Html5Qrcode.getCameras().then(devices => {
+                    if (devices && devices.length) {
+                        let cameraId = devices.find(device =>
+                            device.label.toLowerCase().includes('back') ||
+                            device.label.toLowerCase().includes('rear')
+                        )?.id || devices[0].id;
+
+                        return html5QrCode.start(cameraId, config, onScanSuccess, onScanError);
+                    } else {
+                        throw new Error("No camera found");
+                    }
+                }).then(() => {
+                    $('#scan-message').text('Point camera at barcode').css('color', 'green');
+                }).catch(fallbackErr => {
+                    console.error("Camera fallback failed:", fallbackErr);
+                    html5QrCode = null;
+                    showManualBarcodeInput();
+                });
+            });
+        }
+
+        function showManualBarcodeInput() {
+            $('#scan-message').text('').hide();
+            $('#qr-reader').html(`
+                <div style="text-align:center; padding: 30px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;margin-top: 60px;"></div>
+                    <p style="color:#666; font-size:14px; margin-bottom:16px;">
+                        Scanner stays open. Scan more products, then click Close.<br>
+                        Camera access denied or unsupported.<br>
+                        Enter barcode manually below:
+                    </p>
+                    <div style="display:flex; gap:8px; justify-content:center;">
+                        <input type="text" id="manualBarcodeInput" class="form-control"
+                            placeholder="Enter barcode / product code"
+                            style="max-width:260px; font-size:14px;">
+                        <button type="button" class="btn text-white" id="manualBarcodeSubmit" style="background-color: #ff9f43; border-color: #ff9f43;">Search</button>
+                    </div>
+                    <div id="manualBarcodeError" class="text-danger" style="font-size:14px; margin-top:8px;"></div>
+                </div>
+            `);
+
+            $('#qr-reader').off('click', '#manualBarcodeSubmit').on('click', '#manualBarcodeSubmit', function() {
+                handleManualBarcode();
+            });
+
+            $('#qr-reader').off('keydown', '#manualBarcodeInput').on('keydown', '#manualBarcodeInput', function(e) {
+                if (e.key === 'Enter') {
+                    handleManualBarcode();
+                }
+            });
+        }
+
+        async function handleManualBarcode() {
+            let barcode = $('#manualBarcodeInput').val().trim();
+
+            if (!barcode) {
+                $('#manualBarcodeError').text('Please enter a barcode.');
+                return;
+            }
+
+            $('#manualBarcodeSubmit').prop('disabled', true).text('Searching...');
+            $('#manualBarcodeError').text('').removeClass('text-success').addClass('text-danger');
+
+            try {
+                const product = await fetchProductByBarcode(barcode);
+
+                document.activeElement && document.activeElement.blur();
+                
+                if (product) {
+                    try {
+                        addProductToCart(product);
+                        playBeep();
+                        $('#manualBarcodeInput').val('').focus();
+                        $('#manualBarcodeError').removeClass('text-danger').addClass('text-success').text('Added: ' + product.name);
+                        setTimeout(() => { $('#manualBarcodeError').text(''); }, 2500);
+                    } catch (cartError) {
+                        console.error('Error in addProductToCart:', cartError);
+                        $('#manualBarcodeError').removeClass('text-success').addClass('text-danger').text('Error adding product: ' + cartError.message);
+                        $('#manualBarcodeInput').focus();
+                    }
+                } else {
+                    $('#manualBarcodeError').removeClass('text-success').addClass('text-danger').text('Product not found: ' + barcode);
+                    $('#manualBarcodeInput').focus();
+                }
+            } catch (error) {
+                console.error('Error fetching barcode:', error);
+                $('#manualBarcodeError').removeClass('text-success').addClass('text-danger').text('Fetch error: ' + (error.message || error));
+                $('#manualBarcodeInput').focus();
+            } finally {
+                $('#manualBarcodeSubmit').prop('disabled', false).text('Search');
+            }
+        }
+
+        function fetchProductByBarcode(barcode) {
+            return new Promise((resolve, reject) => {
+                let authToken = localStorage.getItem("authToken");
+                $.ajax({
+                    url: '/api/product-by-barcode/' + encodeURIComponent(barcode),
+                    type: 'GET',
+                    headers: {
+                        "Authorization": "Bearer " + authToken,
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        resolve(response.status && response.product ? response.product : null);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 404) {
+                            resolve(null);
+                        } else {
+                            reject(xhr.responseJSON?.message || 'Network error');
+                        }
+                    }
+                });
+            });
+        }
+
+        function addProductToCart(product) {
+            if (!product) return;
+            const rawId = String(product.id || '').trim();
+            const numericId = parseInt(rawId, 10) || 0;
+            const barcodeVal = (product.barcode || '').trim();
+            const stringId = String(numericId);
+
+            const productName = product.name || 'Unknown';
+            const rawPrice = parseFloat(product.price) || 0;
+
+            let basePath = '{{ rtrim(env('ImagePath'), '/') }}'.replace(/\/+$/, '');
+            let productImage = `${basePath}/admin/assets/img/product/noimage.png`;
+            if (product.image) {
+                try {
+                    let cleanImage = String(product.image).replace(/\\/g, '').replace(/^"(.*)"$/, '$1');
+                    let rawImg = '';
+                    if (cleanImage.startsWith('[')) {
+                        let imagesArray = JSON.parse(cleanImage);
+                        if (Array.isArray(imagesArray) && imagesArray.length > 0) {
+                            rawImg = imagesArray[0];
+                        }
+                    } else {
+                        rawImg = cleanImage;
+                    }
+                    if (rawImg) {
+                        let cleanImg = String(rawImg).replace(/^\/+/, '').replace(/^storage\/+/, '');
+                        productImage = (cleanImg.startsWith('http://') || cleanImg.startsWith('https://'))
+                            ? cleanImg
+                            : `${basePath}/storage/${cleanImg}`;
+                    }
+                } catch (e) {
+                    console.warn('Image parse error, using default');
+                }
+            }
+
+            const stock = parseInt(product.quantity || product.stock) || 100;
+            const categoryId = product.category_id || 0;
+
+            if (selectedItems.has(stringId)) {
+                let item = selectedItems.get(stringId);
+                let nextQty = (parseInt(item.quantity) || 1) + 1;
+                if (nextQty <= item.stock) {
+                    item.quantity = nextQty;
+                    selectedItems.set(stringId, item);
+                    updateTotalItems();
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Stock Limit Reached',
+                        text: 'Cannot exceed available stock (' + item.stock + ')',
+                        confirmButtonColor: '#ff9f43',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } else {
+                selectedItems.set(stringId, {
+                    id: stringId,
+                    productId: numericId,
+                    categoryId: categoryId,
+                    name: productName,
+                    price: rawPrice.toFixed(2),
+                    originalPrice: rawPrice.toFixed(2),
+                    image: productImage,
+                    code: barcodeVal || "PT001",
+                    quantity: 1,
+                    stock: stock
+                });
+                updateTotalItems();
+            }
+        }
+    </script>
     <script>
         // let selectedItems = new Map();
         document.querySelectorAll('.paymentmethod').forEach(el => {
@@ -3252,7 +3583,17 @@
             });
 
             $(document).on('click', '#scanBarcodeBtn', function() {
-                $('#barcodeScannerModal').modal('show');
+                $('#barcodeScannerModal').appendTo("body").modal('show');
+            });
+
+            $('#barcodeScannerModal').on('shown.bs.modal', function() {
+                setTimeout(startScanner, 400);
+            });
+
+            $('#barcodeScannerModal').on('hidden.bs.modal', function() {
+                stopScanner();
+                $('#qr-reader').html('').css('min-height', '300px');
+                $('#scan-message').text('Initializing camera...').show().css('color', '');
             });
 
             // All Products Checkbox / Category sync

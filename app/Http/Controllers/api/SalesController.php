@@ -1061,4 +1061,131 @@ class SalesController extends Controller
             ], 500);
         }
     }
+
+    private function formatLocalBarcodeProduct(Product $product): array
+    {
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'SKU' => $product->SKU,
+            'hsn_code' => $product->hsn_code,
+            'barcode' => $product->barcode,
+            'description' => $product->description,
+            'purchase_price' => $product->purchase_price,
+            'price' => $product->price,
+            'mrp' => $product->mrp,
+            'quantity' => $product->quantity,
+            'stock' => $product->quantity,
+            'image' => $product->images,
+            'category_id' => $product->category_id,
+            'category_name' => $product->category?->name,
+            'categoryId' => $product->category_id,
+            'brand_id' => $product->brand_id,
+            'unit_id' => $product->unit_id,
+            'unit' => $product->unit ? $product->unit->unit_name : null,
+            'status' => $product->status,
+            'availablility' => $product->availablility,
+            'gst_option' => $product->gst_option,
+            'product_gst' => $product->product_gst,
+        ];
+    }
+
+    public function getByBarcode(Request $request, $barcode)
+    {
+        $barcode = trim($barcode);
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {}
+            if (!$user) {
+                try {
+                    $user = Auth::guard('web')->user();
+                } catch (\Throwable $e) {}
+            }
+
+            $sub_admin_id = $request->input('sub_admin_id') ?? session('selectedSubAdminId');
+            $branchId = $sub_admin_id ?: ($user ? ($user->branch_id ?? $user->id) : null);
+
+            // Search product by barcode
+            $productQuery = Product::with('category', 'unit', 'brand')
+                ->where(function($q) use ($barcode) {
+                    $q->where('barcode', $barcode)
+                      ->orWhere('barcode', 'LIKE', '%' . $barcode . '%')
+                      ->orWhereRaw("FIND_IN_SET(?, REPLACE(barcode, ' ', ''))", [$barcode]);
+                })
+                ->where('isDeleted', 0);
+
+            if (!empty($branchId) && $branchId != 1) {
+                $productQuery->where(function($q) use ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhere('branch_id', 1);
+                });
+            }
+
+            $product = $productQuery->first();
+            if ($product) {
+                $product->barcode = $barcode;
+            }
+
+            // Check additional barcodes in ProductBarcode table if not found
+            if (!$product) {
+                $additionalBarcodes = \App\Models\ProductBarcode::where(function($q) use ($barcode) {
+                    $q->where('barcode', $barcode)
+                      ->orWhere('barcode', 'LIKE', '%' . $barcode . '%')
+                      ->orWhereRaw("FIND_IN_SET(?, REPLACE(barcode, ' ', ''))", [$barcode]);
+                })->get();
+
+                foreach ($additionalBarcodes as $additionalBarcode) {
+                    $pQuery = Product::with('category', 'unit', 'brand')
+                        ->where('id', $additionalBarcode->product_id)
+                        ->where('isDeleted', 0);
+
+                    if (!empty($branchId) && $branchId != 1) {
+                        $pQuery->where(function($q) use ($branchId) {
+                            $q->where('branch_id', $branchId)->orWhere('branch_id', 1);
+                        });
+                    }
+
+                    $found = $pQuery->first();
+                    if ($found) {
+                        $product = $found;
+                        $product->barcode = $barcode;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback without branch filter if still not found
+            if (!$product) {
+                $product = Product::with('category', 'unit', 'brand')
+                    ->where(function($q) use ($barcode) {
+                        $q->where('barcode', $barcode)
+                          ->orWhere('barcode', 'LIKE', '%' . $barcode . '%')
+                          ->orWhereRaw("FIND_IN_SET(?, REPLACE(barcode, ' ', ''))", [$barcode]);
+                    })
+                    ->where('isDeleted', 0)
+                    ->first();
+                if ($product) {
+                    $product->barcode = $barcode;
+                }
+            }
+
+            if ($product) {
+                return response()->json([
+                    'status' => true,
+                    'product' => $this->formatLocalBarcodeProduct($product),
+                ]);
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found: ' . $barcode
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
