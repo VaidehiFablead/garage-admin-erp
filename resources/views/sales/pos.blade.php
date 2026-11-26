@@ -187,6 +187,215 @@
         border-color: #ff9f43 !important;
         color: #ff9f43 !important;
     }
+
+    /* ===== CUSTOMER DETAILS & ORDER HEADER (Matching main-erp-product) ===== */
+    .pos-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #ff9f43;
+        background: #ff9f43;
+        color: #fff !important;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1;
+        height: 32px;
+        text-decoration: none !important;
+        transition: background 0.2s;
+    }
+    .pos-back-btn:hover {
+        background: #e08930;
+        color: #fff !important;
+    }
+
+    .pos-fullscreen-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1.5px solid #e0e0e0;
+        background: #fff;
+        color: #4b5563;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+    .pos-fullscreen-btn:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .pos-order-number-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1b2850;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        white-space: nowrap;
+        height: 32px;
+    }
+    .pos-order-number-label {
+        color: #888;
+        font-weight: 500;
+        font-size: 12px;
+    }
+    .pos-order-number-value {
+        color: #ff9f43;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .customer-section-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1b2850;
+    }
+
+    .customer-details-box {
+        border: 1.5px solid #ff9f43;
+        border-radius: 8px;
+        padding: 6px 10px 8px !important;
+        background: #fff;
+        margin-bottom: 8px !important;
+    }
+
+    .customer-details-box .pos-customer-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .customer-details-box .pos-customer-field {
+        flex: 1 1 0;
+        min-width: 140px;
+        padding: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .customer-details-box label {
+        display: flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 500;
+        color: #5e5873;
+        margin-bottom: 3px !important;
+    }
+
+    .customer-details-box .form-control {
+        background-color: #f8f9fa !important;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        height: 34px !important;
+        font-size: 13px;
+        color: #333;
+        padding: 4px 10px;
+    }
+
+    .customer-details-box .select2-container .select2-selection--single {
+        background-color: #f8f9fa !important;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        height: 34px !important;
+    }
+
+    .customer-details-box .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px !important;
+        padding-left: 10px;
+        font-size: 13px;
+    }
+
+    .customer-details-box .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+
+    .pos-order-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0 0 8px 0 !important;
+    }
+
+    .pos-order-row .pos-customer-field {
+        flex: 1 1 0;
+        min-width: 110px;
+        padding: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .pos-order-row label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #5e5873;
+        margin-bottom: 3px !important;
+        display: block;
+    }
+
+    .pos-order-row .form-control {
+        height: 34px !important;
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 4px 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #e0e0e0;
+    }
+
+    .pos-order-row .select2-container .select2-selection--single {
+        height: 34px !important;
+        border-radius: 6px;
+        background-color: #f8f9fa;
+        border: 1px solid #e0e0e0;
+    }
+
+    .pos-order-row .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px !important;
+        padding-left: 10px;
+        font-size: 13px;
+    }
+
+    .pos-order-row .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+
+    /* Dark Theme Support */
+    :root[data-theme="dark"] .customer-details-box {
+        background: #0f172a !important;
+        border-color: #ff9f43 !important;
+    }
+    :root[data-theme="dark"] .customer-details-box label,
+    :root[data-theme="dark"] .pos-order-row label {
+        color: #cbd5e1 !important;
+    }
+    :root[data-theme="dark"] .customer-details-box .form-control,
+    :root[data-theme="dark"] .pos-order-row .form-control {
+        background-color: #1e293b !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+        color: #f8fafc !important;
+    }
+    :root[data-theme="dark"] .pos-fullscreen-btn,
+    :root[data-theme="dark"] .pos-order-number-badge {
+        background: #0f172a !important;
+        border-color: rgba(255, 255, 255, 0.14) !important;
+        color: #f8fafc !important;
+    }
+    :root[data-theme="dark"] .customer-section-title {
+        color: #f8fafc !important;
+    }
+
     /* ── Payment Panel & Drag Handle (Matching main-erp-product) ── */
     .payment_panel {
         position: fixed;
@@ -788,136 +997,174 @@
         <div class="col-lg-5 col-sm-12" id="pos-right-panel">
 
             <div class="card card-order">
-                <div class="card-body body_space">
-                    <div class="row" style="padding: 20px;">
-                        <div class="col-lg-12">
-                            <div class="row">
+                <div class="card-body body_space" style="padding: 12px 14px 4px;">
+                    <div class="customer-section-title">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user-friends" style="color: #ff9f43;"></i> Customer details
+                        </div>
+                        <div class="customer-action-btns" style="display:flex; gap:6px; margin-left: 8px;">
+                            <button type="button" id="openQuickAddCustomerBtn"
+                                class="btn btn-outline-secondary btn-sm"
+                                style="border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #fff; border-color: #d8d6de; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+                                title="Add New Customer">
+                                <i class="fas fa-plus" style="color: #ff9f43;"></i>
+                            </button>
+                            <button type="button" id="openEditCustomerBtn"
+                                class="btn btn-outline-secondary btn-sm"
+                                style="border-radius: 6px; width: 30px; height: 30px; display: none; align-items: center; justify-content: center; background: #fff; border-color: #d8d6de; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+                                title="Edit Selected Customer">
+                                <i class="fas fa-pencil-alt" style="color: #ff9f43;"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            {{-- Fullscreen Toggle --}}
+                            <button type="button" class="pos-fullscreen-btn" id="posFullscreenToggle"
+                                title="Expand panel">
+                                <i class="fas fa-expand"></i>
+                            </button>
 
+                            {{-- Order Number Badge --}}
+                            <div class="pos-order-number-badge" id="posOrderNumberBadge">
+                                <span class="pos-order-number-label" id="posOrderNumberLabel">Order No:</span>
+                                <span class="pos-order-number-value" id="posOrderNumberValue">{{ $nextSaleNo ?? 'ORD-01' }}</span>
+                            </div>
+                            <div class="page-btn">
+                                <a href="{{ route('sales.list') }}" class="pos-back-btn">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
-
-
-
-                                <!-- Customer Section -->
-                                <div class="col-md-6" id="customerSection" style="display:none;">
-                                    <div class="select-split">
-                                        <div class="select-group w-100">
-                                            <label>Customer Name</label>
-                                            <select id="customer_name" name="customer_name"
-                                                class="form-control select2">
-                                                <option value="">Select Customer</option>
-                                                @foreach ($customers as $username)
-                                                <option value="{{ $username->id }}" data-phone="{{ $username->phone }}"
-                                                    data-group="{{ $username->group_by_price }}">
-                                                    {{ $username->name }}
+                    {{-- Customer Details Box --}}
+                    <div class="customer-details-box">
+                        <div class="row w-100 m-0 pos-customer-row">
+                            <!-- Customer Name -->
+                            <div class="col-md-6 col-12 pos-customer-field" id="customerSection">
+                                <div class="select-split select-group w-100">
+                                    <div class="select-group w-100">
+                                        <label><i class="far fa-user-circle" style="color: #ff9f43; margin-right: 5px;"></i> Customer name</label>
+                                        <select id="customer_name" name="customer_name" class="form-control select2">
+                                            <option value="">Select Customer</option>
+                                            @foreach ($customers as $username)
+                                                <option value="{{ $username->id }}"
+                                                    data-phone="{{ $username->phone ?? '' }}"
+                                                    data-gst="{{ $username->gst_num ?? '' }}"
+                                                    data-group="{{ $username->group_by_price ?? '' }}">
+                                                    {{ $username->name }}{{ $username->phone ? ' - ' . $username->phone : '' }}
                                                 </option>
-                                                @endforeach
-                                            </select>
-                                            <span class="error_customername text-danger"></span>
-                                        </div>
+                                            @endforeach
+                                        </select>
+                                        <span class="error_customername text-danger"></span>
                                     </div>
                                 </div>
+                            </div>
 
-
-
-                                <div class="col-md-6" id="customerPhoneSection" style="display:none;">
-                                    <div class="select-split">
-                                        <div class="select-group w-100">
-                                            <label>Customer Phone</label>
-                                            <input type="tel" id="customer_phone" class="form-control"
-                                                placeholder="Customer number" name="customer_phone">
-                                            <span class="error_customerphone text-danger"></span>
-                                        </div>
+                            <!-- Customer Phone -->
+                            <div class="col-md-6 col-12 pos-customer-field" id="customerPhoneSection">
+                                <div class="select-split">
+                                    <div class="select-group w-100">
+                                        <label><i class="fas fa-phone-alt" style="color: #ff9f43; margin-right: 5px;"></i> Customer phone</label>
+                                        <input type="tel" id="customer_phone" class="form-control"
+                                            placeholder="Customer number" name="customer_phone">
+                                        <span class="error_customerphone text-danger"></span>
                                     </div>
                                 </div>
+                            </div>
 
-
-                                <!-- Vendor Section -->
-                                <div class="col-lg-6 col-sm-6 col-6" id="vendorDropdown" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Vendor Name</label>
+                            <!-- Vendor Section (for vendor user_type) -->
+                            <div class="col-md-6 col-12 pos-customer-field" id="vendorDropdown" style="display: none;">
+                                <div class="select-split">
+                                    <div class="select-group w-100">
+                                        <label><i class="far fa-user-circle" style="color: #ff9f43; margin-right: 5px;"></i> Vendor Name</label>
                                         <select name="vendor_id" id="vendor_id" class="form-control select2">
                                             <option value="">Select Vendor</option>
                                             @foreach ($vendors as $vendor)
-                                            <option value="{{ $vendor->id }}" data-phone="{{ $vendor->phone }}"
-                                                data-type="{{ $vendor->group_by_price }}"> <!-- 👈 added vendor type -->
-                                                {{ $vendor->name }}
-                                            </option>
+                                                <option value="{{ $vendor->id }}" data-phone="{{ $vendor->phone }}"
+                                                    data-type="{{ $vendor->group_by_price }}">
+                                                    {{ $vendor->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                         <span class="text-danger error-vendor_id"></span>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="col-lg-6 col-sm-6 col-6" id="vendorPhoneSection" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Vendor Phone</label>
+                            <div class="col-md-6 col-12 pos-customer-field" id="vendorPhoneSection" style="display: none;">
+                                <div class="select-split">
+                                    <div class="select-group w-100">
+                                        <label><i class="fas fa-phone-alt" style="color: #ff9f43; margin-right: 5px;"></i> Vendor Phone</label>
                                         <input type="tel" id="vendor_phone" class="form-control"
                                             placeholder="Vendor number" name="vendor_phone">
                                         <span class="text-danger error-vendorphone"></span>
                                     </div>
                                 </div>
-                                 @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
-                                <div class="col-md-12 col-lg-4" id="staffSection"  style="overflow: hidden;">
-                                    <div class="select-split">
-                                        <div class="select-group w-100">
-                                            <label>Staff Name</label>
-                                            <select id="staff_name" name="staff_name" class="form-control select2">
-                                                <option value="">Select Staff</option>
-                                                @foreach ($staff as $username)
-                                                <option value="{{ $username->id }}" data-phone="{{ $username->phone }}"
-                                                    data-group="{{ $username->group_by_price }}">
-                                                    {{ $username->name }}
-                                                </option>
-                                                @endforeach
-                                            </select>
-                                            <span class="error_staff text-danger"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                                @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
-                                <div class="col-md-12 col-lg-4" style="overflow: hidden;">
-                                    <div class="select-split">
-                                        <div class="select-group w-100">
-                                            <label>Model</label>
-                                            <select id="car_model" name="car_model" class="form-control select2">
-                                                <option value="">Select Model</option>
-                                                @foreach ($model as $username)
-                                                <option value="{{ $username->id }}">
-                                                    {{ $username->model_name }}
-                                                </option>
-                                                @endforeach
-                                            </select>
-                                            <span class="error_car_model text-danger"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                                @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
-                                <div class="col-md-12 col-lg-4" style="overflow: hidden;">
-                                    <div class="select-split">
-                                        <div class="select-group w-100">
-                                            <label>Vehicle No.</label>
-                                            <input type="text" id="vehicle_no" class="form-control"
-                                            placeholder="Vehicle No." name="vehicle_no">
-                                            <span class="error_vehicle_no text-danger"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                                <div class="col-md-6">
-                                    <div class="form-group" style="display: none;">
-                                        <label>User Type</label>
-                                        <select name="user_type" id="user_type" class="form-control">
-                                            <option value="customer">Customer</option>
-                                            <option value="vendor">Vendor</option>
-                                        </select>
-                                        <span class="text-danger error-usertype"></span>
-                                    </div>
-                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    {{-- Garage fields in Row 2 --}}
+                    <div class="row w-100 m-0 pos-order-row">
+                        @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
+                        <div class="col-md-4 col-12 pos-customer-field" id="staffSection">
+                            <div class="select-split">
+                                <div class="select-group w-100">
+                                    <label>Staff Name *</label>
+                                    <select id="staff_name" name="staff_name" class="form-control select2">
+                                        <option value="">Select Staff</option>
+                                        @foreach ($staff as $username)
+                                            <option value="{{ $username->id }}" data-phone="{{ $username->phone }}"
+                                                data-group="{{ $username->group_by_price }}">
+                                                {{ $username->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span class="error_staff text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
+                        @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
+                        <div class="col-md-4 col-12 pos-customer-field">
+                            <div class="select-split">
+                                <div class="select-group w-100">
+                                    <label>Model *</label>
+                                    <select id="car_model" name="car_model" class="form-control select2">
+                                        <option value="">Select Model</option>
+                                        @foreach ($model as $username)
+                                            <option value="{{ $username->id }}">{{ $username->model_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <span class="error_car_model text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
+                        @if(in_array(auth()->user()->role, ['admin', 'sub-admin']))
+                        <div class="col-md-4 col-12 pos-customer-field">
+                            <div class="select-split">
+                                <div class="select-group w-100">
+                                    <label>Vehicle No. *</label>
+                                    <input type="text" id="vehicle_no" class="form-control"
+                                        placeholder="Vehicle No." name="vehicle_no">
+                                    <span class="error_vehicle_no text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="col-md-6" style="display: none;">
+                            <div class="form-group">
+                                <label>User Type</label>
+                                <select name="user_type" id="user_type" class="form-control">
+                                    <option value="customer">Customer</option>
+                                    <option value="vendor">Vendor</option>
+                                </select>
+                                <span class="text-danger error-usertype"></span>
                             </div>
                         </div>
                     </div>
@@ -1498,6 +1745,108 @@
             </div>
         </div>
     </div>
+
+    {{-- ===== QUICK ADD CUSTOMER MODAL ===== --}}
+    <div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-labelledby="quickAddCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form id="quickAddCustomerForm" enctype="multipart/form-data">
+                    <input type="hidden" id="qac_edit_id" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="quickAddCustomerModalLabel">Add New Customer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">x</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Customer Code</label>
+                                <input type="text" name="qac_customer_code" id="qac_customer_code" class="form-control" maxlength="50" placeholder="Customer Code">
+                                <div class="text-danger small qac-error" id="qac_error_customer_code"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Customer Name <span class="text-danger">*</span></label>
+                                <input type="text" name="qac_customer_name" id="qac_customer_name" class="form-control" maxlength="80" placeholder="Customer Name">
+                                <div class="text-danger small qac-error" id="qac_error_customer_name"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Company Name</label>
+                                <input type="text" name="qac_company_name" id="qac_company_name" class="form-control" maxlength="80" placeholder="Company Name">
+                                <div class="text-danger small qac-error" id="qac_error_company_name"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Phone <span class="text-danger">*</span></label>
+                                <input type="text" name="qac_phone" id="qac_phone" class="form-control" maxlength="10" placeholder="10-digit phone">
+                                <div class="text-danger small qac-error" id="qac_error_phone"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Alternate Phone</label>
+                                <input type="text" name="qac_alternate_phone" id="qac_alternate_phone" class="form-control" maxlength="10" placeholder="10-digit phone (optional)">
+                                <div class="text-danger small qac-error" id="qac_error_alternate_phone"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Email</label>
+                                <input type="email" name="qac_email" id="qac_email" class="form-control" placeholder="Email">
+                                <div class="text-danger small qac-error" id="qac_error_email"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>GST Number</label>
+                                <div style="position:relative;">
+                                    <input type="text" name="qac_gst_number" id="qac_gst_number" class="form-control" maxlength="15" placeholder="GST Number (auto-fill)" autocomplete="off">
+                                    <span id="qac-gst-loader" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);display:none;color:#ff9f43;"><i class="fas fa-spinner fa-spin"></i></span>
+                                </div>
+                                <div class="text-danger small qac-error" id="qac_error_gst_number"></div>
+                                <div id="qac-gst-msg" style="font-size:12px;margin-top:3px;min-height:16px;"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>PAN Number</label>
+                                <input type="text" name="qac_pan_number" id="qac_pan_number" class="form-control" maxlength="10" placeholder="PAN Number">
+                                <div class="text-danger small qac-error" id="qac_error_pan_number"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>State Code</label>
+                                <input type="text" name="qac_state_code" id="qac_state_code" class="form-control" placeholder="e.g. 24">
+                                <div class="text-danger small qac-error" id="qac_error_state_code"></div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>State Name</label>
+                                <input type="text" name="qac_state_name" id="qac_state_name" class="form-control" placeholder="Auto-filled from state code" readonly>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>Country</label>
+                                <input type="text" name="qac_country" id="qac_country" class="form-control" placeholder="Country">
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6 mb-3">
+                                <label>City</label>
+                                <input type="text" name="qac_city" id="qac_city" class="form-control" placeholder="City">
+                            </div>
+                            <div class="col-lg-6 col-sm-6 col-12 mb-3">
+                                <label>Address</label>
+                                <textarea name="qac_address" id="qac_address" class="form-control" rows="2" placeholder="Address"></textarea>
+                            </div>
+                            <div class="col-lg-6 col-sm-6 col-12 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="mb-0">Delivery Address</label>
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input" type="checkbox" id="qac_use_same_address">
+                                        <label class="form-check-label small mb-0" style="text-transform: none; font-weight: normal;" for="qac_use_same_address">Use Address</label>
+                                    </div>
+                                </div>
+                                <textarea name="qac_delivery_address" id="qac_delivery_address" class="form-control" rows="2" placeholder="Delivery Address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn text-white" id="qacSaveBtn" style="background-color:#ff9f43;">
+                            <span class="spinner-border spinner-border-sm d-none" id="qacBtnSpinner" role="status" aria-hidden="true"></span>
+                            <span id="qacSaveBtnText">Save Customer</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{-- ===== END QUICK ADD CUSTOMER MODAL ===== --}}
 
     @endsection
     @push('js')
@@ -4210,6 +4559,17 @@
             });
             $("#user_type").val("customer").trigger("change");
 
+            function toggleCustomerButtons() {
+                var val = $('#customer_name').val();
+                if (val && !isNaN(val)) {
+                    $('#openQuickAddCustomerBtn').hide();
+                    $('#openEditCustomerBtn').css('display', 'inline-flex');
+                } else {
+                    $('#openQuickAddCustomerBtn').css('display', 'inline-flex');
+                    $('#openEditCustomerBtn').hide();
+                }
+            }
+            toggleCustomerButtons();
 
             // Populate customer phone
             $("#customer_name").change(function() {
@@ -4223,6 +4583,7 @@
                 } else {
                     $(".error_customerphone").text("");
                 }
+                toggleCustomerButtons();
             });
 
             // Populate vendor phone
@@ -4239,7 +4600,356 @@
                 }
             });
 
+            // Fullscreen panel toggle
+            var isPosFullscreen = false;
+            $('#posFullscreenToggle').on('click', function() {
+                isPosFullscreen = !isPosFullscreen;
+                if (isPosFullscreen) {
+                    $('#pos-left-panel').hide();
+                    $('#pos-right-panel').removeClass('col-lg-5 col-sm-12').addClass('col-lg-12 col-12');
+                    $(this).find('i').removeClass('fa-expand').addClass('fa-compress');
+                    $(this).attr('title', 'Collapse panel');
+                } else {
+                    $('#pos-left-panel').show();
+                    $('#pos-right-panel').removeClass('col-lg-12 col-12').addClass('col-lg-5 col-sm-12');
+                    $(this).find('i').removeClass('fa-compress').addClass('fa-expand');
+                    $(this).attr('title', 'Expand panel');
+                }
+                if (typeof updatePaymentPanelWidth === 'function') {
+                    setTimeout(updatePaymentPanelWidth, 100);
+                }
+            });
+
+            // Order format preview & badge update
+            window.posOrderFormats = {
+                with_gst: @json($withGstFormat ?? 'INV-GST-{YYYY}-{0000}'),
+                without_gst: @json($withoutGstFormat ?? 'INV-{YYYY}-{0000}')
+            };
+
+            function evaluateOrderFormat(format, sample) {
+                if (!format) return '';
+                sample = sample || 1;
+                var d = new Date();
+                var yyyy = d.getFullYear();
+                var yy = String(yyyy).slice(-2);
+                var mm = String(d.getMonth() + 1).padStart(2, '0');
+                var dd = String(d.getDate()).padStart(2, '0');
+
+                var result = String(format);
+                result = result.replace(/{YYYY}/g, yyyy);
+                result = result.replace(/{YY}/g, yy);
+                result = result.replace(/{MM}/g, mm);
+                result = result.replace(/{DD}/g, dd);
+
+                result = result.replace(/{00000}/g, String(sample).padStart(5, '0'));
+                result = result.replace(/{0000}/g, String(sample).padStart(4, '0'));
+                result = result.replace(/{000}/g, String(sample).padStart(3, '0'));
+                result = result.replace(/{00}/g, String(sample).padStart(2, '0'));
+                result = result.replace(/{(?:0|1|NUMBER)}/g, sample);
+                return result;
+            }
+
+            function updateOrderNumberBadge() {
+                var $badgeLabel = $('#posOrderNumberLabel');
+                var $badgeValue = $('#posOrderNumberValue');
+                var formats = window.posOrderFormats || {};
+                var isWithGst = ($('input[name="gst_option"]:checked').val() === 'with');
+
+                $badgeLabel.text('Order No:');
+                var salePattern = isWithGst ? (formats.with_gst || 'INV-GST-{YYYY}-{0000}') : (formats.without_gst || 'INV-{YYYY}-{0000}');
+                $badgeValue.text(evaluateOrderFormat(salePattern, 1));
+            }
+            $(document).on('change', 'input[name="gst_option"]', updateOrderNumberBadge);
+
         });
+
+        // Quick Add / Edit Customer JS
+        (function() {
+            var authToken = localStorage.getItem('authToken');
+            var qacModalEl = document.getElementById('quickAddCustomerModal');
+            var qacModal = qacModalEl && typeof bootstrap !== 'undefined' ? new bootstrap.Modal(qacModalEl) : null;
+
+            var stateCodeToName = {
+                "01": "Jammu and Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
+                "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh",
+                "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh", "13": "Nagaland", "14": "Manipur",
+                "15": "Mizoram", "16": "Tripura", "17": "Meghalaya", "18": "Assam", "19": "West Bengal",
+                "20": "Jharkhand", "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh", "24": "Gujarat",
+                "27": "Maharashtra", "29": "Karnataka", "33": "Tamil Nadu", "36": "Telangana"
+            };
+
+            function resetQacForm() {
+                $('#quickAddCustomerForm')[0].reset();
+                $('#qac_edit_id').val('');
+                $('.qac-error').html('');
+                $('#qac-gst-msg').html('');
+                $('#qac_use_same_address').prop('checked', false);
+            }
+
+            function setQacMode(mode) {
+                var isEdit = mode === 'edit';
+                $('#quickAddCustomerModalLabel').text(isEdit ? 'Edit Customer' : 'Add New Customer');
+                $('#qacSaveBtnText').text(isEdit ? 'Update Customer' : 'Save Customer');
+            }
+
+            function fillQacForm(c) {
+                $('#qac_customer_code').val(c.customer_code || '');
+                $('#qac_customer_name').val(c.name || '');
+                $('#qac_company_name').val(c.company_name || '');
+                $('#qac_phone').val(c.phone || '');
+                $('#qac_alternate_phone').val(c.alternate_phone || '');
+                $('#qac_email').val(c.email || '');
+                $('#qac_gst_number').val(c.gst_num || c.gst_number || '');
+                $('#qac_pan_number').val(c.pan_number || '');
+                $('#qac_state_code').val(c.state_code || '');
+                $('#qac_state_name').val(c.state_name || stateCodeToName[c.state_code] || '');
+                $('#qac_country').val(c.country || (c.details && c.details.country) || '');
+                $('#qac_city').val(c.city || (c.details && c.details.city) || '');
+                $('#qac_address').val(c.address || (c.details && c.details.address) || '');
+                $('#qac_delivery_address').val(c.delivery_address || (c.details && c.details.delivery_address) || '');
+
+                var addressVal = $('#qac_address').val();
+                var deliveryAddressVal = $('#qac_delivery_address').val();
+                $('#qac_use_same_address').prop('checked', addressVal && addressVal === deliveryAddressVal);
+            }
+
+            $(document).on('click', '#openQuickAddCustomerBtn', function() {
+                resetQacForm();
+                setQacMode('add');
+                if (qacModal) qacModal.show();
+            });
+
+            $(document).on('click', '#openEditCustomerBtn', function() {
+                var customerId = $('#customer_name').val();
+                if (!customerId || !/^\d+$/.test(String(customerId))) return;
+
+                resetQacForm();
+                setQacMode('edit');
+                $('#qac_edit_id').val(customerId);
+
+                if (qacModal) qacModal.show();
+                $('#qacSaveBtn').prop('disabled', true);
+                $('#qacBtnSpinner').removeClass('d-none');
+
+                $.ajax({
+                    url: '/api/getCustomer/' + customerId,
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    success: function(res) {
+                        if (res.status && res.customer) {
+                            var c = res.customer;
+                            if (c.details) {
+                                c.country = c.country || c.details.country;
+                                c.city = c.city || c.details.city;
+                                c.address = c.address || c.details.address;
+                                c.delivery_address = c.delivery_address || c.details.delivery_address;
+                            }
+                            fillQacForm(c);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Could not load customer details.'
+                            });
+                            if (qacModal) qacModal.hide();
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to fetch customer details.'
+                        });
+                        if (qacModal) qacModal.hide();
+                    },
+                    complete: function() {
+                        $('#qacSaveBtn').prop('disabled', false);
+                        $('#qacBtnSpinner').addClass('d-none');
+                    }
+                });
+            });
+
+            $(document).on('input', '#qac_state_code', function() {
+                var raw = this.value.replace(/[^0-9]/g, '').substring(0, 3);
+                this.value = raw;
+                $('#qac_state_name').val(stateCodeToName[raw] || '');
+            });
+
+            $(document).on('input', '#qac_gst_number', function() {
+                var raw = $(this).val().toUpperCase().replace(/[^0-9A-Z]/g, '').substring(0, 15);
+                $(this).val(raw);
+                $('#qac-gst-msg').html('');
+                if (raw.length < 15) return;
+
+                var $loader = $('#qac-gst-loader');
+                var $msg = $('#qac-gst-msg');
+
+                $loader.show();
+                $(this).prop('readonly', true);
+                $msg.html('<span style="color:#1B2850;"><i class="fas fa-spinner fa-spin"></i> Fetching GST details...</span>');
+
+                $.ajax({
+                    url: '/api/fetch-gst-details',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: { gst_number: raw },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    success: function(res) {
+                        if (res.trade_name) $('#qac_customer_name').val(res.trade_name);
+                        if (res.legal_name) $('#qac_company_name').val(res.legal_name);
+                        if (res.address) $('#qac_address').val(res.address);
+                        if (res.city) $('#qac_city').val(res.city);
+                        if (res.state_code) {
+                            $('#qac_state_code').val(res.state_code);
+                            $('#qac_state_name').val(res.state_name || stateCodeToName[res.state_code] || '');
+                        }
+                        if (res.country) $('#qac_country').val(res.country);
+                        if (raw.length >= 12) $('#qac_pan_number').val(raw.substring(2, 12));
+                        $msg.html('<span style="color:#28a745;"><i class="fas fa-check-circle"></i> Details fetched successfully.</span>');
+                    },
+                    error: function() {
+                        $('#qac-gst-msg').html('<span class="text-danger">Failed to fetch GST details.</span>');
+                    },
+                    complete: function() {
+                        $loader.hide();
+                        $('#qac_gst_number').prop('readonly', false);
+                    }
+                });
+            });
+
+            $(document).on('input', '#qac_phone, #qac_alternate_phone', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 10);
+            });
+
+            $(document).on('change', '#qac_use_same_address', function() {
+                if ($(this).is(':checked')) {
+                    $('#qac_delivery_address').val($('#qac_address').val());
+                } else {
+                    $('#qac_delivery_address').val('');
+                }
+            });
+
+            $(document).on('submit', '#quickAddCustomerForm', function(e) {
+                e.preventDefault();
+                $('.qac-error').html('');
+
+                var editId = $('#qac_edit_id').val();
+                var isEdit = !!editId;
+
+                var $btn = $('#qacSaveBtn');
+                var $spinner = $('#qacBtnSpinner');
+                $btn.prop('disabled', true);
+                $spinner.removeClass('d-none');
+
+                var formData = new FormData();
+                formData.append('customer_code', $('#qac_customer_code').val().trim());
+                formData.append('customer_name', $('#qac_customer_name').val().trim());
+                formData.append('company_name', $('#qac_company_name').val().trim());
+                formData.append('phone', $('#qac_phone').val().trim());
+                formData.append('alternate_phone', $('#qac_alternate_phone').val().trim());
+                formData.append('email', $('#qac_email').val().trim());
+                formData.append('gst_number', $('#qac_gst_number').val().trim());
+                formData.append('gst_num', $('#qac_gst_number').val().trim());
+                formData.append('pan_number', $('#qac_pan_number').val().trim());
+                formData.append('state_code', $('#qac_state_code').val().trim());
+                formData.append('state_name', $('#qac_state_name').val().trim());
+                formData.append('country', $('#qac_country').val().trim());
+                formData.append('city', $('#qac_city').val().trim());
+                formData.append('address', $('#qac_address').val().trim());
+                formData.append('delivery_address', $('#qac_delivery_address').val().trim());
+
+                var sid = localStorage.getItem('selectedSubAdminId');
+                if (sid && sid !== 'null' && sid !== 'undefined') {
+                    formData.append('sub_admin_id', sid);
+                }
+
+                var apiUrl = isEdit ? '/api/updateCustomer/' + editId : '/api/createCustomer';
+
+                $.ajax({
+                    url: apiUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            var name = $('#qac_customer_name').val().trim();
+                            var company = $('#qac_company_name').val().trim();
+                            var phone = $('#qac_phone').val().trim();
+                            var gst = $('#qac_gst_number').val().trim();
+                            var label = (company || name) + (phone ? ' - ' + phone : '');
+
+                            var $select = $('#customer_name');
+                            var realId = editId || (response.customer ? response.customer.id : (response.customer_id || response.id));
+
+                            var $opt = $select.find('option[value="' + realId + '"]');
+                            if ($opt.length) {
+                                $opt.text(label).attr('data-phone', phone).attr('data-gst', gst);
+                            } else {
+                                $opt = $('<option>', { value: realId, text: label }).attr('data-phone', phone).attr('data-gst', gst);
+                                $select.append($opt);
+                            }
+
+                            if ($select.data('select2')) {
+                                $select.val(realId).trigger('change');
+                                $select.trigger('change.select2');
+                            } else {
+                                $select.val(realId).trigger('change');
+                            }
+
+                            $('#customer_phone').val(phone);
+                            if (qacModal) qacModal.hide();
+                            if (typeof toggleCustomerButtons === 'function') {
+                                toggleCustomerButtons();
+                            }
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: isEdit ? 'Customer Updated' : 'Customer Added',
+                                text: name + (isEdit ? ' updated' : ' added') + ' successfully.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || response.error || 'Operation failed.'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            var errors = (xhr.responseJSON || {}).errors || {};
+                            $.each(errors, function(key, msgs) {
+                                $('#qac_error_' + key).html(msgs[0]);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: (xhr.responseJSON || {}).message || 'Something went wrong.'
+                            });
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                        $spinner.addClass('d-none');
+                    }
+                });
+            });
+        })();
     </script>
 
     <script>

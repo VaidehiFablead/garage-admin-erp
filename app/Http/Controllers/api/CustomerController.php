@@ -154,6 +154,11 @@ class CustomerController extends Controller
     {
         $authUser = Auth::guard('api')->user();
         $userId = $authUser->id;
+
+        if ($request->filled('gst_number') && !$request->filled('gst_num')) {
+            $request->merge(['gst_num' => $request->gst_number]);
+        }
+
         $validator = Validator::make($request->all(), [
             // 'customer_name' => 'required|string|max:255',
             'customer_name' => [
@@ -162,7 +167,7 @@ class CustomerController extends Controller
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s.,\'-]+$/u' // letters, numbers, space, dot, comma, apostrophe, hyphen only
             ],
-            'email' => 'required|email|unique:users,email', // Ensure checking in `users` table
+            'email' => 'nullable|email|unique:users,email', // Ensure checking in `users` table
             'phone' => 'required|numeric|digits:10|unique:users,phone',
             'country' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
@@ -183,7 +188,7 @@ class CustomerController extends Controller
         // Create user
         $customer = new User();
         $customer->name = $request->customer_name;
-        $customer->email = $request->email;
+        $customer->email = $request->email ?: null;
         $customer->phone = $request->phone;
         $customer->state_code = $request->state_code;
         $customer->state_name = $request->state_name;
@@ -207,7 +212,7 @@ class CustomerController extends Controller
         // $customerDetail->branch_id = $userId;
         $customerDetail->save();
 
-        return response()->json(['status' => true, 'message' => 'Customer created successfully!']);
+        return response()->json(['status' => true, 'message' => 'Customer created successfully!', 'customer' => $customer]);
     }
 
     public function deleteCustomer(Request $request, $id)
@@ -264,6 +269,10 @@ class CustomerController extends Controller
 
     public function updateCustomer(Request $request, $id)
     {
+        if ($request->filled('gst_number') && !$request->filled('gst_num')) {
+            $request->merge(['gst_num' => $request->gst_number]);
+        }
+
         // Validate input data
         $validator = Validator::make($request->all(), [
             // 'customer_name' => 'required|string|max:255',
@@ -273,7 +282,7 @@ class CustomerController extends Controller
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s.,\'-]+$/u' // letters, numbers, space, dot, comma, apostrophe, hyphen only
             ],
-            'email' => "required|email|unique:users,email,$id", // Unique but ignores current user
+            'email' => "nullable|email|unique:users,email,$id", // Unique but ignores current user
             'phone' => "required|numeric|digits:10|unique:users,phone,$id", // Unique & exactly 10 digits
             'country' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
@@ -302,7 +311,7 @@ class CustomerController extends Controller
 
         // Update user details
         $customer->name = $request->customer_name;
-        $customer->email = $request->email;
+        $customer->email = $request->email ?: null;
         $customer->gst_num = $request->gst_num;
         $customer->state_code = $request->state_code;
         $customer->state_name = $request->state_name;
@@ -325,7 +334,7 @@ class CustomerController extends Controller
             $customerDetail->save();
         }
 
-        return response()->json(['status' => true, 'message' => 'Customer updated successfully!']);
+        return response()->json(['status' => true, 'message' => 'Customer updated successfully!', 'customer' => $customer]);
     }
     // public function getCustomerProfile($id)
     // {
