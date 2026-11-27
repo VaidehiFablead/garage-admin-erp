@@ -12,7 +12,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login</title>
 
-    <link rel="shortcut icon" type="image/x-icon" href="https://fableadtechnolabs.com/favicon-192x192.webp">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ image_path('admin/assets/img/favicon1.png') }}">
 
     <link rel="stylesheet" href="{{ image_path('admin/assets/css/bootstrap.min.css') }}">
 

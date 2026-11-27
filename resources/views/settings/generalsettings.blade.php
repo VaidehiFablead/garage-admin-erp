@@ -483,12 +483,16 @@
                                             <h4>Drag and drop a file to upload</h4>
                                         </div>
                                     </div>
-                                    <img id="logo_preview" src="" alt="Logo Preview"
-                                        style="display:none; max-width: 100px; margin-top: 10px;">
+                                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                                        <img id="logo_preview" src="" alt="Logo Preview"
+                                            style="display:none; max-width: 100px; max-height: 80px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;">
+                                        <button type="button" id="remove_logo_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('logo')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                        <input type="hidden" id="remove_logo" value="0">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-lg-3 col-6">
+                            <div class="col-lg-3 col-6 d-none">
                                 <div class="form-group">
                                     <label>Shop Favicon</label>
                                     <div class="image-upload">
@@ -499,8 +503,12 @@
                                             <h4>Drag and drop a file to upload</h4>
                                         </div>
                                     </div>
-                                    <img id="favicon_preview" src="" alt="Favicon Preview"
-                                        style="display:none; max-width: 50px; margin-top: 10px;">
+                                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                                        <img id="favicon_preview" src="" alt="Favicon Preview"
+                                            style="display:none; max-width: 50px; max-height: 50px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;">
+                                        <button type="button" id="remove_favicon_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('favicon')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                        <input type="hidden" id="remove_favicon" value="0">
+                                    </div>
                                 </div>
                             </div>
 
@@ -515,8 +523,12 @@
                                             <h4>Drag and drop a file to upload</h4>
                                         </div>
                                     </div>
-                                    <img id="qr_preview" src="" alt="QR Preview"
-                                        style="display:none; max-width: 50px; margin-top: 10px;">
+                                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                                        <img id="qr_preview" src="" alt="QR Preview"
+                                            style="display:none; max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;">
+                                        <button type="button" id="remove_qr_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('qr_code')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                        <input type="hidden" id="remove_qr_code" value="0">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1334,12 +1346,30 @@
 
                             if (response.settings.logo) {
                                 $("#logo_preview").attr("src", getStorageUrl(response.settings.logo)).show();
+                                $("#remove_logo_btn").show();
+                                $("#remove_logo").val(0);
+                            } else {
+                                $("#logo_preview").attr("src", "").hide();
+                                $("#remove_logo_btn").hide();
+                                $("#remove_logo").val(0);
                             }
                             if (response.settings.favicon) {
                                 $("#favicon_preview").attr("src", getStorageUrl(response.settings.favicon)).show();
+                                $("#remove_favicon_btn").show();
+                                $("#remove_favicon").val(0);
+                            } else {
+                                $("#favicon_preview").attr("src", "").hide();
+                                $("#remove_favicon_btn").hide();
+                                $("#remove_favicon").val(0);
                             }
                             if (response.settings.qr_code) {
                                 $("#qr_preview").attr("src", getStorageUrl(response.settings.qr_code)).show();
+                                $("#remove_qr_btn").show();
+                                $("#remove_qr_code").val(0);
+                            } else {
+                                $("#qr_preview").attr("src", "").hide();
+                                $("#remove_qr_btn").hide();
+                                $("#remove_qr_code").val(0);
                             }
                             
                             $("#office_latitude").val(response.settings.office_latitude ?? "");
@@ -1554,27 +1584,48 @@ toggleHRSubSections();
                 $(target).addClass('show active');
             });
 
+            window.removeImagePreview = function(type) {
+                if (type === 'logo') {
+                    $("#logo_preview").attr("src", "").hide();
+                    $("#remove_logo_btn").hide();
+                    $("#logo").val('');
+                    $("#remove_logo").val(1);
+                } else if (type === 'favicon') {
+                    $("#favicon_preview").attr("src", "").hide();
+                    $("#remove_favicon_btn").hide();
+                    $("#favicon").val('');
+                    $("#remove_favicon").val(1);
+                } else if (type === 'qr_code') {
+                    $("#qr_preview").attr("src", "").hide();
+                    $("#remove_qr_btn").hide();
+                    $("#qr_code").val('');
+                    $("#remove_qr_code").val(1);
+                }
+            };
+
             // Show Image Preview
-            function previewImage(input, previewId) {
+            function previewImage(input, previewId, removeBtnId, removeFlagId) {
                 if (input.files && input.files[0]) {
                     var reader = new FileReader();
                     reader.onload = function(e) {
                         $(previewId).attr("src", e.target.result).show();
+                        if (removeBtnId) $(removeBtnId).show();
+                        if (removeFlagId) $(removeFlagId).val(0);
                     };
                     reader.readAsDataURL(input.files[0]);
                 }
             }
 
             $("#logo").change(function() {
-                previewImage(this, "#logo_preview");
+                previewImage(this, "#logo_preview", "#remove_logo_btn", "#remove_logo");
             });
 
             $("#favicon").change(function() {
-                previewImage(this, "#favicon_preview");
+                previewImage(this, "#favicon_preview", "#remove_favicon_btn", "#remove_favicon");
             });
 
             $("#qr_code").change(function() {
-                previewImage(this, "#qr_preview");
+                previewImage(this, "#qr_preview", "#remove_qr_btn", "#remove_qr_code");
             });
 
             // Restrict State Code to letters only
@@ -1833,9 +1884,17 @@ toggleHRSubSections();
                 formData.append("office_longitude", $("#office_longitude").val());
                 formData.append("radius", $("#office_radius").val());
                 
+                let logo = $("#logo")[0]?.files[0];
+                let favicon = $("#favicon")[0]?.files[0];
+                let qr_code = $("#qr_code")[0]?.files[0];
+
                 if (logo) formData.append("logo", logo);
                 if (favicon) formData.append("favicon", favicon);
                 if (qr_code) formData.append("qr_code", qr_code);
+
+                formData.append("remove_logo", $("#remove_logo").val() || 0);
+                formData.append("remove_favicon", $("#remove_favicon").val() || 0);
+                formData.append("remove_qr_code", $("#remove_qr_code").val() || 0);
                 // In update
                 if (selectedSubAdminId) {
                     formData.append("selectedSubAdminId", selectedSubAdminId);
@@ -1864,7 +1923,19 @@ toggleHRSubSections();
                         });
                     },
                     error: function(xhr) {
-                        Swal.fire("Error!", xhr.responseJSON.message, "error");
+                        let errorMsg = "Something went wrong!";
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.errors) {
+                                errorMsg = Object.values(xhr.responseJSON.errors).flat().join("<br>");
+                            } else if (xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                        }
+                        Swal.fire({
+                            title: "Error!",
+                            html: errorMsg,
+                            icon: "error"
+                        });
                     }
                 });
             });
