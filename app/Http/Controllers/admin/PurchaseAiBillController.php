@@ -10,6 +10,7 @@ use App\Services\Purchase\PurchaseBillVisionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PurchaseAiBillController extends Controller
@@ -122,17 +123,35 @@ class PurchaseAiBillController extends Controller
      */
     private function vendors(int $branchId)
     {
-        return User::where('role', 'vendor')
-            ->where(function ($query) use ($branchId) {
-                $query->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })
-            ->where('isDeleted', 0)
-            ->orderBy('name')
-            ->get(['id', 'name', 'phone'])
+        $hasBranch = Schema::hasColumn('users', 'branch_id');
+        $hasIsDeleted = Schema::hasColumn('users', 'isDeleted');
+        $hasRole = Schema::hasColumn('users', 'role');
+        $hasPhone = Schema::hasColumn('users', 'phone');
+
+        $query = User::query();
+        if ($hasRole) {
+            $query->where('role', 'vendor');
+        }
+        if ($hasIsDeleted) {
+            $query->where('isDeleted', 0);
+        }
+        if ($hasBranch) {
+            $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            });
+        }
+
+        $columns = ['id', 'name'];
+        if ($hasPhone) {
+            $columns[] = 'phone';
+        }
+
+        return $query->orderBy('name')
+            ->get($columns)
             ->map(fn (User $vendor) => [
                 'id' => $vendor->id,
                 'name' => $vendor->name,
-                'phone' => $vendor->phone,
+                'phone' => $vendor->phone ?? '',
             ])
             ->values();
     }
@@ -142,11 +161,20 @@ class PurchaseAiBillController extends Controller
      */
     private function categories(int $branchId)
     {
-        return Category::where(function ($query) use ($branchId) {
-                $query->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })
-            ->where('isDeleted', 0)
-            ->orderBy('name')
+        $hasBranch = Schema::hasColumn('categories', 'branch_id');
+        $hasIsDeleted = Schema::hasColumn('categories', 'isDeleted');
+
+        $query = Category::query();
+        if ($hasIsDeleted) {
+            $query->where('isDeleted', 0);
+        }
+        if ($hasBranch) {
+            $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            });
+        }
+
+        return $query->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (Category $category) => [
                 'id' => $category->id,
@@ -160,20 +188,46 @@ class PurchaseAiBillController extends Controller
      */
     private function products(int $branchId)
     {
-        return Product::where('isDeleted', 0)
-            ->where('status', 'active')
-            ->where(function ($query) use ($branchId) {
-                $query->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })
-            ->orderBy('name')
-            ->get(['id', 'name', 'category_id', 'hsn_code', 'quantity', 'price', 'purchase_price'])
+        $hasBranch = Schema::hasColumn('products', 'branch_id');
+        $hasStatus = Schema::hasColumn('products', 'status');
+        $hasIsDeleted = Schema::hasColumn('products', 'isDeleted');
+        $hasHsn = Schema::hasColumn('products', 'hsn_code');
+        $hasQty = Schema::hasColumn('products', 'quantity');
+        $hasPurchasePrice = Schema::hasColumn('products', 'purchase_price');
+
+        $columns = ['id', 'name', 'category_id', 'price'];
+        if ($hasHsn) {
+            $columns[] = 'hsn_code';
+        }
+        if ($hasQty) {
+            $columns[] = 'quantity';
+        }
+        if ($hasPurchasePrice) {
+            $columns[] = 'purchase_price';
+        }
+
+        $query = Product::query();
+        if ($hasIsDeleted) {
+            $query->where('isDeleted', 0);
+        }
+        if ($hasStatus) {
+            $query->where('status', 'active');
+        }
+        if ($hasBranch) {
+            $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            });
+        }
+
+        return $query->orderBy('name')
+            ->get($columns)
             ->map(fn (Product $product) => [
                 'id' => $product->id,
                 'name' => $product->name,
                 'category_id' => $product->category_id,
-                'hsn_code' => $product->hsn_code,
-                'quantity' => (float) $product->quantity,
-                'price' => (float) ($product->purchase_price ?: $product->price),
+                'hsn_code' => $product->hsn_code ?? '',
+                'quantity' => (float) ($product->quantity ?? 0),
+                'price' => (float) ($product->purchase_price ?? $product->price ?? 0),
             ])
             ->values();
     }
