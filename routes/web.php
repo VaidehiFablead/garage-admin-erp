@@ -36,6 +36,8 @@ use App\Http\Controllers\admin\SettingController;
 use App\Http\Controllers\admin\StaffController;
 use App\Http\Controllers\admin\SubBranchController;
 use App\Http\Controllers\admin\UnitController;
+use App\Http\Controllers\admin\TypeController;
+use App\Http\Controllers\admin\MaterialController;
 use App\Http\Controllers\admin\VendorController;
 use App\Http\Controllers\api\GstSalesReportController as ApiGstSalesReportController;
 use App\Http\Controllers\api\LoginController;
@@ -120,6 +122,10 @@ Route::middleware(['check.license'])->group(function () {
         // unit
 
         Route::get('/units', [UnitController::class, 'unit_list'])->name('unit.list');
+
+        // Type Master & Material Master
+        Route::get('/types', [TypeController::class, 'type_list'])->name('type.list');
+        Route::get('/materials', [MaterialController::class, 'material_list'])->name('material.list');
 
         // Brand
         Route::get('/brands', [BrandController::class, 'brand_list'])->name('brand.list');
