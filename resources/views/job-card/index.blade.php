@@ -133,7 +133,17 @@
                 <h4>All Job Card</h4>
                 <!-- <h6>Manage your purchases</h6> -->
             </div>
-            <div class="page-btn">
+            <div class="page-btn d-flex align-items-center flex-wrap gap-2">
+                <div class="btn-group" role="group" aria-label="Document Type Tabs">
+                    <button type="button" class="btn btn-sm doc-tab-btn active" data-tab="invoice"
+                        style="background-color: #ff9f43; color: #fff; border: 1px solid #ff9f43; font-weight: 600;">
+                        <i class="fas fa-file-invoice me-1"></i> Invoice
+                    </button>
+                    <button type="button" class="btn btn-sm doc-tab-btn" data-tab="jobcard"
+                        style="background-color: #fff; color: #334155; border: 1px solid #cbd5e1; font-weight: 600;">
+                        <i class="fas fa-clipboard-list me-1"></i> Job Card
+                    </button>
+                </div>
                 @if (app('hasPermission')(16, 'add'))
                     <a href="{{ route('job_card.create') }}" class="btn btn-sm btn-added">
                         <img src="{{ env('ImagePath') . 'admin/assets/img/icons/plus.svg' }}" alt="img">New Job Card
@@ -673,14 +683,25 @@
                     }
 
                     if (canView) {
-                        buttons += `
-                            <a class="${linkClass}" href="/job-card/${jobCard.id}/download-pdf" title="Download PDF">
-                                <i class="fas fa-download" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                            </a>
-                            <a class="${mobile ? 'btn btn-sm' : 'me-3 mt-2'}" href="/job-card/${jobCard.id}/view-pdf" title="View">
-                                <i class="fas fa-eye" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                            </a>
-                        `;
+                        if (activeDocTab === 'jobcard') {
+                            buttons += `
+                                <a class="${linkClass}" href="/job-card/${jobCard.id}/job-card-print" target="_blank" title="Print Job Card">
+                                    <i class="fas fa-print" style="${mobile ? '' : 'font-size: 20px;'}"></i>
+                                </a>
+                                <a class="${mobile ? 'btn btn-sm' : 'me-3 mt-2'}" href="/job-card/${jobCard.id}/job-card-print" target="_blank" title="View Job Card">
+                                    <i class="fas fa-eye" style="${mobile ? '' : 'font-size: 20px;'}"></i>
+                                </a>
+                            `;
+                        } else {
+                            buttons += `
+                                <a class="${linkClass}" href="/job-card/${jobCard.id}/download-pdf" title="Download Invoice PDF">
+                                    <i class="fas fa-download" style="${mobile ? '' : 'font-size: 20px;'}"></i>
+                                </a>
+                                <a class="${mobile ? 'btn btn-sm' : 'me-3 mt-2'}" href="/job-card/${jobCard.id}/view-pdf" title="View Invoice">
+                                    <i class="fas fa-eye" style="${mobile ? '' : 'font-size: 20px;'}"></i>
+                                </a>
+                            `;
+                        }
                     }
 
                     if (canDelete) {
@@ -805,6 +826,24 @@
                     $("#job-card-tbody").html(tableRows);
                 }
 
+                let activeDocTab = 'invoice';
+                let lastFetchedRows = [];
+
+                $(document).on('click', '.doc-tab-btn', function() {
+                    activeDocTab = $(this).data('tab') || 'invoice';
+                    $('.doc-tab-btn').removeClass('active').css({
+                        'background-color': '#fff',
+                        'color': '#334155',
+                        'border-color': '#cbd5e1'
+                    });
+                    $(this).addClass('active').css({
+                        'background-color': '#ff9f43',
+                        'color': '#fff',
+                        'border-color': '#ff9f43'
+                    });
+                    renderTable(lastFetchedRows);
+                });
+
                 function fetchJobCards(page = 1) {
                     let month = $('#filterMonth').val();
                     let year = $('#filterYear').val();
@@ -832,7 +871,8 @@
                             );
                         },
                         success: function(res) {
-                            renderTable(res.data || []);
+                            lastFetchedRows = res.data || [];
+                            renderTable(lastFetchedRows);
                             renderCustomerOptions(res.customers || [], customer);
                             $("#dynamic-modals").empty();
 
