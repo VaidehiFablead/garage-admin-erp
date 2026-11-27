@@ -97,6 +97,8 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('deleteProduct/{id}', [ProductController::class, 'deleteProduct'])->name('deleteProduct');
     Route::post('importProducts', [ProductController::class, 'importProducts'])->name('importProducts');
     Route::post('remove-product-image', [ProductController::class, 'removeProductImage'])->name('removeProductImage');
+    Route::post('generate-product-image', [ProductController::class, 'generateImage'])->name('generateProductImage');
+    Route::post('remove-product-bg', [ProductController::class, 'removeBg'])->name('removeProductBg');
     Route::get('/product-quantity-history/{productId}', [ProductController::class, 'getQuantityHistory']);
     Route::get('/export-product', [ProductController::class, 'export_product']);
     Route::get('/export-product-pdf', [ProductController::class, 'export_product_pdf']);

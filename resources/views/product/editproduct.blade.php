@@ -293,7 +293,13 @@
 
                         <div class="col-lg-6 col-sm-6 col-12">
                             <div class="form-group">
-                                <label>Product Image</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="mb-0">Product Image</label>
+                                    <button type="button" class="btn btn-warning btn-sm" id="generateAiImageBtn"
+                                        style="background: #ff9f43; color: #fff; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 3px 10px; border: none;">
+                                        <i class="fa fa-magic me-1"></i> Generate AI Image
+                                    </button>
+                                </div>
                                 <div class="image-upload">
                                     <input type="file" name="images[]" id="images" accept=".jpg,.jpeg,.png,.webp,.gif" multiple>
                                     <div class="image-uploads">
@@ -303,7 +309,33 @@
                                     </div>
                                 </div>
                                 <span class="error_images text-danger"></span>
-                                <div class="image-preview" style="margin-top: 10px;">
+                                <div class="image-preview" style="margin-top: 10px;"></div>
+
+                                <!-- AI Image Preview Container -->
+                                <div id="aiImageContainer" class="mt-3" style="display: none;">
+                                    <div class="position-relative d-inline-block" style="width: 120px; height: 120px;">
+                                        <img id="aiImagePreview" src="" alt="AI Generated Image"
+                                            class="img-thumbnail p-0"
+                                            style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px;">
+                                        <span class="badge position-absolute"
+                                            style="bottom: 5px; left: 5px; font-size: 10px; background-color: #007bff; color: #fff; padding: 2px 5px; border-radius: 4px;">AI Generated</span>
+                                        <button type="button" id="removeAiImageBtn"
+                                            class="btn btn-danger btn-xs position-absolute rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                            style="top: -6px; right: -6px; width: 22px; height: 22px; font-size: 12px; line-height: 1; border: none; cursor: pointer;">
+                                            &times;
+                                        </button>
+                                        <input type="hidden" name="ai_image_paths[]" id="aiImagePathInput" value="">
+                                    </div>
+                                    <div class="mt-2 d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-warning btn-sm" id="regenerateAiImageBtn"
+                                            style="color: #ff9f43; border-color: #ff9f43; font-weight: 600; font-size: 12px; border-radius: 6px; white-space: nowrap;">
+                                            <i class="fa fa-refresh me-1"></i> Regenerate AI
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-sm" id="removeBgBtn"
+                                            style="background-color: #198754; color: #fff; font-weight: 600; font-size: 12px; border-radius: 6px; border: none; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                            <i class="fa fa-eraser me-1"></i> Remove BG
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -960,6 +992,136 @@
                             } else {
                                 Swal.fire("Error", "Something went wrong.", "error");
                             }
+                        }
+                    });
+                });
+
+                // AI Image Generation Event Handlers
+                $(document).on('click', '#generateAiImageBtn, #regenerateAiImageBtn', function(e) {
+                    e.preventDefault();
+                    var productName = $('#name').val() ? $('#name').val().trim() : '';
+                    if (!productName || productName.length < 3) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Product Name Required',
+                            text: 'Please enter a valid product name (at least 3 characters) before generating an image.',
+                            confirmButtonColor: '#ff9f43'
+                        });
+                        $('#name').focus();
+                        return;
+                    }
+
+                    var $btn = $(this);
+                    var originalHtml = $btn.html();
+                    $btn.prop('disabled', true).html(
+                        '<i class="fa fa-spinner fa-spin me-1"></i> Generating...'
+                    );
+
+                    var authToken = localStorage.getItem("authToken");
+
+                    $.ajax({
+                        url: "/api/generate-product-image",
+                        type: "POST",
+                        data: {
+                            product_name: productName
+                        },
+                        headers: {
+                            "Authorization": "Bearer " + authToken
+                        },
+                        success: function(response) {
+                            $btn.prop('disabled', false).html(originalHtml);
+                            if (response.success) {
+                                $('#aiImagePreview').attr('src', response.image_url);
+                                $('#aiImagePathInput').val(response.image_path);
+                                $('#aiImageContainer').show();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Generation Failed',
+                                    text: response.message || 'Failed to generate image from AI service.',
+                                    confirmButtonColor: '#ff9f43'
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html(originalHtml);
+                            var msg = 'An error occurred while generating AI image.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: msg,
+                                confirmButtonColor: '#ff9f43'
+                            });
+                        }
+                    });
+                });
+
+                $(document).on('click', '#removeAiImageBtn', function(e) {
+                    e.preventDefault();
+                    $('#aiImageContainer').hide();
+                    $('#aiImagePathInput').val('');
+                    $('#aiImagePreview').attr('src', '');
+                });
+
+                $(document).on('click', '#removeBgBtn', function(e) {
+                    e.preventDefault();
+                    var imagePath = $('#aiImagePathInput').val();
+                    if (!imagePath) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Image',
+                            text: 'Please generate an AI image first.',
+                            confirmButtonColor: '#ff9f43'
+                        });
+                        return;
+                    }
+
+                    var $btn = $(this);
+                    var originalHtml = $btn.html();
+                    $btn.prop('disabled', true).html(
+                        '<i class="fa fa-spinner fa-spin me-1"></i> Removing...'
+                    );
+
+                    var authToken = localStorage.getItem("authToken");
+
+                    $.ajax({
+                        url: "/api/remove-product-bg",
+                        type: "POST",
+                        data: {
+                            image_path: imagePath
+                        },
+                        headers: {
+                            "Authorization": "Bearer " + authToken
+                        },
+                        success: function(response) {
+                            $btn.prop('disabled', false).html(originalHtml);
+                            if (response.success) {
+                                $('#aiImagePreview').attr('src', response.image_url);
+                                $('#aiImagePathInput').val(response.image_path);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Removal Failed',
+                                    text: response.message || 'Failed to remove background.',
+                                    confirmButtonColor: '#ff9f43'
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html(originalHtml);
+                            var msg = 'An error occurred while removing background.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: msg,
+                                confirmButtonColor: '#ff9f43'
+                            });
                         }
                     });
                 });

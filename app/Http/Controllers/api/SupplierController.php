@@ -13,87 +13,188 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
+use App\Services\ApiKeyService;
+use Illuminate\Support\Facades\Log;
 
 class SupplierController extends Controller
 {
      public function fetch(Request $request)
     {
-        $gst = $request->input('gst_number');
+        $gst = trim((string) $request->input('gst_number'));
 
         if (!$gst) {
             return response()->json(['error' => 'GST number is required'], 400);
         }
 
-        // Example API: Replace URL with your actual API provider
-        $apiUrl = "https://cleartax.in/f/compliance-report/{$gst}";
-        // $apiKey = "YOUR_API_KEY_HERE";
+        // Get dynamic GST API tokens (primary + backup fallback)
+        $tokens = ApiKeyService::getCandidates('GST');
+        if (empty($tokens)) {
+            $tokens = ['3.ebf2623c-44a2-49c8-8e11-aefa342f60f3_a1cfc03847ba734d20b6f9c1f80018474999aec0809348357afe263a98a99267'];
+        }
 
-        $response = Http::withHeaders([
-            // 'Authorization' => "Bearer {$apiKey}",
-            'Accept' => 'application/json',
-        ])->get($apiUrl);
+        $apiUrl = "https://api.clear.in/gst/api/v0.2/taxable_entities/123456/gstin_verification?gstin={$gst}";
+        $response = null;
+        $lastException = null;
+
+        $options = ['verify' => false];
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $options['curl'] = [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4];
+        }
+
+        foreach ($tokens as $apiToken) {
+            try {
+                $response = Http::withoutVerifying()
+                    ->connectTimeout(10)
+                    ->timeout(20)
+                    ->retry(2, 300)
+                    ->withOptions($options)
+                    ->withHeaders([
+                        'X-Cleartax-Auth-Token' => $apiToken,
+                        'Accept'                => 'application/json',
+                    ])->get($apiUrl);
+
+                // If successful or explicit business error (404 / 422), stop trying
+                if ($response->successful() || in_array($response->status(), [400, 404, 422], true)) {
+                    break;
+                }
+            } catch (\Throwable $e) {
+                $lastException = $e;
+                Log::warning('ClearTax GST API attempt failed with token: ' . $e->getMessage());
+            }
+        }
+
+        if (!$response) {
+            $errMsg = $lastException ? $lastException->getMessage() : 'GST verification service unavailable';
+            Log::error('ClearTax GST API Error: ' . $errMsg, ['gst' => $gst]);
+            return response()->json(['error' => 'GST verification service unavailable: ' . $errMsg], 500);
+        }
 
         if ($response->failed()) {
-            return response()->json(['error' => 'API request failed'], 500);
+            $errorData = $response->json();
+            $errorMessage = $errorData['message'] ?? 'API request failed';
+            return response()->json(['error' => $errorMessage], $response->status() >= 400 && $response->status() < 500 ? $response->status() : 500);
         }
 
         $data = $response->json();
+        $info = $data['taxpayerInfo'] ?? $data;
 
-        if (!isset($data['taxpayerInfo'])) {
+        if (isset($data['success']) && $data['success'] === false) {
+            return response()->json(['error' => $data['message'] ?? 'Invalid GST or no data found'], 404);
+        }
+
+        if (!isset($info['gstin']) && !isset($info['tradeNam']) && !isset($info['lgnm'])) {
             return response()->json(['error' => 'Invalid GST or no data found'], 404);
         }
 
-        $info = $data['taxpayerInfo'];
-
         // Company / Business Details
+        $legalName = $info['lgnm'] ?? ($info['tradeNam'] ?? '');
         $companyName = $info['tradeNam'] ?? ($info['lgnm'] ?? '');
         $gstin = $info['gstin'] ?? $gst;
-        $legalName = $info['lgnm'] ?? '';
         $businessType = $info['ctb'] ?? '';
         $status = $info['sts'] ?? '';
         $registrationDate = $info['rgdt'] ?? '';
         $taxpayerType = $info['dty'] ?? '';
-        $natureOfBusiness = $info['nba'] ?? []; // array of business types
-        $lastUpdated = $info['lstupdt'] ?? '';
-        $frequency = $info['frequencyType'] ?? '';
+        $natureOfBusiness = $info['nba'] ?? [];
+        $lastUpdated = $info['lastUpdated'] ?? ($info['lstupdt'] ?? '');
+        $frequency = $info['filingFreq'] ?? ($info['frequencyType'] ?? '');
         $pradr = $info['pradr'] ?? [];
 
         // Primary Address
         $primaryAddr = $pradr['addr'] ?? [];
-        $address = trim(
-            ($primaryAddr['bnm'] ?? '') . ', ' .
-            ($primaryAddr['st'] ?? '') . ', ' .
-            ($primaryAddr['loc'] ?? '') . ', ' .
-            ($primaryAddr['dst'] ?? '') . ', ' .
-            ($primaryAddr['stcd'] ?? '') . ' - ' .
-            ($primaryAddr['pncd'] ?? ''),
-            ', -'
-        );
+        $address = $pradr['fullAddress'] ?? null;
+        if (empty($address)) {
+            $addrParts = array_filter([
+                $primaryAddr['bno'] ?? '',
+                $primaryAddr['flno'] ?? '',
+                $primaryAddr['bnm'] ?? '',
+                $primaryAddr['st'] ?? '',
+                $primaryAddr['loc'] ?? '',
+                $primaryAddr['dst'] ?? '',
+                $primaryAddr['stcd'] ?? '',
+                $primaryAddr['pncd'] ?? '',
+            ]);
+            $address = implode(', ', $addrParts);
+        }
 
         // Additional Addresses
         $additionalAddresses = [];
         if (isset($info['adadr']) && is_array($info['adadr'])) {
             foreach ($info['adadr'] as $addrItem) {
                 $addr = $addrItem['addr'] ?? [];
+                $adParts = array_filter([
+                    $addr['bno'] ?? '',
+                    $addr['flno'] ?? '',
+                    $addr['bnm'] ?? '',
+                    $addr['st'] ?? '',
+                    $addr['loc'] ?? '',
+                    $addr['dst'] ?? '',
+                    $addr['stcd'] ?? '',
+                    $addr['pncd'] ?? '',
+                ]);
                 $additionalAddresses[] = [
                     'name' => $addr['bnm'] ?? '',
-                    'address' => trim(
-                        ($addr['bnm'] ?? '') . ', ' .
-                        ($addr['st'] ?? '') . ', ' .
-                        ($addr['loc'] ?? '') . ', ' .
-                        ($addr['dst'] ?? '') . ', ' .
-                        ($addr['stcd'] ?? '') . ' - ' .
-                        ($addr['pncd'] ?? ''),
-                        ', -'
-                    ),
-                    'city' => $addr['dst'] ?? '',
+                    'address' => $addrItem['fullAddress'] ?? implode(', ', $adParts),
+                    'city' => $addr['city'] ?? ($addr['dst'] ?? ($addr['loc'] ?? '')),
                     'state' => $addr['stcd'] ?? '',
                     'nature' => $addrItem['ntr'] ?? '',
                 ];
             }
         }
 
+        $city = $primaryAddr['city'] ?? ($primaryAddr['dst'] ?? ($primaryAddr['loc'] ?? ''));
         $country = $primaryAddr['country'] ?? ($info['country'] ?? 'India');
+        $stateName = $primaryAddr['stcd'] ?? '';
+
+        $stateCode = '';
+        $candidateCode = substr(trim($gstin), 0, 2);
+        if (is_numeric($candidateCode)) {
+            $stateCode = $candidateCode;
+        } else {
+            $stateCodeMap = [
+                'JAMMU AND KASHMIR' => '01',
+                'HIMACHAL PRADESH' => '02',
+                'PUNJAB' => '03',
+                'CHANDIGARH' => '04',
+                'UTTARAKHAND' => '05',
+                'HARYANA' => '06',
+                'DELHI' => '07',
+                'RAJASTHAN' => '08',
+                'UTTAR PRADESH' => '09',
+                'BIHAR' => '10',
+                'SIKKIM' => '11',
+                'ARUNACHAL PRADESH' => '12',
+                'NAGALAND' => '13',
+                'MANIPUR' => '14',
+                'MIZORAM' => '15',
+                'TRIPURA' => '16',
+                'MEGHALAYA' => '17',
+                'ASSAM' => '18',
+                'WEST BENGAL' => '19',
+                'JHARKHAND' => '20',
+                'ODISHA' => '21',
+                'CHHATTISGARH' => '22',
+                'CHATTISGARH' => '22',
+                'MADHYA PRADESH' => '23',
+                'GUJARAT' => '24',
+                'DAMAN AND DIU' => '26',
+                'DADRA AND NAGAR HAVELI' => '26',
+                'DADRA AND NAGAR HAVELI AND DAMAN AND DIU' => '26',
+                'MAHARASHTRA' => '27',
+                'ANDHRA PRADESH' => '37',
+                'KARNATAKA' => '29',
+                'GOA' => '30',
+                'LAKSHADWEEP' => '31',
+                'KERALA' => '32',
+                'TAMIL NADU' => '33',
+                'PUDUCHERRY' => '34',
+                'ANDAMAN AND NICOBAR ISLANDS' => '35',
+                'TELANGANA' => '36',
+                'LADAKH' => '38',
+                'OTHER TERRITORY' => '97',
+            ];
+            $upperState = strtoupper(trim($stateName));
+            $stateCode = $stateCodeMap[$upperState] ?? '';
+        }
 
         return response()->json([
             'gstin' => $gstin,
@@ -105,9 +206,14 @@ class SupplierController extends Controller
             'registration_date' => $registrationDate,
             'nature_of_business' => $natureOfBusiness,
             'primary_address' => $address,
-            'city' => $primaryAddr['dst'] ?? '',
-            'state_code' => $primaryAddr['stcd'] ?? '',
-            'state' => $primaryAddr['stcd'] ?? '',
+            'address' => $address,
+            'city' => $city,
+            'state_code' => $stateCode,
+            'state' => $stateName ?: $stateCode,
+            'state_name' => $stateName,
+            'pin_code' => $primaryAddr['pncd'] ?? '',
+            'pincode' => $primaryAddr['pncd'] ?? '',
+            'pan_number' => strlen(trim($gstin)) >= 12 ? substr(trim($gstin), 2, 10) : '',
             'country' => $country,
             'last_updated' => $lastUpdated,
             'frequency' => $frequency,
