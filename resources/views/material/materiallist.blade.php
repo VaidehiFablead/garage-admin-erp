@@ -448,7 +448,7 @@
 @endsection
 
 @push('js')
-    @include('partials.master-mobile-ui')
+    @includeIf('partials.master-mobile-ui')
     <script>
         $(document).ready(function() {
             var authToken = localStorage.getItem("authToken");
