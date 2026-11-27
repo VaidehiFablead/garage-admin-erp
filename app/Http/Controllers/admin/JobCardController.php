@@ -785,11 +785,22 @@ class JobCardController extends Controller
         }
 
         // --- Determine grand total and payment ---
-        $grand_total = $request->grand_total ?? 0.0;
+        $grand_total = (float) ($request->grand_total ?? 0.0);
         $paid_amount = 0.0;
         $remaining_amount = $grand_total;
+        $paymentData = $this->resolvePaymentData($request, $grand_total);
 
-        if ($action == 'pay_now') {
+        if ($paymentData !== null) {
+            $paid_amount = $paymentData['paid_amount'];
+            $remaining_amount = $paymentData['remaining_amount'];
+            $validated['payment_method'] = $paymentData['payment_method'];
+            $validated['payment_type'] = $paymentData['payment_type'];
+            $validated['cash_amount'] = $paymentData['cash_amount'];
+            $validated['online_amount'] = $paymentData['online_amount'];
+            $validated['discount'] = $paymentData['discount'];
+            $validated['emi_duration'] = $paymentData['emi_duration'];
+            $validated['emi_months'] = $paymentData['emi_months'];
+        } elseif ($action == 'pay_now') {
             if (!empty($request->paid_by)) {
                 switch ($request->paid_by) {
                     case 'Cash':
@@ -933,9 +944,12 @@ class JobCardController extends Controller
             }
         }
         $tz = 'Asia/Kolkata';
+        $nowIst = Carbon::now($tz);
         $yesterday = Carbon::now($tz)->subDay();
         // --- PaymentStore ---
-        if ($jobCard && $action == 'pay_now') {
+        if ($jobCard && $paymentData !== null) {
+            $this->syncPaymentStoreRecords($jobCard, (int) ($customer_id ?? $validated['user_id']), $paymentData, $nowIst);
+        } elseif ($jobCard && $action == 'pay_now') {
             PaymentStore::create([
                 'user_id' => $validated['user_id'],
                 'jobcard_id' => $jobCard->id,
@@ -1104,22 +1118,45 @@ class JobCardController extends Controller
             }
         }
 
-        // Adjust remaining amount if total changed: when editing a job card,
-        // any increase in total_subtotal_amount should increase remaining_amount
-        // (and decreases should reduce remaining, never below zero).
-        $oldTotal = (float) ($jobCard->total_subtotal_amount ?? 0);
-        $newTotal = (float) ($validated['total_subtotal_amount'] ?? $oldTotal);
-        $diff = $newTotal - $oldTotal;
+        // Adjust remaining amount or apply payment_mode details from Daily Data billing form
+        $newTotal = (float) ($validated['total_subtotal_amount'] ?? ($jobCard->total_subtotal_amount ?? 0));
+        $paymentData = $this->resolvePaymentData($request, $newTotal);
 
-        if ($diff !== 0) {
-            $currentRemaining = (float) ($jobCard->remaining_amount ?? 0);
-            $updatedRemaining = $currentRemaining + $diff;
-            // never allow negative remaining
-            $validated['remaining_amount'] = $updatedRemaining > 0 ? $updatedRemaining : 0;
+        if ($paymentData !== null) {
+            $validated['payment_method'] = $paymentData['payment_method'];
+            $validated['payment_type'] = $paymentData['payment_type'];
+            $validated['cash_amount'] = $paymentData['cash_amount'];
+            $validated['online_amount'] = $paymentData['online_amount'];
+            $validated['discount'] = $paymentData['discount'];
+            $validated['remaining_amount'] = $paymentData['remaining_amount'];
+            $validated['emi_duration'] = $paymentData['emi_duration'];
+            $validated['emi_months'] = $paymentData['emi_months'];
+        } else {
+            $oldTotal = (float) ($jobCard->total_subtotal_amount ?? 0);
+            $diff = $newTotal - $oldTotal;
+
+            if ($diff !== 0) {
+                $currentRemaining = (float) ($jobCard->remaining_amount ?? 0);
+                $updatedRemaining = $currentRemaining + $diff;
+                $validated['remaining_amount'] = $updatedRemaining > 0 ? $updatedRemaining : 0;
+            }
         }
 
         // Update the job card
         $jobCard->update($validated);
+
+        if ($paymentData !== null) {
+            PaymentStore::where('jobcard_id', $jobCard->id)
+                ->where('isDeleted', 0)
+                ->update(['isDeleted' => 1]);
+
+            $this->syncPaymentStoreRecords(
+                $jobCard,
+                (int) ($jobCard->customer_id ?? $jobCard->user_id),
+                $paymentData,
+                Carbon::now('Asia/Kolkata')
+            );
+        }
 
         // Subtract new parts stock if it is not a quotation
         if (!$isQuotation) {
@@ -1874,5 +1911,141 @@ class JobCardController extends Controller
                 return ['id' => $v->vehicle_no, 'text' => $v->vehicle_no];
             }),
         ]);
+    }
+
+    /**
+     * Resolve payment breakdown from the Daily Data-style Payment Details fields.
+     */
+    private function resolvePaymentData(Request $request, float $grandTotal): ?array
+    {
+        $paymentMode = trim((string) $request->input('payment_mode', ''));
+        if ($paymentMode === '') {
+            return null;
+        }
+
+        $paidType = trim((string) $request->input('paid_type', ''));
+        $discountAmount = max((float) ($request->input('discount_amount') ?? 0), 0);
+        $payableAmount = (float) ($request->input('payable_amount') ?? $grandTotal);
+        if ($payableAmount <= 0) {
+            $payableAmount = $grandTotal;
+        }
+        $effectivePayable = max($payableAmount - $discountAmount, 0);
+
+        $cashAmount = 0.0;
+        $onlineAmount = 0.0;
+        $paidAmount = 0.0;
+        $remainingAmount = $effectivePayable;
+        $emiDuration = null;
+        $emiMonthly = null;
+
+        if ($paymentMode === 'pending') {
+            $paidType = 'partial';
+        } elseif ($paymentMode === 'emi') {
+            $paidType = 'partial';
+            $emiDuration = max((int) ($request->input('emi_duration') ?? 1), 1);
+            $emiMonthly = (float) ($request->input('calculated_emi') ?? ($effectivePayable / $emiDuration));
+            $paidAmount = $emiMonthly;
+            $remainingAmount = max($effectivePayable - $paidAmount, 0);
+        } elseif ($paidType === 'full') {
+            if ($paymentMode === 'cash') {
+                $cashAmount = $effectivePayable;
+            } elseif ($paymentMode === 'online') {
+                $onlineAmount = $effectivePayable;
+            } elseif ($paymentMode === 'cashonline') {
+                $cashAmount = (float) ($request->input('cash_amount') ?? 0);
+                $onlineAmount = (float) ($request->input('upi_amount') ?? 0);
+            }
+            $paidAmount = $cashAmount + $onlineAmount;
+            $remainingAmount = max($effectivePayable - $paidAmount, 0);
+        } else {
+            $paidType = 'partial';
+            if ($paymentMode === 'cash') {
+                $cashAmount = (float) ($request->input('amount') ?? $request->input('cash_amount') ?? 0);
+            } elseif ($paymentMode === 'online') {
+                $onlineAmount = (float) ($request->input('amount') ?? $request->input('upi_amount') ?? 0);
+            } elseif ($paymentMode === 'cashonline') {
+                $cashAmount = (float) ($request->input('cash_amount') ?? 0);
+                $onlineAmount = (float) ($request->input('upi_amount') ?? 0);
+            }
+            $paidAmount = $cashAmount + $onlineAmount;
+            $remainingAmount = max($effectivePayable - $paidAmount, 0);
+        }
+
+        return [
+            'payment_method' => $paymentMode,
+            'payment_type' => $paidType,
+            'cash_amount' => $cashAmount,
+            'online_amount' => $onlineAmount,
+            'discount' => $discountAmount,
+            'paid_amount' => $paidAmount,
+            'remaining_amount' => $remainingAmount,
+            'emi_duration' => $emiDuration,
+            'emi_months' => $emiMonthly,
+        ];
+    }
+
+    /**
+     * Create PaymentStore entries matching DailyDataController behavior.
+     */
+    private function syncPaymentStoreRecords(JobCard $jobCard, int $userId, array $paymentData, Carbon $paymentDate): void
+    {
+        $mode = $paymentData['payment_method'];
+        if ($mode === 'pending') {
+            return;
+        }
+
+        if ($mode === 'cashonline') {
+            PaymentStore::create([
+                'user_id' => $userId,
+                'jobcard_id' => $jobCard->id,
+                'payment_amount' => $paymentData['cash_amount'],
+                'remaining_amount' => $paymentData['remaining_amount'],
+                'payment_date' => $paymentDate,
+                'payment_method' => 'cash',
+                'discount_amount' => $paymentData['discount'],
+                'isDeleted' => 0,
+                'created_at' => $paymentDate,
+                'updated_at' => $paymentDate,
+            ]);
+
+            PaymentStore::create([
+                'user_id' => $userId,
+                'jobcard_id' => $jobCard->id,
+                'payment_amount' => $paymentData['online_amount'],
+                'remaining_amount' => $paymentData['remaining_amount'],
+                'payment_date' => $paymentDate,
+                'payment_method' => 'online',
+                'isDeleted' => 0,
+                'created_at' => $paymentDate,
+                'updated_at' => $paymentDate,
+            ]);
+        } elseif ($mode === 'emi') {
+            PaymentStore::create([
+                'user_id' => $userId,
+                'jobcard_id' => $jobCard->id,
+                'payment_amount' => $paymentData['paid_amount'],
+                'remaining_amount' => $paymentData['remaining_amount'],
+                'payment_date' => $paymentDate,
+                'payment_method' => 'emi',
+                'discount_amount' => $paymentData['discount'],
+                'emi_month' => 1,
+                'isDeleted' => 0,
+                'created_at' => $paymentDate,
+                'updated_at' => $paymentDate,
+            ]);
+        } else {
+            PaymentStore::create([
+                'user_id' => $userId,
+                'jobcard_id' => $jobCard->id,
+                'payment_amount' => $paymentData['paid_amount'],
+                'remaining_amount' => $paymentData['remaining_amount'],
+                'payment_date' => $paymentDate,
+                'payment_method' => $mode,
+                'discount_amount' => $paymentData['discount'],
+                'isDeleted' => 0,
+                'created_at' => $paymentDate,
+                'updated_at' => $paymentDate,
+            ]);
+        }
     }
 }

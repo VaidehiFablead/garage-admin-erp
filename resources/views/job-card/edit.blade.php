@@ -519,101 +519,100 @@
                         <div class="col-lg-4 col-md-6 col-12">
                             <h5 class="mb-3 text-center"><strong>Job Card Details</strong></h5>
 
-                            {{-- Two-column grid on mobile, single column on md+ --}}
-                            <div class="row g-2">
-
-                                <!-- Job Card No -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="job_card_number" class="form-label mb-1" style="font-size:13px;">Job Card No</label>
-                                        <input type="text" name="job_card_number" class="form-control form-control-sm"
-                                            placeholder="Enter Job Card No." value="{{ $jobCard->job_card_number }}" readonly>
-                                        @error('job_card_number')
-                                            <small class="text-danger d-block mt-1">{{ $message }}</small>
-                                        @enderror
-                                    </div>
+                            <!-- Job Card No -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="job_card_number" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Job Card No</label>
+                                <div class="flex-grow-1">
+                                    <input type="text" name="job_card_number" class="form-control"
+                                        placeholder="Enter Job Card No." value="{{ $jobCard->job_card_number }}" readonly>
+                                    @error('job_card_number')
+                                        <small class="text-danger d-block mt-1">{{ $message }}</small>
+                                    @enderror
                                 </div>
+                            </div>
 
-                                <!-- Job Category -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="category" class="form-label mb-1" style="font-size:13px;">Job Category</label>
-                                        <select name="category" id="category"
-                                            class="form-control form-control-sm @error('category') is-invalid @enderror">
-                                            @if ($carCategory->count() > 0)
-                                                <option value="">Select Category</option>
-                                                @foreach ($carCategory as $category)
-                                                    <option value="{{ $category->name }}" {{ $jobCard->category == $category->name ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @endforeach
-                                            @else
-                                                <option value="">No Categories Available</option>
-                                            @endif
-                                        </select>
-                                        @error('category')
-                                            <small class="text-danger d-block mt-1">{{ $message }}</small>
-                                        @enderror
-                                    </div>
+                            <!-- Job Category -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="category" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Job Category</label>
+                                <div class="flex-grow-1">
+                                    <select name="category" id="category"
+                                        class="form-control @error('category') is-invalid @enderror">
+                                        @if ($carCategory->count() > 0)
+                                            <option value="">Select Category</option>
+                                            @foreach ($carCategory as $category)
+                                                <option value="{{ $category->name }}" {{ $jobCard->category == $category->name ? 'selected' : '' }}>
+                                                    {{ $category->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No Categories Available</option>
+                                        @endif
+                                    </select>
+                                    @error('category')
+                                        <small class="text-danger d-block mt-1">{{ $message }}</small>
+                                    @enderror
                                 </div>
+                            </div>
 
-                                <!-- Technician -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="technician" class="form-label mb-1" style="font-size:13px;">Technician</label>
-                                        <select name="technician" id="technician"
-                                            class="form-control form-control-sm @error('technician') is-invalid @enderror">
-                                            <option value="">Select Technician</option>
-                                            @if ($technicians->isNotEmpty())
-                                                @foreach ($technicians as $tech)
-                                                    <option value="{{ $tech->id }}" {{ $jobCard->technician == $tech->id ? 'selected' : '' }}>
-                                                        {{ $tech->name }}
-                                                    </option>
-                                                @endforeach
-                                            @else
-                                                <option value="">No technicians found</option>
-                                            @endif
-                                        </select>
-                                        @error('technician')
-                                            <small class="text-danger d-block mt-1">{{ $message }}</small>
-                                        @enderror
-                                    </div>
+                            <!-- Technician -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="technician" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Technician</label>
+                                <div class="flex-grow-1">
+                                    <select name="technician" id="technician"
+                                        class="form-control @error('technician') is-invalid @enderror">
+                                        <option value="">Select Technician</option>
+                                        @if ($technicians->isNotEmpty())
+                                            @foreach ($technicians as $tech)
+                                                <option value="{{ $tech->id }}" {{ $jobCard->technician == $tech->id ? 'selected' : '' }}>
+                                                    {{ $tech->name }}
+                                                </option>
+                                            @endforeach
+                                        @else
+                                            <option value="">No technicians found</option>
+                                        @endif
+                                    </select>
+                                    @error('technician')
+                                        <small class="text-danger d-block mt-1">{{ $message }}</small>
+                                    @enderror
                                 </div>
+                            </div>
 
-                                <!-- Date -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="date" class="form-label mb-1" style="font-size:13px;">Date</label>
-                                        <input type="date" name="date" id="date" class="form-control form-control-sm"
-                                            value="{{ $jobCard->date ? date('Y-m-d', strtotime($jobCard->date)) : date('Y-m-d') }}">
-                                    </div>
+                            <!-- Date -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="date" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Date</label>
+                                <div class="flex-grow-1">
+                                    <input type="date" name="date" id="date" class="form-control"
+                                        value="{{ $jobCard->date ? date('Y-m-d', strtotime($jobCard->date)) : date('Y-m-d') }}">
                                 </div>
+                            </div>
 
-                                <!-- Due Date -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="due_date" class="form-label mb-1" style="font-size:13px;">Due Date</label>
-                                        <input type="text" id="due_date" name="due_date" class="form-control form-control-sm" readonly
-                                            placeholder="Auto-calculated" value="{{ $jobCard->due_date ?? '' }}">
-                                    </div>
+                            <!-- Due Date -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="due_date" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Due Date</label>
+                                <div class="flex-grow-1">
+                                    <input type="text" id="due_date" name="due_date" class="form-control" readonly
+                                        placeholder="Auto-calculated" value="{{ $jobCard->due_date ?? '' }}">
                                 </div>
+                            </div>
 
-                                <!-- Next Due -->
-                                <div class="col-6 col-md-12">
-                                    <div class="form-group mb-2">
-                                        <label for="next_due_date" class="form-label mb-1" style="font-size:13px;">Next Due</label>
-                                        <div class="d-flex gap-1">
-                                            <input type="number" id="next_due_date" name="next_due_date" class="form-control form-control-sm"
-                                                value="90">
-                                            <select id="next_due_type" name="next_due_type" class="form-control form-control-sm">
-                                                <option value="Days" {{ ($jobCard->next_due_type ?? 'Days') == 'Days' ? 'selected' : '' }}>Days</option>
-                                                <option value="KM" {{ ($jobCard->next_due_type ?? 'Days') == 'KM' ? 'selected' : '' }}>KM</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                            <!-- Next Due -->
+                            <div class="form-group d-flex align-items-center mb-2">
+                                <label for="next_due_date" class="mb-0 me-2"
+                                    style="white-space: nowrap; min-width: 120px;">Next Due</label>
+                                <div class="flex-grow-1 d-flex gap-2">
+                                    <input type="number" id="next_due_date" name="next_due_date" class="form-control"
+                                        value="90">
+                                    <select id="next_due_type" name="next_due_type" class="form-control">
+                                        <option value="Days" {{ ($jobCard->next_due_type ?? 'Days') == 'Days' ? 'selected' : '' }}>Days</option>
+                                        <option value="KM" {{ ($jobCard->next_due_type ?? 'Days') == 'KM' ? 'selected' : '' }}>KM</option>
+                                    </select>
                                 </div>
-
-                            </div>{{-- end .row --}}
+                            </div>
                         </div>
 
                     </div>
@@ -1027,6 +1026,8 @@
                         @endforeach
                     @endif
 
+                    @include('job-card.partials.payment_details')
+
                     <hr>
                     {{-- Submit --}}
                     <div class="text-end">
@@ -1313,6 +1314,10 @@
             if (totalLabour <= 0 && totalParts <= 0) {
                 isValid = false;
                 $('#total_parts').after('<div class="text-danger" style="color:red;">Either Total labour or Total parts must be greater than 0.</div>');
+                return false;
+            }
+
+            if (typeof window.validateJcPaymentBeforeSubmit === 'function' && !window.validateJcPaymentBeforeSubmit()) {
                 return false;
             }
 
@@ -2538,6 +2543,7 @@ $(document).ready(function () {
             // Update both summary and hidden total
             $('#grand_total_summary').val(grandTotalFormatted);
             $('#grand_total_form').val(grandTotalFormatted);
+            $('#payable_amount').val(grandTotalFormatted).trigger('input');
 
             // EMI auto-fill
             if ($('#paid_by').val() === 'EMI') {
