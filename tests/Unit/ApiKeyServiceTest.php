@@ -94,5 +94,9 @@ class ApiKeyServiceTest extends TestCase
         $this->assertCount(2, $aiCandidates);
         $this->assertEquals('primary-ai-key-abc', $aiCandidates[0]);
         $this->assertEquals('backup-ai-key-def', $aiCandidates[1]);
+
+        // OPENAI is disabled in tenant primary, so getCandidates returns empty and does not fall back
+        $openaiCandidates = ApiKeyService::getCandidates('OPENAI');
+        $this->assertEmpty($openaiCandidates);
     }
 }
