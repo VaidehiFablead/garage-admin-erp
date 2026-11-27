@@ -277,6 +277,8 @@ Route::middleware(['check.license'])->group(function () {
 
         Route::get('/purchase-list', [PurchaseController::class, 'purchase_list'])->name('purchase.lists');
         Route::get('/add-purchase', [PurchaseController::class, 'add_purchase'])->name('purchase.add');
+        Route::get('/ai-purchase-bill', [\App\Http\Controllers\admin\PurchaseAiBillController::class, 'index'])->name('purchase.ai-bill');
+        Route::post('/ai-purchase-bill/parse', [\App\Http\Controllers\admin\PurchaseAiBillController::class, 'parse'])->name('purchase.ai-bill.parse');
         Route::get('/edit-purchase/{num}', [PurchaseController::class, 'edit_purchase'])->name('purchase.edit');
         Route::get('/purchase-invoice', [PurchaseController::class, 'purchase_invoice'])->name('purchase.invoice');
         Route::get('/print-purchase/{id}', [PurchaseController::class, 'printPurchase'])->name('purchase.print');
