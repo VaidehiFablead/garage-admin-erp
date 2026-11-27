@@ -116,6 +116,18 @@ class ApiKeyService
      */
     public static function getCandidates(string $label): array
     {
+        $norm = static::normalizeLabel($label);
+
+        // If the tenant explicitly configured this key as disabled, do NOT use it or fall back
+        $tenantPrimary = static::tenantKeys('api_keys');
+        foreach ($tenantPrimary as $item) {
+            if (is_array($item) && static::normalizeLabel((string) ($item['label'] ?? '')) === $norm) {
+                if (isset($item['enabled']) && ! (bool) $item['enabled']) {
+                    return [];
+                }
+            }
+        }
+
         $candidates = [];
 
         $primary = static::getPrimary($label);

@@ -31,32 +31,17 @@ class PurchaseBillVisionService
         $prompt = $this->prompt();
 
         $raw = null;
-        $lastError = '';
-
         $geminiKeys = $this->geminiKeys();
+        $openaiKeys = $this->openaiKeys();
+
         if (!empty($geminiKeys)) {
-            try {
-                $raw = $this->callGeminiWithKeys($geminiKeys, $mime, $base64, $prompt);
-            } catch (\Throwable $e) {
-                $lastError = $e->getMessage();
-                Log::warning('Gemini vision extraction failed, checking fallback: ' . $lastError);
-            }
-        }
-
-        if ($raw === null) {
-            $openaiKeys = $this->openaiKeys();
-            if (!empty($openaiKeys)) {
-                try {
-                    $raw = $this->callOpenAiWithKeys($openaiKeys, $mime, $base64, $prompt);
-                } catch (\Throwable $e) {
-                    $lastError = $e->getMessage();
-                    Log::warning('OpenAI vision extraction failed: ' . $lastError);
-                }
-            }
-        }
-
-        if ($raw === null) {
-            throw new RuntimeException($lastError !== '' ? $lastError : 'Could not read bill image with AI.');
+            $raw = $this->callGeminiWithKeys($geminiKeys, $mime, $base64, $prompt);
+        } elseif (!empty($openaiKeys)) {
+            $raw = $this->callOpenAiWithKeys($openaiKeys, $mime, $base64, $prompt);
+        } else {
+            throw new RuntimeException(
+                'AI API key is missing or disabled. Please add AI or OPENAI API key in Admin API Keys Management or .env.'
+            );
         }
 
         return $this->normalizePayload($this->decodeJson($raw));
@@ -149,15 +134,15 @@ PROMPT;
      */
     private function callGeminiWithKeys(array $keys, string $mime, string $base64, string $prompt): string
     {
-        $preferred = trim((string) config('services.gemini.model', 'gemini-2.5-flash-lite'));
+        $preferred = trim((string) config('services.gemini.model', 'gemini-3.5-flash-lite'));
         $models = array_values(array_unique(array_filter([
-            $preferred !== '' ? $preferred : 'gemini-2.5-flash-lite',
-            'gemini-2.5-flash-lite',
-            'gemini-1.5-flash',
-            'gemini-2.5-flash',
-            'gemini-3.1-flash-lite',
+            $preferred !== '' ? $preferred : 'gemini-3.5-flash-lite',
             'gemini-3.5-flash-lite',
+            'gemini-3.1-flash-lite',
+            'gemini-flash-lite-latest',
+            'gemini-flash-latest',
             'gemini-3.5-flash',
+            'gemini-2.5-flash',
         ])));
 
         $payload = [
@@ -299,7 +284,10 @@ PROMPT;
             || str_contains($message, 'api_key_invalid')
             || str_contains($message, 'key not valid')
             || str_contains($message, 'unauthenticated')
-            || str_contains($message, 'permission denied');
+            || str_contains($message, 'permission denied')
+            || str_contains($message, 'access_denied')
+            || str_contains($message, 'forbidden')
+            || str_contains($message, '403');
     }
 
     /**
