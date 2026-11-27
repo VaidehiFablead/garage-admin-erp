@@ -12,8 +12,13 @@ use App\Models\TaxRate;
 use App\Models\Setting;
 use App\Models\UserDetail;
 use App\Models\PaymentStore;
+use App\Models\WhatsAppMessageTemplate;
+use App\Services\PersonalWhatsAppService;
+use App\Services\WhatsAppService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -425,7 +430,127 @@ class SalesController extends Controller
 
 
             DB::commit();
-            // dd($request->all());
+
+            // Send WhatsApp notification (non-blocking)
+            try {
+                $branchIdToUse = (int) ($order->branch_id ?? $branchId ?? $userId);
+                $customer = $order->user_id ? User::select('id', 'name', 'phone', 'email')->find($order->user_id) : null;
+                if ($customer && !empty($customer->phone)) {
+                    $waSetting = Setting::select('customer_whatsapp_message', 'name')
+                        ->where('branch_id', $branchIdToUse)
+                        ->first();
+                    $isCustomerWhatsAppEnabled = $waSetting
+                        ? !in_array((string) ($waSetting->customer_whatsapp_message ?? '1'), ['0', 'off', 'false'], true)
+                        : true;
+
+                    $phoneNumber = preg_replace('/[^0-9]/', '', (string) $customer->phone);
+
+                    if ($isCustomerWhatsAppEnabled && $phoneNumber !== '') {
+                        $invoiceMeta = $this->generateSalesInvoicePdfForWhatsApp($order, $branchIdToUse);
+                        $invoiceFileUrl = (string) data_get($invoiceMeta, 'file_url', '');
+                        $invoiceFileName = (string) data_get($invoiceMeta, 'file_name', 'sales_invoice.pdf');
+
+                        $personalHandled = $this->sendPersonalWhatsAppIfSelected(
+                            $branchIdToUse,
+                            $customer,
+                            $order,
+                            $phoneNumber,
+                            is_array($invoiceMeta) ? $invoiceMeta : null
+                        );
+
+                        if ($personalHandled === null) {
+                            $template = $this->findWhatsAppTemplateByName($branchIdToUse, 'subscription_invoice_pdf');
+                            if (!$template) {
+                                $template = $this->findWhatsAppOrderTemplate($branchIdToUse, [
+                                    'Order invoice PDF',
+                                    'Complete order',
+                                    'Subscription complete',
+                                    'Pending order',
+                                    'Subscription pending',
+                                ]);
+                            }
+
+                            if ($template && ($template->status ?? '') === 'APPROVED' && !empty($template->name)) {
+                                $templateName = trim($template->name);
+                                $templateLanguage = !empty($template->language) ? $template->language : 'en';
+                                $customerName = $customer->name ?? 'Customer';
+                                $orderNumber = $order->order_number ?? (string) $order->id;
+                                $totalAmount = number_format((float) ($order->total_amount ?? 0), 2);
+                                $companyName = $waSetting->name ?? 'Company';
+                                $statusForTemplate = ($status === 'complete') ? 'Paid' : 'Pending';
+                                $publicInvoicePdfUrl = url('/sales/invoice/pdf/' . $order->id);
+
+                                $templateExtraComponents = [];
+                                if ($invoiceFileUrl !== '') {
+                                    $templateExtraComponents[] = [
+                                        'type' => 'header',
+                                        'parameters' => [[
+                                            'type' => 'document',
+                                            'document' => [
+                                                'link' => $invoiceFileUrl,
+                                                'filename' => $invoiceFileName,
+                                            ],
+                                        ]],
+                                    ];
+                                }
+
+                                $templateParams = [];
+                                $components = is_string($template->components)
+                                    ? json_decode($template->components, true)
+                                    : $template->components;
+
+                                if (is_array($components)) {
+                                    foreach ($components as $component) {
+                                        if (strtoupper((string) ($component['type'] ?? '')) === 'BODY' && isset($component['text'])) {
+                                            preg_match_all('/\{\{(\d+)\}\}/', $component['text'], $m);
+                                            $bodyVarNums = array_values(array_unique(array_map('intval', $m[1] ?? [])));
+                                            sort($bodyVarNums, SORT_NUMERIC);
+                                            foreach ($bodyVarNums as $varNum) {
+                                                $templateParams[] = match ((int) $varNum) {
+                                                    1 => $customerName,
+                                                    2 => $orderNumber,
+                                                    3 => $companyName,
+                                                    4 => $orderNumber,
+                                                    5 => $totalAmount,
+                                                    6 => $statusForTemplate,
+                                                    7 => $publicInvoicePdfUrl,
+                                                    default => '',
+                                                };
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (empty($templateParams)) {
+                                    $templateParams = [
+                                        $customerName,
+                                        $orderNumber,
+                                        $companyName,
+                                        $orderNumber,
+                                        $totalAmount,
+                                        $statusForTemplate,
+                                        $publicInvoicePdfUrl,
+                                    ];
+                                }
+
+                                WhatsAppService::sendTemplateMessage(
+                                    $branchIdToUse,
+                                    $phoneNumber,
+                                    $templateName,
+                                    $templateParams,
+                                    $templateLanguage,
+                                    $templateExtraComponents
+                                );
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $waEx) {
+                Log::warning('Order WhatsApp send failed (non-blocking): ' . $waEx->getMessage(), [
+                    'order_id' => $order->id ?? null,
+                ]);
+            }
 
             return response()->json([
                 'status' => true,
@@ -1210,5 +1335,402 @@ class SalesController extends Controller
                 'message' => 'Server error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function findWhatsAppOrderTemplate(int $branchId, array $useForCandidates): ?WhatsAppMessageTemplate
+    {
+        $templates = WhatsAppMessageTemplate::select(
+                'id',
+                'branch_id',
+                'name',
+                'components',
+                'language',
+                'status',
+                'category',
+                'use_for_template',
+                'on_off',
+                'isDeleted'
+            )
+            ->where('branch_id', $branchId)
+            ->where('on_off', 'active')
+            ->where('isDeleted', 0)
+            ->get();
+
+        if ($templates->isEmpty()) {
+            return null;
+        }
+
+        $normalize = static function ($value): string {
+            return trim(mb_strtolower((string) $value));
+        };
+
+        $candidates = collect($useForCandidates)
+            ->filter(fn ($value) => trim((string) $value) !== '')
+            ->map(fn ($value) => trim((string) $value))
+            ->unique()
+            ->values();
+
+        foreach ($candidates as $candidate) {
+            $normalizedCandidate = $normalize($candidate);
+
+            $template = $templates->first(function ($template) use ($normalize, $normalizedCandidate) {
+                return $normalize($template->use_for_template ?? '') === $normalizedCandidate;
+            });
+
+            if ($template) {
+                return $template;
+            }
+        }
+
+        $aliasMap = [
+            'pending order' => [
+                'pending order',
+                'subscription pending',
+                'order_pending_notification',
+                'order_panding_notification',
+                'order_pending',
+            ],
+            'subscription pending' => [
+                'subscription pending',
+                'pending order',
+                'order_pending_notification',
+                'order_panding_notification',
+                'order_pending',
+            ],
+            'complete order' => [
+                'complete order',
+                'subscription complete',
+                'subscription_invoice_pdf',
+                'order_complete_notification',
+                'order_confirmation',
+                'order_conform',
+            ],
+            'subscription complete' => [
+                'subscription complete',
+                'complete order',
+                'subscription_invoice_pdf',
+                'order_complete_notification',
+                'order_confirmation',
+                'order_conform',
+            ],
+            'order invoice pdf' => [
+                'order invoice pdf',
+                'subscription_invoice_pdf',
+                'complete order',
+                'subscription complete',
+            ],
+        ];
+
+        $aliasCandidates = [];
+        foreach ($candidates as $candidate) {
+            $aliasCandidates = array_merge($aliasCandidates, $aliasMap[$normalize($candidate)] ?? [$candidate]);
+        }
+
+        $aliasCandidates = array_values(array_unique(array_map($normalize, $aliasCandidates)));
+
+        return $templates->first(function ($template) use ($normalize, $aliasCandidates) {
+            return in_array($normalize($template->use_for_template ?? ''), $aliasCandidates, true)
+                || in_array($normalize($template->name ?? ''), $aliasCandidates, true);
+        });
+    }
+
+    private function findWhatsAppTemplateByName(int $branchId, string $templateName): ?WhatsAppMessageTemplate
+    {
+        $normalizedName = trim(mb_strtolower($templateName));
+        if ($normalizedName === '') {
+            return null;
+        }
+
+        return WhatsAppMessageTemplate::select(
+                'id',
+                'branch_id',
+                'name',
+                'components',
+                'language',
+                'status',
+                'category',
+                'use_for_template',
+                'on_off',
+                'isDeleted'
+            )
+            ->where('branch_id', $branchId)
+            ->where('on_off', 'active')
+            ->where('isDeleted', 0)
+            ->get()
+            ->first(function ($template) use ($normalizedName) {
+                return trim(mb_strtolower((string) ($template->name ?? ''))) === $normalizedName;
+            });
+    }
+
+    private function generateSalesInvoicePdfForWhatsApp(Order $order, int $branchId): ?array
+    {
+        try {
+            $sales = Order::with('carModel')->find($order->id);
+            if (! $sales) {
+                return null;
+            }
+
+            $setting = Setting::where('branch_id', $branchId)->first()
+                ?? Setting::where('branch_id', 1)->first()
+                ?? Setting::first()
+                ?? new Setting([
+                    'currency_symbol' => '₹',
+                    'currency_position' => 'left',
+                ]);
+
+            $customerModel = $sales->user_id ? User::with('userDetail')->find($sales->user_id) : null;
+
+            $formatCurrency = function ($amount) use ($setting) {
+                $amount = number_format((float) $amount, 2);
+                $symbol = $setting->currency_symbol ?? '₹';
+                $position = $setting->currency_position ?? 'left';
+
+                return $position === 'right' ? $amount . $symbol : $symbol . $amount;
+            };
+
+            $orderItems = OrderItem::where('order_id', $sales->id)->get();
+            $subtotal = $orderItems->sum('total_amount');
+
+            $discountPercent = (float) ($sales->discount ?? 0);
+            $discountAmount = ($discountPercent / 100) * $subtotal;
+            $afterDiscount = $subtotal - $discountAmount;
+
+            $taxDetails = [];
+            if ($sales->gst_option === 'with') {
+                $taxIds = json_decode($sales->tax_id, true) ?? [];
+                if (!empty($taxIds)) {
+                    $taxes = TaxRate::whereIn('id', $taxIds)->get();
+                    foreach ($taxes as $tax) {
+                        $taxAmount = ($tax->tax_rate / 100) * $afterDiscount;
+                        $taxDetails[] = [
+                            'name' => $tax->tax_name,
+                            'rate' => $tax->tax_rate,
+                            'amount' => $taxAmount,
+                            'formatted_amount' => $formatCurrency($taxAmount),
+                        ];
+                    }
+                }
+            }
+
+            $finalTotal = $afterDiscount + collect($taxDetails)->sum('amount');
+            $paidAmount = (float) PaymentStore::where('order_id', $sales->id)
+                ->where(function ($q) {
+                    $q->whereNull('isDeleted')->orWhere('isDeleted', 0);
+                })
+                ->sum('payment_amount');
+            $pendingAmount = max(0, $finalTotal - $paidAmount);
+
+            $pdfData = [
+                'view_id' => $sales->id,
+                'sales' => $sales,
+                'setting' => $setting,
+                'orderItems' => $orderItems,
+                'salesItems' => $orderItems,
+                'customer' => [
+                    'name' => $customerModel->name ?? 'walk-in-customer',
+                    'email' => $customerModel->email ?? '',
+                    'phone' => $customerModel->phone ?? '',
+                    'address' => optional($customerModel?->userDetail)->address ?? '',
+                ],
+                'user' => $customerModel ? $customerModel->toArray() : null,
+                'subtotal' => $formatCurrency($subtotal),
+                'discountAmount' => $formatCurrency($discountAmount),
+                'afterDiscount' => $formatCurrency($afterDiscount),
+                'finalTotal' => $formatCurrency($finalTotal),
+                'taxDetails1' => $taxDetails,
+            ];
+
+            $pdf = Pdf::loadView('sales.salse-invoice-pdf', $pdfData)->setPaper('A4', 'portrait');
+
+            Storage::disk('public')->makeDirectory('sales-invoices');
+
+            $fileName = 'invoice_' . $sales->id . '_' . now()->format('Ymd_His') . '.pdf';
+            $relativePath = 'sales-invoices/' . $fileName;
+            $pdfBytes = $pdf->output();
+            Storage::disk('public')->put($relativePath, $pdfBytes);
+
+            $waDir = public_path('wa-invoices');
+            if (! is_dir($waDir)) {
+                @mkdir($waDir, 0775, true);
+            }
+            @file_put_contents($waDir . DIRECTORY_SEPARATOR . $fileName, $pdfBytes);
+
+            $fileUrl = asset('storage/' . $relativePath);
+            try {
+                $host = request() ? (string) request()->getHost() : '';
+                if ($host !== '' && ! in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                    $fileUrl = request()->getSchemeAndHttpHost() . '/wa-invoices/' . rawurlencode($fileName);
+                }
+            } catch (\Throwable $e) {
+            }
+
+            return [
+                'status' => true,
+                'file_url' => $fileUrl,
+                'file_name' => $fileName,
+                'relative_path' => $relativePath,
+                'local_path' => Storage::disk('public')->path($relativePath),
+                'pendingAmountNumeric' => $pendingAmount,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Sales invoice PDF generation for WhatsApp failed', [
+                'order_id' => $order->id ?? null,
+                'branch_id' => $branchId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => false,
+                'message' => 'Failed to generate sales invoice PDF: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send sale invoice via Personal WhatsApp when that channel is selected.
+     * Returns true/false when personal is selected, or null to keep Business API path.
+     */
+    private function sendPersonalWhatsAppIfSelected(int $branchId, $customer, $order, string $phoneNumber, ?array $invoiceMeta)
+    {
+        if (! PersonalWhatsAppService::isPersonalSelected($branchId)) {
+            return null;
+        }
+
+        $pending = null;
+        if (is_array($invoiceMeta) && array_key_exists('pendingAmountNumeric', $invoiceMeta)) {
+            $pending = $invoiceMeta['pendingAmountNumeric'];
+        }
+
+        $vars = PersonalWhatsAppService::saleVars($order, $customer, $branchId, [
+            'pending' => $pending ?? ($order->pending_amount ?? null),
+        ]);
+
+        $result = PersonalWhatsAppService::sendSaleMessage($branchId, $phoneNumber, $vars, $invoiceMeta);
+        if (! empty($result['success'])) {
+            Log::info('Personal WhatsApp sale message sent', [
+                'order_id' => $order->id,
+                'branch_id' => $branchId,
+                'phone' => $phoneNumber,
+            ]);
+
+            return true;
+        }
+
+        Log::warning('Personal WhatsApp sale message skipped or failed', [
+            'order_id' => $order->id,
+            'branch_id' => $branchId,
+            'phone' => $phoneNumber,
+            'error' => $result['message'] ?? 'unknown',
+        ]);
+
+        return false;
+    }
+
+    public function resendWhatsApp($id)
+    {
+        $order = Order::with('orderItems.product')->find($id);
+        if (! $order) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Sale not found.',
+            ], 404);
+        }
+
+        $user = Auth::guard('api')->user() ?: Auth::guard('web')->user();
+        $branchId = (int) ($order->branch_id ?: ($user->branch_id ?? $user->id ?? 0));
+        $customer = User::select('id', 'name', 'phone')->find($order->user_id);
+        $phone = preg_replace('/[^0-9]/', '', (string) ($customer->phone ?? ''));
+
+        if (! $customer || $phone === '') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Customer phone number is missing.',
+            ], 422);
+        }
+
+        $invoiceMeta = $this->generateSalesInvoicePdfForWhatsApp($order, $branchId);
+
+        if (PersonalWhatsAppService::isPersonalSelected($branchId)) {
+            $pending = is_array($invoiceMeta) ? ($invoiceMeta['pendingAmountNumeric'] ?? null) : null;
+            $vars = PersonalWhatsAppService::saleVars($order, $customer, $branchId, [
+                'pending' => $pending ?? ($order->pending_amount ?? null),
+            ]);
+            $result = PersonalWhatsAppService::sendSaleMessage(
+                $branchId,
+                $phone,
+                $vars,
+                is_array($invoiceMeta) ? $invoiceMeta : null
+            );
+            $pdfOk = ! empty($result['pdf']) || collect($result['results'] ?? [])->contains(fn ($row) => ! empty($row['pdf']));
+            if (! empty($result['success'])) {
+                return response()->json([
+                    'status' => true,
+                    'pdf' => $pdfOk,
+                    'message' => $result['message'] ?? ($pdfOk ? 'WhatsApp sent with PDF.' : 'WhatsApp sent.'),
+                ]);
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => $result['message'] ?? 'Could not send WhatsApp. Connect Personal WhatsApp and try again.',
+            ], 422);
+        }
+
+        $fileUrl = (string) data_get($invoiceMeta, 'file_url', '');
+        $fileName = (string) data_get($invoiceMeta, 'file_name', 'sales_invoice.pdf');
+        $template = $this->findWhatsAppTemplateByName($branchId, 'subscription_invoice_pdf');
+        if (! $template) {
+            $template = $this->findWhatsAppOrderTemplate($branchId, [
+                'Order invoice PDF',
+                'Complete order',
+                'Pending order',
+            ]);
+        }
+
+        if (! $template || ($template->status ?? '') !== 'APPROVED' || empty($template->name)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No WhatsApp channel is ready. Connect Personal WhatsApp or save an approved API template.',
+            ], 422);
+        }
+
+        $extra = [];
+        if ($fileUrl !== '') {
+            $extra[] = [
+                'type' => 'header',
+                'parameters' => [[
+                    'type' => 'document',
+                    'document' => [
+                        'link' => $fileUrl,
+                        'filename' => $fileName,
+                    ],
+                ]],
+            ];
+        }
+
+        $result = WhatsAppService::sendTemplateMessage(
+            $branchId,
+            $phone,
+            trim($template->name),
+            [
+                $customer->name ?? 'Customer',
+                $order->order_number ?? (string) $order->id,
+                number_format((float) ($order->total_amount ?? 0), 2),
+            ],
+            $template->language ?: 'en',
+            $extra
+        );
+
+        if (! empty($result['success'])) {
+            return response()->json([
+                'status' => true,
+                'message' => 'WhatsApp sent to the customer.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => $result['message'] ?? 'Could not send WhatsApp.',
+        ], 422);
     }
 }

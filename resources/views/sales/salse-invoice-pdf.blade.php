@@ -512,7 +512,8 @@
 @php
     $grandTotal = $finalTotal;
 
-    function convertNumberToWords($number)
+    if (!function_exists('convertNumberToWords')) {
+        function convertNumberToWords($number)
     {
         $hyphen = '-';
         $conjunction = ' and ';
@@ -588,6 +589,7 @@
             }
         }
         return $string;
+        }
     }
 
     $amountInWords = ucwords(convertNumberToWords((int) $grandTotal)) . ' Rupees';
