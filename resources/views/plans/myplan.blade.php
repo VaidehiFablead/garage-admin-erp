@@ -52,16 +52,16 @@
             <h6 style="color: #777; font-weight: 400;">Overview of your active subscription plan and limits</h6>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button type="button" class="btn text-white fw-semibold" style="background-color: #eb5e28; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#invoicesListModal">
+            <button type="button" class="btn text-white fw-semibold" style="background-color: #eb5e28; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#invoicesListModal" data-toggle="modal" data-target="#invoicesListModal">
                 <i class="fas fa-file-pdf me-1"></i> Download Invoice
             </button>
-            <button type="button" class="btn btn-outline-success fw-semibold" style="border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#renewPlanModal">
+            <button type="button" class="btn btn-outline-success fw-semibold" style="border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#renewPlanModal" data-toggle="modal" data-target="#renewPlanModal">
                 <i class="fas fa-sync-alt me-1"></i> Renew Plan
             </button>
-            <!-- <button type="button" class="btn text-white fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#upgradePlanModal" onclick="loadUpgradePlans()">
+            <!-- <button type="button" class="btn text-white fw-semibold" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#upgradePlanModal" data-toggle="modal" data-target="#upgradePlanModal" onclick="loadUpgradePlans()">
                 <i class="fas fa-arrow-up me-1"></i> Upgrade Plan
             </button> -->
-            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#planHistoryModal" style="color: #24355c; border: 1px solid #24355c; background-color: #fff; font-weight: 600; border-radius: 6px;">
+            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#planHistoryModal" data-toggle="modal" data-target="#planHistoryModal" style="color: #24355c; border: 1px solid #24355c; background-color: #fff; font-weight: 600; border-radius: 6px;">
                 <i class="fas fa-history me-1"></i> Plan History
             </button>
             <a href="javascript:history.back()" class="btn" style="background-color: #d27936; color: #fff; font-weight: 600; border-radius: 6px;">
@@ -177,7 +177,7 @@
                     <h5 class="modal-title fw-bold" id="renewPlanModalLabel">
                         <i class="fas fa-sync-alt me-2 text-warning"></i> Renew Current Subscription
                     </h5>
-                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -220,7 +220,7 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0 px-4 py-3">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn text-white fw-bold px-4" id="btnConfirmRenewal" style="background-color: #24355c;" onclick="processRenewalPayment()">
                         <span class="spinner-border spinner-border-sm me-1 d-none" id="renewalSpinner"></span>
                         <i class="fas fa-lock me-1"></i> Pay ₹{{ number_format($renewalPrice, 2) }} & Renew
@@ -241,7 +241,7 @@
                         </h5>
                         <p class="mb-0 small text-white-50">Select a membership package to unlock higher user/branch limits and expanded modules.</p>
                     </div>
-                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -260,7 +260,7 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0 px-4 py-3">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -280,7 +280,7 @@
                             <p class="mb-0 small text-white-50">Select and download tax invoices & receipts for all your plan purchases and renewals</p>
                         </div>
                     </div>
-                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close-custom btn-close-white-style" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -365,7 +365,7 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-0 px-4 py-3">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -377,7 +377,7 @@
             <div class="modal-content border-0 shadow" style="border-radius: 12px;">
                 <div class="modal-header border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
                     <h5 class="modal-title" id="planHistoryModalLabel" style="font-weight: 700; color: #333;"><i class="fas fa-history text-secondary me-2"></i> Plan & Payment History</h5>
-                    <button type="button" class="btn-close-custom btn-close-dark-style" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close-custom btn-close-dark-style" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
