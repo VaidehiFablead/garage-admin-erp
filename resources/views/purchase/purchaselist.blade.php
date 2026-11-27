@@ -819,6 +819,9 @@
 
             <div class="header-actions d-flex align-items-center gap-2">
                 @if (app('hasPermission')(3, 'add'))
+                    <a href="{{ route('purchase.ai-bill') }}" class="btn btn-sm btn-added d-flex align-items-center justify-content-center" style="min-height: 36px; background-color: #ff9f43; border-color: #ff9f43; color: #fff;">
+                        <i class="fas fa-magic me-1"></i> AI Bill Upload
+                    </a>
                     <a href="{{ route('purchase.add') }}" class="btn btn-sm btn-added btn-add-purchase">
                         <img src="{{ env('ImagePath') . 'admin/assets/img/icons/plus.svg' }}" alt="img">
                         Add Purchase

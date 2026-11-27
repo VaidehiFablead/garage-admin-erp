@@ -305,6 +305,9 @@
                     <input type="radio" name="gst_option" id="with_gst" value="with" />
                     With GST
                 </label>
+                <a href="{{ route('purchase.ai-bill') }}" class="btn btn-added" style="background-color: #ff9f43; border-color: #ff9f43; color: #fff;">
+                    <i class="fas fa-magic me-1"></i> AI Bill Upload
+                </a>
                 <a href="{{ route('purchase.lists') }}" class="btn btn-added">Back</a>
             </div>
             
