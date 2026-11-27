@@ -39,6 +39,8 @@ use App\Http\Controllers\api\SubBranchController;
 use App\Http\Controllers\api\SupplierController;
 use App\Http\Controllers\api\TaxRateController;
 use App\Http\Controllers\api\UnitController;
+use App\Http\Controllers\api\TypeController;
+use App\Http\Controllers\api\MaterialController;
 use App\Http\Controllers\api\LeaveTypeController;
 use App\Http\Controllers\api\PayrollController;
 use App\Http\Controllers\admin\LeaveController as AdminLeaveController;
@@ -318,6 +320,10 @@ Route::middleware(['auth.api'])->group(function () {
     Route::get('/units', [UnitController::class, 'index'])->name('units.index');
     Route::post('/update-unit/{id}', [UnitController::class, 'update'])->name('units.update');
     Route::delete('/delete-unit/{id}', [UnitController::class, 'destroy'])->name('units.destroy');
+
+    // Type Master & Material Master
+    Route::apiResource('types', TypeController::class);
+    Route::apiResource('materials', MaterialController::class);
 
     Route::get('/get-category', [ProductController::class, 'getCategory']);
     Route::get('/get-brand', [ProductController::class, 'getBrand']);

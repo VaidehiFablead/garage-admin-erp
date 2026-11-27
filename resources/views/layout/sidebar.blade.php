@@ -224,11 +224,15 @@
                                                         class="fa fa-car"></i><span>Make Model</span></a></li>
                                         @endif
                                         @if ($canAllUnits)
-                                            <li><a href="{{ route('unit.list') }}"><i
+                                            <li><a href="{{ route('unit.list') }}" class="{{ request()->routeIs('unit.list') ? 'active' : '' }}"><i
                                                         class="fa fa-balance-scale"></i><span>All Units</span></a></li>
                                         @endif
+                                        <li><a href="{{ route('type.list') }}" class="{{ request()->routeIs('type.list') ? 'active' : '' }}"><i
+                                                    class="fa fa-tags"></i><span>Type Master</span></a></li>
+                                        <li><a href="{{ route('material.list') }}" class="{{ request()->routeIs('material.list') ? 'active' : '' }}"><i
+                                                    class="fa fa-cubes"></i><span>Material Master</span></a></li>
                                         @if ($canImportItems)
-                                            <li><a href="{{ route('product.import') }}"><i
+                                            <li><a href="{{ route('product.import') }}" class="{{ request()->routeIs('product.import') ? 'active' : '' }}"><i
                                                         class="fa fa-file-import"></i><span>Import Items</span></a></li>
                                         @endif
                                     </ul>
