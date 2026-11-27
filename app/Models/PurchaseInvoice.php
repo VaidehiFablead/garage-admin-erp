@@ -52,6 +52,35 @@ class PurchaseInvoice extends Model
         return $this->hasMany(PaymentStore::class, 'purchase_id')
             ->where('isDeleted', 0);
     }
+
+    /**
+     * Ensure bill_no can store alphanumeric strings (e.g. 'INV-77197189') across tenant databases.
+     */
+    public static function ensureBillNoColumnIsString(): void
+    {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+        $checked = true;
+
+        try {
+            $col = \Illuminate\Support\Facades\DB::selectOne("
+                SELECT DATA_TYPE 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                  AND TABLE_NAME = 'purchase_invoice' 
+                  AND COLUMN_NAME = 'bill_no'
+            ");
+
+            if ($col && in_array(strtolower($col->DATA_TYPE), ['int', 'integer', 'bigint', 'smallint', 'tinyint', 'mediumint'])) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `purchase_invoice` MODIFY `bill_no` VARCHAR(255) NULL");
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not alter purchase_invoice.bill_no: ' . $e->getMessage());
+        }
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -63,6 +92,24 @@ class PurchaseInvoice extends Model
 
         static::updating(function ($model) {
             $model->updated_at = Carbon::now('Asia/Kolkata');
+        });
+
+        static::saving(function ($model) {
+            if (!empty($model->bill_no) && !is_numeric($model->bill_no)) {
+                try {
+                    $col = \Illuminate\Support\Facades\DB::selectOne("
+                        SELECT DATA_TYPE 
+                        FROM INFORMATION_SCHEMA.COLUMNS 
+                        WHERE TABLE_SCHEMA = DATABASE() 
+                          AND TABLE_NAME = 'purchase_invoice' 
+                          AND COLUMN_NAME = 'bill_no'
+                    ");
+                    if ($col && in_array(strtolower($col->DATA_TYPE), ['int', 'integer', 'bigint', 'smallint', 'tinyint', 'mediumint'])) {
+                        $digits = preg_replace('/\D/', '', (string) $model->bill_no);
+                        $model->bill_no = $digits !== '' ? (int) substr($digits, 0, 9) : null;
+                    }
+                } catch (\Throwable) {}
+            }
         });
     }
 }
