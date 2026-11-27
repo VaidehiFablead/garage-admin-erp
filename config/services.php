@@ -45,6 +45,8 @@ return [
 
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
+    ],
+
     /*
     | Local Baileys bridge used by Personal WhatsApp (QR / WhatsApp Web style).
     | Start with: cd whatsapp-session-server && npm install && npm start
