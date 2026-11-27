@@ -74,6 +74,8 @@ class PurchaseController extends Controller
             ], 422);
         }
 
+        PurchaseInvoice::ensureBillNoColumnIsString();
+
         try {
             DB::beginTransaction();
 
@@ -1356,6 +1358,8 @@ class PurchaseController extends Controller
                 'errors'  => $validator->errors(),
             ], 422);
         }
+
+        PurchaseInvoice::ensureBillNoColumnIsString();
 
         DB::beginTransaction();
 
