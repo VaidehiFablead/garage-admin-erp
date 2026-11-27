@@ -68,6 +68,8 @@ class GeneralSettingController extends Controller
             'remove_logo' => 'nullable',
             'remove_favicon' => 'nullable',
             'remove_qr_code' => 'nullable',
+            'customer_whatsapp_message' => 'nullable|boolean',
+            'admin_whatsapp_message' => 'nullable|boolean',
         ]);
 
         // Find branch-specific settings
@@ -119,6 +121,12 @@ class GeneralSettingController extends Controller
         $settings->office_longitude = $request->office_longitude;
         $settings->radius = $request->radius ?? 200;
         $settings->shop_address = $request->address;
+        if ($request->has('customer_whatsapp_message')) {
+            $settings->customer_whatsapp_message = (int) $request->customer_whatsapp_message;
+        }
+        if ($request->has('admin_whatsapp_message')) {
+            $settings->admin_whatsapp_message = (int) $request->admin_whatsapp_message;
+        }
 
         $settings->save();
 

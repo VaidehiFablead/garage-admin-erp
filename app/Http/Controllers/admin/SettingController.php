@@ -11,4 +11,9 @@ class SettingController extends Controller
     {
         return view('settings/generalsettings');
     }
+
+    public function facebookappconfiguration(Request $request)
+    {
+        return view('settings/facebookappconfiguration');
+    }
 }

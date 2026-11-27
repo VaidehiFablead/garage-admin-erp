@@ -75,6 +75,10 @@ Route::post('/clear-subadmin-session', function () {
 });
 Route::post('/set-subadmin-session', [AuthController::class, 'subadmin_session'])->name('subadmin_session');
 
+Route::get('/wa-invoice/{token}/{file}', function (string $token, string $file) {
+    return \App\Services\PersonalWhatsAppService::servePublicInvoice($token, $file);
+})->where('file', '[A-Za-z0-9._-]+')->name('wa.invoice.public');
+
 Route::middleware(['guest:web'])->group(function () {
     Route::get('/', [AuthController::class, 'signin'])->name('auth.signin');
     Route::post('/', [LoginController::class, 'login'])->name('login');
@@ -249,6 +253,7 @@ Route::middleware(['check.license'])->group(function () {
 
         //settings
         Route::get('/setting', [SettingController::class, 'generalsettings'])->name('setting.generalsettings');
+        Route::get('/setting/facebook-app-configuration', [SettingController::class, 'facebookappconfiguration'])->name('setting.facebookappconfiguration');
 
         //salesreturn
 

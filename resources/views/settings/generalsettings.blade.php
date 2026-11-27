@@ -468,6 +468,26 @@
                                     <small class="text-muted">Staff must be within this distance from office GPS to clock in.</small>
                                 </div>
                             </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Customer WhatsApp Message</label>
+                                    <select id="customer_whatsapp_message" name="customer_whatsapp_message" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Admin WhatsApp Message</label>
+                                    <select id="admin_whatsapp_message" name="admin_whatsapp_message" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Step 3: Media & Branding -->
@@ -1375,6 +1395,16 @@
                             $("#office_latitude").val(response.settings.office_latitude ?? "");
                             $("#office_longitude").val(response.settings.office_longitude ?? "");
                             $("#office_radius").val(response.settings.radius ?? "200");
+                            $("#customer_whatsapp_message").val(
+                                response.settings.customer_whatsapp_message === null || response.settings.customer_whatsapp_message === undefined
+                                    ? '1'
+                                    : (response.settings.customer_whatsapp_message === 'off' || response.settings.customer_whatsapp_message === 0 || response.settings.customer_whatsapp_message === '0' ? '0' : '1')
+                            );
+                            $("#admin_whatsapp_message").val(
+                                response.settings.admin_whatsapp_message === null || response.settings.admin_whatsapp_message === undefined
+                                    ? '1'
+                                    : (response.settings.admin_whatsapp_message === 'off' || response.settings.admin_whatsapp_message === 0 || response.settings.admin_whatsapp_message === '0' ? '0' : '1')
+                            );
                             // Company Rules Fields
                             $("#working_hours").val(response.settings.working_hours ?? "");
                             if (response.settings.sunday_off === 'yes') {
@@ -1883,18 +1913,15 @@ toggleHRSubSections();
                 formData.append("office_latitude", $("#office_latitude").val());
                 formData.append("office_longitude", $("#office_longitude").val());
                 formData.append("radius", $("#office_radius").val());
+                formData.append("customer_whatsapp_message", $("#customer_whatsapp_message").val());
+                formData.append("admin_whatsapp_message", $("#admin_whatsapp_message").val());
                 
-                let logo = $("#logo")[0]?.files[0];
-                let favicon = $("#favicon")[0]?.files[0];
-                let qr_code = $("#qr_code")[0]?.files[0];
-
-                if (logo) formData.append("logo", logo);
-                if (favicon) formData.append("favicon", favicon);
-                if (qr_code) formData.append("qr_code", qr_code);
-
-                formData.append("remove_logo", $("#remove_logo").val() || 0);
-                formData.append("remove_favicon", $("#remove_favicon").val() || 0);
-                formData.append("remove_qr_code", $("#remove_qr_code").val() || 0);
+                const logoFile = $("#logo")[0]?.files?.[0];
+                const faviconFile = $("#favicon")[0]?.files?.[0];
+                const qrCodeFile = $("#qr_code")[0]?.files?.[0];
+                if (logoFile) formData.append("logo", logoFile);
+                if (faviconFile) formData.append("favicon", faviconFile);
+                if (qrCodeFile) formData.append("qr_code", qrCodeFile);
                 // In update
                 if (selectedSubAdminId) {
                     formData.append("selectedSubAdminId", selectedSubAdminId);

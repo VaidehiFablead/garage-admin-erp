@@ -61,6 +61,9 @@ class Setting extends Model
         'monthly_leave_limit',
         'tax_deduction_amount',
         'salary_exceeds',
+        'customer_whatsapp_message',
+        'admin_whatsapp_message',
+        'appointment_reminder_hours_before',
         // ERP Dashboard visibility
         'show_erp_dashboard',
         'show_erp_total_collections',

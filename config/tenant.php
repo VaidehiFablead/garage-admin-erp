@@ -7,7 +7,8 @@ return [
     | The client's database credentials come from the admin-products panel and
     | the DB_* values in .env are only used when this is disabled.
     */
-    'enabled' => (bool) env('TENANCY_ENABLED', false),
+    'enabled' => (bool) env('TENANCY_ENABLED', false)
+    && (env('APP_ENV', 'production') !== 'local' || (bool) env('TENANCY_LOCAL_ENABLED', false)),
 
     /*
     | Base URL of the admin-products tenant API, e.g.

@@ -19,6 +19,7 @@ use App\Http\Controllers\api\DailyDataController;
 use App\Http\Controllers\api\DebitNoteItemApiController;
 use App\Http\Controllers\api\ExpenseController;
 use App\Http\Controllers\api\ExpenseTypeController;
+use App\Http\Controllers\api\FacebookAppConfigurationController;
 use App\Http\Controllers\api\GeneralSettingController;
 use App\Http\Controllers\api\GstController;
 use App\Http\Controllers\api\GSTR_1Controller;
@@ -43,6 +44,7 @@ use App\Http\Controllers\api\TypeController;
 use App\Http\Controllers\api\MaterialController;
 use App\Http\Controllers\api\LeaveTypeController;
 use App\Http\Controllers\api\PayrollController;
+use App\Http\Controllers\api\PersonalWhatsAppController;
 use App\Http\Controllers\admin\LeaveController as AdminLeaveController;
 use App\Http\Controllers\admin\AttendanceeController;
 use Illuminate\Http\Request;
@@ -199,6 +201,25 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/sales-settings/update', [GeneralSettingController::class, 'updateBarcodeSettings'])->name('sales-settings.update');
     Route::post('/order-format-settings/update', [GeneralSettingController::class, 'updateOrderFormatSettings'])->name('order-format-settings.update');
 
+    Route::get('/facebook-app-configurations', [FacebookAppConfigurationController::class, 'index'])->name('facebook-app-configurations.index');
+    Route::post('/facebook-app-configurations', [FacebookAppConfigurationController::class, 'store'])->name('facebook-app-configurations.store');
+    // Specific routes must come before parameterized routes
+    Route::get('/facebook-app-configurations/message-templates', [FacebookAppConfigurationController::class, 'getMessageTemplates'])->name('facebook-app-configurations.message-templates');
+    Route::post('/facebook-app-configurations/store-templates', [FacebookAppConfigurationController::class, 'storeTemplates'])->name('facebook-app-configurations.store-templates');
+    Route::get('/facebook-app-configurations/stored-templates', [FacebookAppConfigurationController::class, 'getStoredTemplates'])->name('facebook-app-configurations.stored-templates');
+    Route::put('/facebook-app-configurations/templates/{templateId}/toggle-status', [FacebookAppConfigurationController::class, 'toggleTemplateStatus'])->name('facebook-app-configurations.toggle-template-status');
+    Route::put('/facebook-app-configurations/templates/{templateId}/update-use-for', [FacebookAppConfigurationController::class, 'updateTemplateUseFor'])->name('facebook-app-configurations.update-template-use-for');
+    // Parameterized routes come after specific routes
+    Route::get('/facebook-app-configurations/{id}', [FacebookAppConfigurationController::class, 'show'])->name('facebook-app-configurations.show');
+    Route::put('/facebook-app-configurations/{id}', [FacebookAppConfigurationController::class, 'update'])->name('facebook-app-configurations.update');
+    Route::delete('/facebook-app-configurations/{id}', [FacebookAppConfigurationController::class, 'destroy'])->name('facebook-app-configurations.destroy');
+
+    Route::get('/personal-whatsapp', [PersonalWhatsAppController::class, 'show']);
+    Route::post('/personal-whatsapp', [PersonalWhatsAppController::class, 'save']);
+    Route::get('/personal-whatsapp/status', [PersonalWhatsAppController::class, 'status']);
+    Route::get('/personal-whatsapp/qr', [PersonalWhatsAppController::class, 'qr']);
+    Route::post('/personal-whatsapp/logout', [PersonalWhatsAppController::class, 'logout']);
+
     // Route::post('/purchase_order', [PurchaseController::class, 'purchase_order'])->name('purchase_order');
     // Route::post('/purchase_order1', [PurchaseController::class, 'purchase_order1'])->name('purchase_order1');
     // Route::get('/purchase_list', [PurchaseController::class, 'purchase_list'])->name('purchase_list');
@@ -238,6 +259,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('delete/{id}', [SalesController::class, 'delete'])->name('delete');
     Route::post('update_sale', [SalesController::class, 'update_sale'])->name('update_sale');
     Route::get('/orders/filter', [SalesController::class, 'getFilteredOrders']);
+    Route::post('/sales/{id}/send-whatsapp', [SalesController::class, 'resendWhatsApp']);
 
     Route::post('/expenses/store', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::get('/expenses/list', [ExpenseController::class, 'getExpenses'])->name('expenses.list');

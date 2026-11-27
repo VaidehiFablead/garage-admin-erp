@@ -701,6 +701,9 @@ table.on('draw', function () {
                                     <path d="M19 7V4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3H3a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h2v3h12v-3h2a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1h-2zM7 4h10v3H7V4zm10 16H7v-4h10v4zm3-6a1 1 0 0 1-1 1h-2v-2H7v2H5a1 1 0 0 1-1-1V9h16v5z"/>
                                 </svg>
                             </a>
+                            <a class="me-3 send-sales-whatsapp" href="javascript:void(0);" data-id="${order.id}" title="Send WhatsApp" style="color:#25d366;">
+                                <i class="fab fa-whatsapp" style="font-size: 20px; vertical-align: middle;"></i>
+                            </a>
                             <a class="me-3 delete-order" href="javascript:void(0);" data-id="${order.id}" title="Delete">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5 20C5 20.5304 5.21071 21.0391 5.58579 21.4142C5.96086 21.7893 6.46957 22 7 22H17C17.5304 22 18.0391 21.7893 18.4142 21.4142C18.7893 21.0391 19 20.5304 19 20V8H21V6H17V4C17 3.46957 16.7893 2.96086 16.4142 2.58579C16.0391 2.21071 15.5304 2 15 2H9C8.46957 2 7.96086 2.21071 7.58579 2.58579C7.21071 2.96086 7 3.46957 7 4V6H3V8H5V20ZM9 10H11V18H9V10ZM13 10H15V18H13V10Z" fill="#092C4C"/>
@@ -1012,6 +1015,62 @@ table.on('draw', function () {
                             renderOrders(response.data, selectedDate, response.currency_symbol, response.currency_position);
                         }
                     }
+                });
+            });
+
+            // Send WhatsApp handler
+            $(document).off('click.sendSalesWhatsapp').on('click.sendSalesWhatsapp', '.send-sales-whatsapp', function(e) {
+                e.preventDefault();
+                const orderId = $(this).data('id');
+                if (!orderId) {
+                    return;
+                }
+                Swal.fire({
+                    title: 'Send WhatsApp?',
+                    text: 'Send this sale bill message and PDF to the customer again.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Send',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#25d366'
+                }).then(function(result) {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+                    Swal.fire({
+                        title: 'Sending...',
+                        allowOutsideClick: false,
+                        didOpen: function() {
+                            Swal.showLoading();
+                        }
+                    });
+                    $.ajax({
+                        url: '/api/sales/' + orderId + '/send-whatsapp',
+                        type: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || window.authToken || '')
+                        },
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            const pdfOk = !response || response.pdf !== false;
+                            Swal.fire({
+                                icon: pdfOk ? 'success' : 'warning',
+                                title: pdfOk ? 'Sent' : 'Sent without PDF',
+                                text: (response && response.message) ? response.message : 'WhatsApp sent to the customer.',
+                                confirmButtonColor: '#ff9f43'
+                            });
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Not sent',
+                                text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not send WhatsApp.',
+                                confirmButtonColor: '#ff9f43'
+                            });
+                        }
+                    });
                 });
             });
 
