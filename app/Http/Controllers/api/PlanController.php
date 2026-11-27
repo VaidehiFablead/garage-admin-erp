@@ -127,6 +127,7 @@ class PlanController extends Controller
             'is_active'        => 'required|boolean',
             'features'         => 'nullable|string',
             'sub_branch_id'    => 'nullable|integer',
+            'renewal_price'    => 'nullable|numeric|min:0',
         ];
 
         $validator = Validator::make($request->all(), $rules, [], [
@@ -187,6 +188,7 @@ class PlanController extends Controller
             $plan = Plan::create([
                 'name'             => $validated['name'],
                 'price'            => $validated['price']         ?? null,
+                'renewal_price'    => $validated['renewal_price'] ?? null,
                 'discount_percent' => $discountPercent,
                 'final_price'      => $finalPrice,
                 'total_amount'     => $totalVal,
@@ -238,6 +240,7 @@ class PlanController extends Controller
             'is_active'        => 'required|boolean',
             'features'         => 'nullable|string',
             'sub_branch_id'    => 'nullable|integer',
+            'renewal_price'    => 'nullable|numeric|min:0',
         ];
 
         $validator = Validator::make($request->all(), $rules, [], [
@@ -301,6 +304,7 @@ class PlanController extends Controller
             $plan->update([
                 'name'             => $validated['name'],
                 'price'            => $validated['price']         ?? null,
+                'renewal_price'    => $validated['renewal_price'] ?? null,
                 'discount_percent' => $discountPercent,
                 'final_price'      => $finalPrice,
                 'total_amount'     => $totalVal,

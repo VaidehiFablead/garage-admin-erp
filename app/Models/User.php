@@ -75,8 +75,11 @@ public function plan()
      */
     public function getActivePlan()
     {
-        if ($this->plan_id && $this->plan) {
-            return $this->plan;
+        if ($this->plan_id) {
+            $plan = $this->plan ?? \App\Models\Plan::find($this->plan_id);
+            if ($plan && $plan->is_active) {
+                return $plan;
+            }
         }
 
         if (! empty($this->branch_id)) {
@@ -86,7 +89,40 @@ public function plan()
             }
         }
 
+        if (in_array($this->role, ['admin', 'sub-admin'], true)) {
+            $plan = \App\Models\Plan::where('sub_branch_id', $this->id)->where('is_active', 1)->latest('id')->first();
+            if ($plan) {
+                return $plan;
+            }
+        }
+
         return \App\Models\Plan::where('is_active', 1)->latest('id')->first();
+    }
+
+    public function getLatestPlan()
+    {
+        if ($this->plan_id) {
+            $plan = $this->plan ?? \App\Models\Plan::find($this->plan_id);
+            if ($plan) {
+                return $plan;
+            }
+        }
+
+        if (! empty($this->branch_id)) {
+            $plan = \App\Models\Plan::where('sub_branch_id', $this->branch_id)->latest('id')->first();
+            if ($plan) {
+                return $plan;
+            }
+        }
+
+        if (in_array($this->role, ['admin', 'sub-admin'], true)) {
+            $plan = \App\Models\Plan::where('sub_branch_id', $this->id)->latest('id')->first();
+            if ($plan) {
+                return $plan;
+            }
+        }
+
+        return \App\Models\Plan::latest('id')->first();
     }
 
     /**
@@ -94,7 +130,7 @@ public function plan()
      */
     public function checkPlanExpiryStatus(): array
     {
-        $plan = $this->getActivePlan();
+        $plan = $this->getLatestPlan();
 
         if (! $plan || empty($plan->end_date)) {
             return [
@@ -106,7 +142,8 @@ public function plan()
 
         $today = Carbon::today('Asia/Kolkata');
         $endDate = Carbon::parse($plan->end_date, 'Asia/Kolkata')->startOfDay();
-        $warningStartDate = $endDate->copy()->subDays(30);
+        $warningDays = method_exists($plan, 'getWarningDays') ? $plan->getWarningDays() : 30;
+        $warningStartDate = $endDate->copy()->subDays($warningDays);
 
         if ($today->gt($endDate)) {
             return [

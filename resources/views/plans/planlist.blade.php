@@ -122,7 +122,10 @@
                 <div>
                     <h4 class="mb-1" style="color: #092C4C; font-weight: bold;">Plans</h4>
                 </div>
-                <a href="{{ route('plans.addplan') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Add Plan</a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('plans.myplan') }}" class="btn btn-outline-primary"><i class="fa fa-gem me-1"></i> My Plan & Subscription</a>
+                    <a href="{{ route('plans.addplan') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Add Plan</a>
+                </div>
             </div>
 
             <!-- @if (session('success'))
@@ -155,6 +158,8 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Price</th>
+                                    <th>Total Amount</th>
+                                    <th>Renewal Price</th>
                                     <th>Start Date</th>
                                     <th>End Date</th>
                                     <th>Duration</th>
@@ -279,6 +284,21 @@
                         var finalP = plan.final_price ? parseFloat(plan.final_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : price;
                         priceDisplay = '<div><span class="text-decoration-line-through text-muted small">₹' + price + '</span> <strong class="text-success">₹' + finalP + '</strong> <span class="badge bg-warning text-dark ms-1" style="font-size:10px;">' + parseFloat(plan.discount_percent) + '% OFF</span></div>';
                     }
+                    
+                    var totalAmount = (plan.total_amount === null || plan.total_amount === undefined) ?
+                        '0.00' :
+                        parseFloat(plan.total_amount).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    var totalAmountDisplay = '₹' + totalAmount;
+                    
+                    var renPrice = (plan.renewal_price === null || plan.renewal_price === undefined) ?
+                        'N/A' :
+                        '₹' + parseFloat(plan.renewal_price).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
 
                     var duration = plan.duration ? (plan.duration.charAt(0).toUpperCase() + plan.duration
                         .slice(1)) : '-';
@@ -314,6 +334,8 @@
                         '<td><strong>' + $('<div>').text(plan.name).html() + '</strong>'    +
                         '</td>' +
                         '<td>' + priceDisplay + '</td>' +
+                        '<td>' + totalAmountDisplay + '</td>' +
+                        '<td>' + renPrice + '</td>' +
                         '<td>' + startDate + '</td>' +
                         '<td>' + endDate + '</td>' +
                         '<td>' + duration + '</td>' +

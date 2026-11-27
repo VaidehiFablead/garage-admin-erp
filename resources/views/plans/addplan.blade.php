@@ -9,7 +9,9 @@
             <h4>Add Plan</h4>
         </div>
         <div class="back-button">
-            <a href="{{ route('plans.planlist') }}" class="btn btn-added">Back</a>
+            <a href="{{ route('plans.planlist') }}" class="btn btn-primary back-button">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
         </div>
     </div>
 
@@ -50,6 +52,12 @@
                             <input type="hidden" name="total_price" id="total_price">
                             <span class="error_total_amount text-danger"></span>
                         </div>
+                  
+                    <div class="col-md-3">
+                        <label class="form-label">Renewal Price</label>
+                        <input type="number" name="renewal_price" id="renewal_price" class="form-control" step="0.01" min="0">
+                        <span class="error_renewal_price text-danger"></span>
+                    </div>
 
                     <div class="col-md-3">
     <label class="form-label">Start Date <span class="text-danger">*</span></label>
@@ -219,7 +227,7 @@ $('#start_date, #end_date, #price, #discount_percent').on('change keyup input', 
             // clear all previous errors
             $('.error_name, .error_price, .error_discount_percent, .error_final_price, .error_total_amount, .error_duration, .error_is_active, ' +
               '.error_user_limit, .error_branch_limit, .error_storage_limit, ' +
-              '.error_subtitle, .error_features').text('');
+              '.error_subtitle, .error_features, .error_renewal_price').text('');
 
             $.ajax({
                 url: '/api/createPlan',
@@ -256,7 +264,7 @@ $('#start_date, #end_date, #price, #discount_percent').on('change keyup input', 
                         // clear first
                         $('.error_name, .error_price, .error_discount_percent, .error_final_price, .error_total_amount, .error_duration, .error_is_active, ' +
                           '.error_user_limit, .error_branch_limit, .error_storage_limit, ' +
-                          '.error_subtitle, .error_features').text('');
+                          '.error_subtitle, .error_features, .error_renewal_price').text('');
 
                         $.each(errors, function (key, value) {
                             // features.0, features.1 … → map to .error_features
