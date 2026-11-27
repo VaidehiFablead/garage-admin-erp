@@ -25,6 +25,8 @@ use Milon\Barcode\DNS2D;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
+use App\Services\ApiKeyService;
 
 class ProductController extends Controller
 {
@@ -491,6 +493,14 @@ class ProductController extends Controller
             }
         }
 
+        if ($request->has('ai_image_paths') && is_array($request->ai_image_paths)) {
+            foreach ($request->ai_image_paths as $aiPath) {
+                if (!empty($aiPath)) {
+                    $imagePaths[] = $aiPath;
+                }
+            }
+        }
+
         /* -------------------------------------------------
      | 3️⃣ Resolve Branch ID (clean & safe)
      -------------------------------------------------*/
@@ -691,6 +701,14 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $existingImages[] = $image->store('img/product', 'public');
+            }
+        }
+
+        if ($request->has('ai_image_paths') && is_array($request->ai_image_paths)) {
+            foreach ($request->ai_image_paths as $aiPath) {
+                if (!empty($aiPath) && !in_array($aiPath, $existingImages)) {
+                    $existingImages[] = $aiPath;
+                }
             }
         }
 
@@ -1724,5 +1742,166 @@ class ProductController extends Controller
             'file_url'  => $fileUrl,
             'file_name' => $fileName,
         ]);
+    }
+
+    public function generateImage(Request $request)
+    {
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+        ]);
+
+        try {
+            $productName = trim($request->product_name);
+            $prompt = "{$productName}, single product on plain white background, professional e-commerce product photography, studio lighting, centered, high detail, no text, no watermark";
+
+            // Dynamic Gemini AI Key with fallback
+            $aiKeys = ApiKeyService::getCandidates('AI');
+            foreach ($aiKeys as $geminiKey) {
+                if (empty($geminiKey)) {
+                    continue;
+                }
+                $promptRequest = "Write a highly detailed, comma-separated prompt for an AI image generator to create a professional e-commerce product photography image of: " . $productName . ". Plain white background, studio lighting. No more than 30 words.";
+
+                try {
+                    $geminiResponse = Http::withHeaders([
+                        'Content-Type' => 'application/json'
+                    ])->timeout(15)->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiKey}", [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $promptRequest]
+                                ]
+                            ]
+                        ]
+                    ]);
+
+                    if ($geminiResponse->successful()) {
+                        $data = $geminiResponse->json();
+                        if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                            $enhancedPrompt = trim($data['candidates'][0]['content']['parts'][0]['text']);
+                            if (!empty($enhancedPrompt)) {
+                                $prompt = $enhancedPrompt;
+                                break;
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Gemini AI prompt generation failed with key: ' . $e->getMessage());
+                }
+            }
+
+            $encodedPrompt = rawurlencode($prompt);
+            $seed = random_int(1, 999999);
+
+            $url = "https://image.pollinations.ai/prompt/{$encodedPrompt}"
+                . "?width=512&height=512&nologo=true&model=flux&seed={$seed}";
+
+            \Log::info("Pollinations Prompt: " . $prompt);
+            \Log::info("Pollinations URL: " . $url);
+
+            $response = Http::timeout(60)->get($url);
+
+            if ($response->successful()) {
+                $imageBytes = $response->body();
+                $filename = 'ai_gen_' . time() . '_' . uniqid() . '.jpg';
+                $path = 'img/product/' . $filename;
+
+                Storage::disk('public')->put($path, $imageBytes);
+
+                return response()->json([
+                    'success' => true,
+                    'image_url' => asset(env('ImagePath') . 'storage/' . $path),
+                    'image_path' => $path
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate image from AI service.'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while generating the image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function removeBg(Request $request)
+    {
+        $request->validate([
+            'image_path' => 'required|string',
+        ]);
+
+        try {
+            $path = $request->image_path;
+
+            if (!Storage::disk('public')->exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image not found locally.'
+                ], 404);
+            }
+
+            $imageContent = Storage::disk('public')->get($path);
+            $filename = basename($path);
+
+            $removeBgKeys = ApiKeyService::getCandidates('REMOVE_BG');
+            if (empty($removeBgKeys)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Remove.bg API key not configured.'
+                ], 400);
+            }
+
+            $response = null;
+            $lastError = null;
+
+            foreach ($removeBgKeys as $apiKey) {
+                try {
+                    $response = Http::withHeaders([
+                        'X-Api-Key' => $apiKey
+                    ])->timeout(30)->attach(
+                        'image_file', $imageContent, $filename
+                    )->post('https://api.remove.bg/v1.0/removebg', [
+                        'size' => 'auto'
+                    ]);
+
+                    if ($response->successful()) {
+                        break;
+                    }
+
+                    $lastError = $response->json();
+                } catch (\Throwable $e) {
+                    \Log::warning('Remove.bg attempt failed: ' . $e->getMessage());
+                }
+            }
+
+            if ($response && $response->successful()) {
+                $imageBytes = $response->body();
+                $newFilename = 'removebg_' . time() . '_' . uniqid() . '.png';
+                $newPath = 'img/product/' . $newFilename;
+
+                Storage::disk('public')->put($newPath, $imageBytes);
+
+                return response()->json([
+                    'success' => true,
+                    'image_url' => asset(env('ImagePath') . 'storage/' . $newPath),
+                    'image_path' => $newPath
+                ]);
+            }
+
+            $msg = $lastError['errors'][0]['title'] ?? 'Failed to remove background from image.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $msg
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while removing background: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

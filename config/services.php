@@ -31,4 +31,20 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
+    'removebg' => [
+        'key' => env('REMOVE_BG_API_KEY'),
+    ],
+
+    'cleartax' => [
+        'key' => env('GST_API_KEY') ?: env('CLEARTAX_AUTH_TOKEN'),
+    ],
+
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
+
 ];

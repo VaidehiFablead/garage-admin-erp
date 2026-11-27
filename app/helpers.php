@@ -284,3 +284,23 @@ if (! function_exists('tenant_user_limit')) {
         return null;
     }
 }
+
+if (! function_exists('api_key')) {
+    /**
+     * Get dynamic API key by label from active tenant or environment.
+     */
+    function api_key(string $label, $default = null): ?string
+    {
+        return \App\Services\ApiKeyService::get($label, $default);
+    }
+}
+
+if (! function_exists('backup_api_key')) {
+    /**
+     * Get dynamic backup API key by label from active tenant.
+     */
+    function backup_api_key(string $label, $default = null): ?string
+    {
+        return \App\Services\ApiKeyService::getBackup($label, $default);
+    }
+}
