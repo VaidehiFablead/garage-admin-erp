@@ -13,6 +13,9 @@
             transform: rotate(90deg);
         }
 
+
+
+    
         /* Add spacing between nested tables */
         .collapse>td>div>table {
             margin-top: 1rem;

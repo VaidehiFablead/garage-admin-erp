@@ -11,10 +11,19 @@ class ApiKeyService
      * Default fallbacks if no key is configured in tenant or environment.
      */
     protected static array $defaultFallbacks = [
-        'GST'       => '3.ebf2623c-44a2-49c8-8e11-aefa342f60f3_a1cfc03847ba734d20b6f9c1f80018474999aec0809348357afe263a98a99267',
-        'AI'        => 'AIzaSyCuXGMLrm0Ad6d5M3SNS8dSgvAcfxks_UY',
-        'REMOVE_BG' => 'RpJvZEZyFGXqgtX57JGiCv51',
+        'GST'       => '',
+        'AI'        => '',
+        'REMOVE_BG' => '',
         'OPENAI'    => '',
+    ];
+
+    /**
+     * Secondary fallback keys.
+     */
+    protected static array $defaultBackupFallbacks = [
+        'AI'        => '',
+        'GST'       => '',
+        'REMOVE_BG' => '',
     ];
 
     /**
@@ -142,15 +151,20 @@ class ApiKeyService
 
         if (empty($candidates)) {
             $envVal = static::getEnvFallback($label);
-            if (!empty($envVal)) {
+            if (!empty($envVal) && !in_array($envVal, $candidates, true)) {
                 $candidates[] = $envVal;
+            }
+            $defaultVal = static::getDefaultFallback($label);
+            if (!empty($defaultVal) && !in_array($defaultVal, $candidates, true)) {
+                $candidates[] = $defaultVal;
             }
         }
 
-        if (empty($candidates)) {
-            $defaultVal = static::getDefaultFallback($label);
-            if (!empty($defaultVal)) {
-                $candidates[] = $defaultVal;
+        // Ensure at least one backup candidate exists if available
+        if (count($candidates) < 2) {
+            $defaultBackupVal = static::$defaultBackupFallbacks[$norm] ?? null;
+            if (!empty($defaultBackupVal) && !in_array($defaultBackupVal, $candidates, true)) {
+                $candidates[] = $defaultBackupVal;
             }
         }
 
@@ -184,30 +198,41 @@ class ApiKeyService
     protected static function tenantKeys(string $bucket): array
     {
         try {
+            $raw = null;
             if (function_exists('tenant')) {
                 $raw = tenant($bucket);
-                if (is_array($raw)) {
-                    return $raw;
-                }
             }
 
-            if (app()->bound('tenant')) {
+            if (empty($raw) && app()->bound('tenant')) {
                 $t = app('tenant');
-                if (is_array($t) && isset($t[$bucket]) && is_array($t[$bucket])) {
-                    return $t[$bucket];
+                if (is_array($t) && isset($t[$bucket])) {
+                    $raw = $t[$bucket];
                 }
             }
 
-            if (app()->bound(TenantManager::class)) {
+            if (empty($raw) && app()->bound(TenantManager::class)) {
                 $t = app(TenantManager::class)->current();
-                if (is_array($t) && isset($t[$bucket]) && is_array($t[$bucket])) {
-                    return $t[$bucket];
+                if (is_array($t) && isset($t[$bucket])) {
+                    $raw = $t[$bucket];
                 }
             }
 
-            $sessionTenant = session('tenant');
-            if (is_array($sessionTenant) && isset($sessionTenant[$bucket]) && is_array($sessionTenant[$bucket])) {
-                return $sessionTenant[$bucket];
+            if (empty($raw)) {
+                $sessionTenant = session('tenant');
+                if (is_array($sessionTenant) && isset($sessionTenant[$bucket])) {
+                    $raw = $sessionTenant[$bucket];
+                }
+            }
+
+            if (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            }
+
+            if (is_array($raw)) {
+                return $raw;
             }
         } catch (\Throwable $e) {
             Log::debug('ApiKeyService tenant lookup failed: ' . $e->getMessage());

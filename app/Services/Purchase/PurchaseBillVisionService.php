@@ -186,16 +186,15 @@ PROMPT;
                         continue;
                     }
 
-                    if ($this->shouldTryNextGeminiModel($lastError)) {
-                        break;
-                    }
-
-                    // If quota exceeded or invalid key, break model loop to try next key
                     if ($this->isKeyExhausted($lastError)) {
                         break 2;
                     }
 
-                    throw new RuntimeException($lastError);
+                    if ($this->shouldTryNextGeminiModel($lastError)) {
+                        break;
+                    }
+
+                    break;
                 }
             }
         }
