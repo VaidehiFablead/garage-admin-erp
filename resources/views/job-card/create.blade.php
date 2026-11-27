@@ -1108,17 +1108,15 @@
 
                     <hr>
                     {{-- Submit --}}
-                    <div class="text-end">
-                        {{-- <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn"> --}}
+                    <div class="text-end d-flex justify-content-end flex-wrap gap-2">
                         <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn" id="generateBillBtn">
-                            <span class="btn-text">Generate Bill</span>
+                            <span class="btn-text">Generate Bill (Invoice)</span>
                             <span class="spinner-border spinner-border-sm d-none" role="status" id="generateBillSpinner"></span>
                         </button>
-                        {{--
-                        <button type="submit" name="action" value="pay_now" class="btn btn-submit action-btn">
-                            Pay Now
+                        <button type="submit" name="action" value="create_print" class="btn btn-primary action-btn" id="createPrintBtn" style="background-color:#1e293b; border-color:#1e293b; font-weight:600;">
+                            <span class="btn-text"><i class="fas fa-print me-1"></i> Create Job Card &amp; Print</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status" id="createPrintSpinner"></span>
                         </button>
-                        --}}
                         <a href="{{ route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
                     </div>
                         <div class="mobile-step-actions">
@@ -1295,11 +1293,24 @@
 
 
         // --------------------------------- Handle form submission ---------------------------------
-        let clickedAction = null;
+        let clickedAction = 'generate_bill';
         let isSubmitting = false;
+
+        function resetSubmitButtons() {
+            $('#generateBillBtn').prop('disabled', false);
+            $('#generateBillBtn .btn-text').text('Generate Bill (Invoice)');
+            $('#generateBillSpinner').addClass('d-none');
+
+            $('#createPrintBtn').prop('disabled', false);
+            $('#createPrintBtn .btn-text').html('<i class="fas fa-print me-1"></i> Create Job Card &amp; Print');
+            $('#createPrintSpinner').addClass('d-none');
+
+            isSubmitting = false;
+        }
+
         // Track which button was clicked
         $(document).on('click', '.action-btn', function () {
-            clickedAction = $(this).val(); // "generate_bill" or "pay_now"
+            clickedAction = $(this).val() || 'generate_bill';
         });
 
         $('#jobCardForm').on('submit', function (e) {
@@ -1308,15 +1319,15 @@
             // Prevent double submission
             if (isSubmitting) return false;
             isSubmitting = true;
-            
-            // Get button elements
-            const generateBillBtn = $('#generateBillBtn');
-            const btnText = generateBillBtn.find('.btn-text');
-            const spinner = $('#generateBillSpinner');
-            
-            // Show loader and disable button
-            generateBillBtn.prop('disabled', true);
-            btnText.text('Generating...');
+
+            const isPrintAction = clickedAction === 'create_print';
+            const activeBtn = isPrintAction ? $('#createPrintBtn') : $('#generateBillBtn');
+            const btnText = activeBtn.find('.btn-text');
+            const spinner = isPrintAction ? $('#createPrintSpinner') : $('#generateBillSpinner');
+
+            // Show loader and disable both submit buttons
+            $('#generateBillBtn, #createPrintBtn').prop('disabled', true);
+            btnText.text(isPrintAction ? 'Creating & Printing...' : 'Generating...');
             spinner.removeClass('d-none');
 
             $('.text-danger').remove();
@@ -1327,22 +1338,10 @@
 
             let isValid = true;
 
-            // Check total labour
-            // if (totalLabour <= 0 && totalParts <= 0) {
-            //     isValid = false;
-            //     $('#total_parts').after('<div class="text-danger" style="color:red;">Either Total labour or Total parts must be greater than 0.</div>');
-            //     return false;
-            // }
             if (totalLabour <= 0 && totalParts <= 0) {
                 isValid = false;
                 $('#total_parts').after('<div class="text-danger" style="color:red;">Either Total labour or Total parts must be greater than 0.</div>');
-                
-                // FIX: Re-enable button and hide spinner when validation fails
-                generateBillBtn.prop('disabled', false);
-                btnText.text('Generate Bill');
-                spinner.addClass('d-none');
-                isSubmitting = false;
-                
+                resetSubmitButtons();
                 return false;
             }
 
@@ -1396,9 +1395,10 @@
                             confirmButtonColor: '#3085d6'
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                // Open PDF in new tab
-                                window.open("/job-card/" + response.job_card_id + "/download-pdf-view", "_blank");
-                                // Redirect to job cards list
+                                const printUrl = clickedAction === 'create_print'
+                                    ? "/job-card/" + response.job_card_id + "/job-card-print"
+                                    : "/job-card/" + response.job_card_id + "/download-pdf-view";
+                                window.open(printUrl, "_blank");
                                 window.location.href = '/job-cards';
                             }
                         });
@@ -1414,11 +1414,7 @@
                     }
                 },
                 error: function (xhr) {
-                        // Always re-enable button on error
-                        generateBillBtn.prop('disabled', false);
-                        btnText.text('Generate Bill');
-                        spinner.addClass('d-none');
-                        isSubmitting = false;
+                        resetSubmitButtons();
                     if (xhr.status === 422) {
                         let errors = xhr.responseJSON.errors;
 
@@ -1460,11 +1456,7 @@
                     }
                 },
                  complete: function() {
-            // Always re-enable button when request completes (success or error)
-            generateBillBtn.prop('disabled', false);
-            btnText.text('Generate Bill');
-            spinner.addClass('d-none');
-            isSubmitting = false;
+            resetSubmitButtons();
         }
 
             });
@@ -1472,18 +1464,12 @@
 
         // Reset button if form is manually reset
 $('#jobCardForm').on('reset', function() {
-    $('#generateBillBtn').prop('disabled', false)
-        .find('.btn-text').text('Generate Bill');
-    $('#generateBillSpinner').addClass('d-none');
-    isSubmitting = false;
+    resetSubmitButtons();
 });
 
 // Reset button when user clicks cancel
 $('.btn-cancel').on('click', function() {
-    $('#generateBillBtn').prop('disabled', false)
-        .find('.btn-text').text('Generate Bill');
-    $('#generateBillSpinner').addClass('d-none');
-    isSubmitting = false;
+    resetSubmitButtons();
 });
     </script>    
     <script>
@@ -2309,13 +2295,13 @@ $('.btn-cancel').on('click', function() {
             $('#vehicle_number').select2({
                 placeholder: "Search or Add Vehicle",
                 tags: true,
-                minimumInputLength: 1,
+                minimumInputLength: 0,
                 ajax: {
                     url: "{{ route('job_card.search_vehicle') }}",
                     dataType: 'json',
                     delay: 300,
                     data: function (params) {
-                        return { q: params.term };
+                        return { q: params.term || '' };
                     },
                     processResults: function (data) {
                         if (data.exact) {
