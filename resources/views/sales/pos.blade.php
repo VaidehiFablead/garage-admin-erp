@@ -2240,7 +2240,8 @@
         });
 
         let groupPrices = [];
-        let selectedItems = new Map();
+        window.selectedItems = window.selectedItems || new Map();
+        selectedItems = window.selectedItems;
 
 
 
@@ -4649,16 +4650,18 @@
                 var dd = String(d.getDate()).padStart(2, '0');
 
                 var result = String(format);
-                result = result.replace(/{YYYY}/g, yyyy);
-                result = result.replace(/{YY}/g, yy);
-                result = result.replace(/{MM}/g, mm);
-                result = result.replace(/{DD}/g, dd);
+                result = result.replace(/\{YYYY\}/g, yyyy);
+                result = result.replace(/\{YY\}/g, yy);
+                result = result.replace(/\{MM\}/g, mm);
+                result = result.replace(/\{DD\}/g, dd);
 
-                result = result.replace(/{00000}/g, String(sample).padStart(5, '0'));
-                result = result.replace(/{0000}/g, String(sample).padStart(4, '0'));
-                result = result.replace(/{000}/g, String(sample).padStart(3, '0'));
-                result = result.replace(/{00}/g, String(sample).padStart(2, '0'));
-                result = result.replace(/{(?:0|1|NUMBER)}/g, sample);
+                result = result.replace(/\{00000\}/g, String(sample).padStart(5, '0'));
+                result = result.replace(/\{0000\}/g, String(sample).padStart(4, '0'));
+                result = result.replace(/\{000\}/g, String(sample).padStart(3, '0'));
+                result = result.replace(/\{00\}/g, String(sample).padStart(2, '0'));
+                result = result.replace(/\{0\}/g, String(sample));
+                result = result.replace(/\{1\}/g, String(sample));
+                result = result.replace(/\{NUMBER\}/g, String(sample));
                 return result;
             }
 
