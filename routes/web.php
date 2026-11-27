@@ -363,6 +363,7 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/job-card/{id}/view-pdf', [JobCardController::class, 'viewPdf'])->name('job_card.view_pdf');
         Route::get('/job-card/{id}/download-pdf', [JobCardController::class, 'downloadPdf'])->name('job_card.download_pdf');
         Route::get('/job-card/{id}/download-pdf-view', [JobCardController::class, 'downloadPdf1'])->name('job_card.download_pdf_view');
+        Route::get('/job-card/{id}/job-card-print', [JobCardController::class, 'printJobCard'])->name('job_card.print');
         Route::get('/job-cards/{id}/convert', [JobCardController::class, 'convertToJobCard'])->name('job_card.convert');
         Route::post('/job-card/make-payment', [JobCardController::class, 'makePaymentSubmit'])->name('job_card.make_payment_submit');
         Route::post('/purchase/make-payment', [PurchaseController::class, 'makePaymentSubmit'])->name('purchase.make_payment_submit');
