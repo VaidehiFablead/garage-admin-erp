@@ -27,6 +27,47 @@ class ApiKeyService
     ];
 
     /**
+     * Map of canonical labels to their accepted aliases.
+     */
+    protected static array $labelAliases = [
+        'AI' => [
+            'AI', 'GEMINI', 'GEMINI_API_KEY', 'GEMINI_KEY', 'GEMINIAPI', 'GEMINIAPIKEY',
+            'GOOGLE_AI', 'GOOGLE_GEMINI', 'GOOGLE_API_KEY', 'GOOGLEAI', 'GOOGLEGEMINI',
+        ],
+        'GST' => [
+            'GST', 'CLEARTAX', 'CLEAR_TAX', 'GST_KEY', 'GST_API_KEY', 'GSTAPIKEY',
+        ],
+        'REMOVE_BG' => [
+            'REMOVE_BG', 'REMOVEBG', 'REMOVE_BG_API_KEY', 'REMOVEBG_API_KEY', 'REMOVEBGAPIKEY',
+        ],
+        'OPENAI' => [
+            'OPENAI', 'OPEN_AI', 'OPENAI_API_KEY', 'OPENAIAPIKEY', 'CHATGPT',
+        ],
+    ];
+
+    /**
+     * Check if a candidate label matches the target label (or any of its aliases).
+     */
+    public static function matchesLabel(string $candidateLabel, string $targetLabel): bool
+    {
+        $normCandidate = static::normalizeLabel($candidateLabel);
+        $normTarget = static::normalizeLabel($targetLabel);
+
+        if ($normCandidate === $normTarget) {
+            return true;
+        }
+
+        foreach (static::$labelAliases as $group => $aliases) {
+            $normAliases = array_map([static::class, 'normalizeLabel'], $aliases);
+            if (in_array($normTarget, $normAliases, true) && in_array($normCandidate, $normAliases, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Normalize label for comparison (case-insensitive, trims underscores/hyphens/spaces).
      */
     public static function normalizeLabel(string $label): string
@@ -100,17 +141,16 @@ class ApiKeyService
      */
     public static function isEnabled(string $label): bool
     {
-        $norm = static::normalizeLabel($label);
         $keys = static::tenantKeys('api_keys');
         foreach ($keys as $item) {
-            if (is_array($item) && static::normalizeLabel((string) ($item['label'] ?? '')) === $norm) {
+            if (is_array($item) && static::matchesLabel((string) ($item['label'] ?? ''), $label)) {
                 return (bool) ($item['enabled'] ?? true) && !empty($item['value']);
             }
         }
 
         $backupKeys = static::tenantKeys('backup_api_keys');
         foreach ($backupKeys as $item) {
-            if (is_array($item) && static::normalizeLabel((string) ($item['label'] ?? '')) === $norm) {
+            if (is_array($item) && static::matchesLabel((string) ($item['label'] ?? ''), $label)) {
                 return (bool) ($item['enabled'] ?? true) && !empty($item['value']);
             }
         }
@@ -127,28 +167,46 @@ class ApiKeyService
     {
         $norm = static::normalizeLabel($label);
 
-        // If the tenant explicitly configured this key as disabled, do NOT use it or fall back
+        // Check if tenant configured this key as disabled
         $tenantPrimary = static::tenantKeys('api_keys');
+        $hasDisabled = false;
+        $hasEnabled = false;
+
         foreach ($tenantPrimary as $item) {
-            if (is_array($item) && static::normalizeLabel((string) ($item['label'] ?? '')) === $norm) {
+            if (is_array($item) && static::matchesLabel((string) ($item['label'] ?? ''), $label)) {
                 if (isset($item['enabled']) && ! (bool) $item['enabled']) {
-                    return [];
+                    $hasDisabled = true;
+                } else {
+                    $hasEnabled = true;
                 }
             }
         }
 
+        // Only block if tenant explicitly disabled it and has NO enabled alias
+        if ($hasDisabled && ! $hasEnabled) {
+            return [];
+        }
+
         $candidates = [];
 
-        $primary = static::getPrimary($label);
-        if (!empty($primary)) {
-            $candidates[] = $primary;
+        // 1. All enabled keys from tenant primary matching label or aliases (e.g. AI, GEMINI_API_KEY)
+        $primaryKeys = static::findKeysInList($tenantPrimary, $label);
+        foreach ($primaryKeys as $pk) {
+            if (!in_array($pk, $candidates, true)) {
+                $candidates[] = $pk;
+            }
         }
 
-        $backup = static::getBackup($label);
-        if (!empty($backup) && !in_array($backup, $candidates, true)) {
-            $candidates[] = $backup;
+        // 2. All enabled keys from tenant backup matching label or aliases
+        $tenantBackup = static::tenantKeys('backup_api_keys');
+        $backupKeys = static::findKeysInList($tenantBackup, $label);
+        foreach ($backupKeys as $bk) {
+            if (!in_array($bk, $candidates, true)) {
+                $candidates[] = $bk;
+            }
         }
 
+        // 3. Fallback to environment
         if (empty($candidates)) {
             $envVal = static::getEnvFallback($label);
             if (!empty($envVal) && !in_array($envVal, $candidates, true)) {
@@ -160,7 +218,7 @@ class ApiKeyService
             }
         }
 
-        // Ensure at least one backup candidate exists if available
+        // 4. Ensure at least one backup candidate exists if available
         if (count($candidates) < 2) {
             $defaultBackupVal = static::$defaultBackupFallbacks[$norm] ?? null;
             if (!empty($defaultBackupVal) && !in_array($defaultBackupVal, $candidates, true)) {
@@ -168,7 +226,42 @@ class ApiKeyService
             }
         }
 
+        // If multiple candidates exist for AI, prioritize working keys (like AQ.) over failing ones
+        if (static::matchesLabel($label, 'AI') && count($candidates) > 1) {
+            usort($candidates, function ($a, $b) {
+                $aIsAq = str_starts_with($a, 'AQ.');
+                $bIsAq = str_starts_with($b, 'AQ.');
+                if ($aIsAq && !$bIsAq) return -1;
+                if (!$aIsAq && $bIsAq) return 1;
+                return 0;
+            });
+        }
+
         return array_values(array_unique(array_filter($candidates)));
+    }
+
+    /**
+     * Find all enabled keys in a list matching the label or any alias.
+     *
+     * @return array<string>
+     */
+    protected static function findKeysInList(array $list, string $label): array
+    {
+        $keys = [];
+        foreach ($list as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $itemLabel = (string) ($item['label'] ?? '');
+            if (static::matchesLabel($itemLabel, $label)) {
+                $enabled = (bool) ($item['enabled'] ?? true);
+                $val = trim((string) ($item['value'] ?? ''));
+                if ($enabled && !empty($val) && !in_array($val, $keys, true)) {
+                    $keys[] = $val;
+                }
+            }
+        }
+        return $keys;
     }
 
     /**
@@ -176,20 +269,21 @@ class ApiKeyService
      */
     protected static function findKeyInList(array $list, string $label): ?string
     {
-        $norm = static::normalizeLabel($label);
-        foreach ($list as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-            $itemLabel = static::normalizeLabel((string) ($item['label'] ?? ''));
-            if ($itemLabel === $norm) {
-                $enabled = (bool) ($item['enabled'] ?? true);
-                if ($enabled && !empty($item['value'])) {
-                    return trim((string) $item['value']);
+        $keys = static::findKeysInList($list, $label);
+        if (empty($keys)) {
+            return null;
+        }
+
+        // If multiple exist for AI, prefer the one starting with AQ.
+        if (static::matchesLabel($label, 'AI')) {
+            foreach ($keys as $k) {
+                if (str_starts_with($k, 'AQ.')) {
+                    return $k;
                 }
             }
         }
-        return null;
+
+        return end($keys);
     }
 
     /**

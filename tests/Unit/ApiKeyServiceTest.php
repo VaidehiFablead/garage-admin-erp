@@ -99,4 +99,35 @@ class ApiKeyServiceTest extends TestCase
         $openaiCandidates = ApiKeyService::getCandidates('OPENAI');
         $this->assertEmpty($openaiCandidates);
     }
+
+    public function test_alias_resolution_for_gemini_api_key(): void
+    {
+        // Setup matching the user's setup UI:
+        // Row 2: AI (failing key)
+        // Row 5: GEMINI_API_KEY (working key with AQ. prefix)
+        $tenantWithAliases = [
+            'id' => 2,
+            'domain' => 'garage-erp.fableadtech.com',
+            'api_keys' => [
+                ['label' => 'GST', 'value' => 'mock-gst', 'enabled' => true],
+                ['label' => 'AI', 'value' => 'mock-failing-ai-key', 'enabled' => true],
+                ['label' => 'REMOVE_BG', 'value' => 'mock-bg', 'enabled' => true],
+                ['label' => 'OPENAI', 'value' => 'mock-openai', 'enabled' => false],
+                ['label' => 'GEMINI_API_KEY', 'value' => 'AQ.mock-working-gemini-key', 'enabled' => true],
+            ],
+            'backup_api_keys' => [],
+        ];
+
+        app()->instance('tenant', $tenantWithAliases);
+
+        // When queried for 'AI', ApiKeyService should find both 'AI' and 'GEMINI_API_KEY'
+        // and prioritize AQ. key first
+        $candidates = ApiKeyService::getCandidates('AI');
+        $this->assertCount(2, $candidates);
+        $this->assertEquals('AQ.mock-working-gemini-key', $candidates[0]);
+        $this->assertEquals('mock-failing-ai-key', $candidates[1]);
+
+        // ApiKeyService::get('AI') should also resolve to the working key
+        $this->assertEquals('AQ.mock-working-gemini-key', ApiKeyService::get('AI'));
+    }
 }
