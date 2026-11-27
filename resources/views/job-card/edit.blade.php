@@ -2330,13 +2330,13 @@ $(document).on('click', '.btn-delete-part', function () {
             $('#vehicle_number').select2({
                 placeholder: "Search or Add Vehicle",
                 tags: true,
-                minimumInputLength: 1,
+                minimumInputLength: 0,
                 ajax: {
                     url: "{{ route('job_card.search_vehicle') }}",
                     dataType: 'json',
                     delay: 300,
                     data: function (params) {
-                        return { q: params.term };
+                        return { q: params.term || '' };
                     },
                     processResults: function (data) {
                         if (data.exact) {

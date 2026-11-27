@@ -1369,6 +1369,54 @@ class JobCardController extends Controller
         return $pdf->stream($filename);
     }
 
+    public function printJobCard($id)
+    {
+        $user_id = Auth::id();
+        $subAdminId = session('selectedSubAdminId') ?? $user_id;
+
+        $setting = Setting::where('branch_id', $subAdminId)->first();
+        $jobCard = JobCard::with('customer')->findOrFail($id);
+
+        $labourDetails = json_decode($jobCard->labour_details, true) ?? [];
+        $labourIds = collect($labourDetails)->pluck('id')->filter()->all();
+        $labourMap = LabourService::whereIn('id', $labourIds)->get()->keyBy('id');
+
+        foreach ($labourDetails as $key => $labour) {
+            $labourId = $labour['id'] ?? null;
+            $labourDetails[$key]['name'] = $labourId && isset($labourMap[$labourId])
+                ? $labourMap[$labourId]->name
+                : 'N/A';
+        }
+
+        $partsDetails = json_decode($jobCard->parts_details, true) ?? [];
+
+        $modelId = json_decode($jobCard->model, true);
+        $model = AutoCarModel::find($modelId);
+        $model_name = $model ? $model->model_name : '--';
+
+        $category = is_numeric($jobCard->category) ? AutoCarCategory::find($jobCard->category) : null;
+        $category_name = $category ? ($category->category_name ?? $category->name ?? '--') : ($jobCard->category ?: '--');
+
+        $technician = is_numeric($jobCard->technician) ? User::find($jobCard->technician) : null;
+        $technician_name = $technician ? $technician->name : ($jobCard->technician ?: '--');
+
+        $pdf = Pdf::loadView('job-card.job_card_print_pdf', compact(
+            'jobCard',
+            'labourDetails',
+            'partsDetails',
+            'setting',
+            'model_name',
+            'category_name',
+            'technician_name'
+        ))
+            ->setPaper('A4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif']);
+
+        $filename = 'JobCard_' . ($jobCard->job_card_number ?? $jobCard->id) . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
 
 
     public function destroy($id)
@@ -1783,19 +1831,27 @@ class JobCardController extends Controller
 
     public function searchAndGetVehicle(Request $request)
     {
-        $query = $request->input('q', '');
+        $query = trim((string) $request->input('q', ''));
 
-        $vehicles = JobCard::where('vehicle_no', 'like', "%{$query}%")
+        $vehicles = JobCard::where('isDeleted', 0)
+            ->whereNotNull('vehicle_no')
+            ->where('vehicle_no', '!=', '')
+            ->when($query !== '', function ($q) use ($query) {
+                $q->where('vehicle_no', 'like', "%{$query}%");
+            })
             ->select('vehicle_no', 'model', 'chassis_no', 'engine_no', 'km_hours', 'customer_id')
-            ->limit(10)
-            ->get();
+            ->orderByDesc('id')
+            ->limit(25)
+            ->get()
+            ->unique('vehicle_no')
+            ->values();
 
-        // dd($vehicles);
-
-        // Find exact match (case-insensitive)
-        $exactMatch = $vehicles->first(function ($vehicle) use ($query) {
-            return strcasecmp($vehicle->vehicle_no, $query) === 0;
-        });
+        // Find exact match (case-insensitive) only when a search term is provided
+        $exactMatch = $query !== ''
+            ? $vehicles->first(function ($vehicle) use ($query) {
+                return strcasecmp($vehicle->vehicle_no, $query) === 0;
+            })
+            : null;
 
         if ($exactMatch) {
             return response()->json([
