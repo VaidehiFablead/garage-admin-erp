@@ -47,6 +47,9 @@ class GeneralSettingController extends Controller
         }
         // dd($branchId);  // Debugging: Check the branch ID
 
+        // Ensure columns exist on tenant databases
+        static::ensureBankColumnsExist();
+
         $request->validate([
             'shop_name' => 'required|string',
             'gst_num' => 'nullable',
@@ -56,10 +59,14 @@ class GeneralSettingController extends Controller
             'phone' => 'required',
             'alt_phone' => 'nullable',
             'address' => 'required|string',
-            'bank_name' => 'required|string',
-            'branch' => 'required|string',
-            'ac_no' => 'required|string',
-            'ifsc_code' => 'required|string',
+            'bank_name' => 'nullable|string',
+            'branch' => 'nullable|string',
+            'ac_no' => 'nullable|string',
+            'ifsc_code' => 'nullable|string',
+            'bank_name_without_gst' => 'nullable|string',
+            'branch_without_gst' => 'nullable|string',
+            'ac_no_without_gst' => 'nullable|string',
+            'ifsc_code_without_gst' => 'nullable|string',
             'currency_symbol' => 'required|string',
             'currency_position' => 'required|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp',
@@ -92,6 +99,10 @@ class GeneralSettingController extends Controller
         $settings->branch = $request->branch;
         $settings->ac_no = $request->ac_no;
         $settings->ifsc_code = $request->ifsc_code;
+        $settings->bank_name_without_gst = $request->bank_name_without_gst;
+        $settings->branch_without_gst = $request->branch_without_gst;
+        $settings->ac_no_without_gst = $request->ac_no_without_gst;
+        $settings->ifsc_code_without_gst = $request->ifsc_code_without_gst;
         $settings->currency_position = $request->currency_position;
         $settings->currency_symbol = $request->currency_symbol;
 
@@ -109,12 +120,18 @@ class GeneralSettingController extends Controller
             $faviconPath = $request->file('favicon')->store('favicons', 'public');
             $settings->favicon = $faviconPath;
         }
-
         if ($request->remove_qr_code == 1) {
             $settings->qr_code = null;
         } elseif ($request->hasFile('qr_code')) {
             $qrCodePath = $request->file('qr_code')->store('qr_codes', 'public');
             $settings->qr_code = $qrCodePath;
+        }
+
+        if ($request->remove_qr_code_without_gst == 1) {
+            $settings->qr_code_without_gst = null;
+        } elseif ($request->hasFile('qr_code_without_gst')) {
+            $qrCodeWithoutGstPath = $request->file('qr_code_without_gst')->store('qr_codes', 'public');
+            $settings->qr_code_without_gst = $qrCodeWithoutGstPath;
         }
 
         $settings->office_latitude = $request->office_latitude;
@@ -422,5 +439,38 @@ class GeneralSettingController extends Controller
             'settings' => $settings,
             'branch_id' => $selectedSubAdminId,
         ]);
+    }
+
+    /**
+     * Ensure without_gst bank details columns exist in tenant settings table.
+     */
+    public static function ensureBankColumnsExist(): void
+    {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+        $checked = true;
+
+        try {
+            $cols = [
+                'bank_name_without_gst',
+                'branch_without_gst',
+                'ac_no_without_gst',
+                'ifsc_code_without_gst',
+                'qr_code_without_gst',
+            ];
+            $missing = [];
+            foreach ($cols as $c) {
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('settings', $c)) {
+                    $missing[] = "`$c` VARCHAR(255) NULL";
+                }
+            }
+            if (!empty($missing)) {
+                \Illuminate\Support\Facades\DB::statement('ALTER TABLE `settings` ADD COLUMN ' . implode(', ADD COLUMN ', $missing));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Could not alter settings table: ' . $e->getMessage());
+        }
     }
 }

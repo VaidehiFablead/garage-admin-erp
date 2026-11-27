@@ -107,6 +107,14 @@
             content: "Order No Format";
         }
 
+        #bank-tab::before {
+            content: "\f19c";
+        }
+
+        #bank-tab::after {
+            content: "Bank Details";
+        }
+
         .settings-tabs .nav-link i {
             color: #98a2b3;
             font-size: 14px;
@@ -308,6 +316,12 @@
                             Order No Format
                         </a>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="bank-tab" data-toggle="tab" data-bs-toggle="tab" href="#bank-settings"
+                            role="tab" aria-controls="bank-settings" aria-selected="false">
+                            Bank Details
+                        </a>
+                    </li>
                     <!-- <li class="nav-item" role="presentation">
                         <a class="nav-link" id="dashboard-tab" data-toggle="tab" href="#dashboard-settings"
                             role="tab" aria-controls="dashboard-settings" aria-selected="false">
@@ -369,34 +383,9 @@
                                     <input type="text" id="state_code" placeholder="Enter State Code">
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-sm-6 col-6">
-                                <div class="form-group">
-                                    <label>Bank Name<span class="manitory">*</span></label>
-                                    <input type="text" id="bank_name" placeholder="Enter Bank Name">
-                                </div>
-                            </div>
+                            <!-- Removed Bank Details from here (moved to Bank Details tab) -->
 
-                            <div class="col-lg-3 col-sm-6 col-6">
-                                <div class="form-group">
-                                    <label>Branch<span class="manitory">*</span></label>
-                                    <input type="text" id="branch" placeholder="Enter Branch">
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3 col-sm-6 col-6">
-                                <div class="form-group">
-                                    <label>A/C No.<span class="manitory">*</span></label>
-                                    <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3 col-sm-6 col-6">
-                                <div class="form-group">
-                                    <label>IFSC Code<span class="manitory">*</span></label>
-                                    <input type="text" id="ifsc_code" placeholder="Enter IFSC Code">
-                                </div>
-                            </div>
-                            <div class="col-lg-6 col-sm-12">
+                            <div class="col-lg-12 col-sm-12">
                                 <div class="form-group">
                                     <label>Shop Address<span class="manitory">*</span></label>
                                     <textarea id="address" placeholder="Enter Address" rows="3" class="form-control"></textarea>
@@ -1252,6 +1241,147 @@
                         </div>
                     </div>
 
+                    <!-- ================= BANK DETAILS TAB ================= -->
+                    <div class="tab-pane fade" id="bank-settings" role="tabpanel" aria-labelledby="bank-tab">
+                        <ul class="nav nav-pills mb-4" id="bank-gst-pills" role="tablist">
+                            <li class="nav-item w-50" role="presentation">
+                                <button class="nav-link active w-100" id="with-gst-tab" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#with-gst" href="#with-gst" type="button" role="tab" aria-controls="with-gst" aria-selected="true">With GST</button>
+                            </li>
+                            <li class="nav-item w-50" role="presentation">
+                                <button class="nav-link w-100" id="without-gst-tab" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#without-gst" href="#without-gst" type="button" role="tab" aria-controls="without-gst" aria-selected="false">Without GST</button>
+                            </li>
+                        </ul>
+                        <style>
+                            #bank-gst-pills {
+                                max-width: 400px;
+                                background-color: #f8f9fa;
+                                border: 1px solid #e9ecef;
+                                border-radius: 50px;
+                                padding: 5px;
+                                display: flex;
+                            }
+                            #bank-gst-pills .nav-link {
+                                border-radius: 50px;
+                                font-weight: 600;
+                                color: #6c757d;
+                                background-color: transparent;
+                                border: none;
+                                padding: 8px 16px;
+                                transition: all 0.3s ease;
+                            }
+                            #bank-gst-pills .nav-link.active {
+                                background-color: #ff9f43 !important;
+                                color: white !important;
+                                box-shadow: 0 2px 4px rgba(255, 159, 67, 0.2);
+                            }
+                        </style>
+
+                        <div class="tab-content" id="bank-gst-pills-content">
+                            <!-- With GST Tab -->
+                            <div class="tab-pane fade show active" id="with-gst" role="tabpanel" aria-labelledby="with-gst-tab">
+                                <div class="row">
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>Bank Name</label>
+                                            <input type="text" id="bank_name" class="form-control" placeholder="Enter Bank Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>Branch</label>
+                                            <input type="text" id="branch" class="form-control" placeholder="Enter Branch">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>A/C No.</label>
+                                            <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>IFSC Code</label>
+                                            <input type="text" id="ifsc_code" class="form-control" placeholder="Enter IFSC Code">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6 mt-3">
+                                        <div class="form-group">
+                                            <label>QR (Upload Pic)</label>
+                                            <div class="image-upload">
+                                                <input type="file" id="qr_code" accept="image/*">
+                                                <div class="image-uploads">
+                                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
+                                                        alt="img">
+                                                    <h4>Drag and drop a file to upload</h4>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2" style="position: relative; display: inline-block;">
+                                                <img id="qr_preview" src="" alt="QR Preview" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
+                                                <button type="button" id="remove_qr_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('qr_code')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                                <input type="hidden" id="remove_qr_code" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Without GST Tab -->
+                            <div class="tab-pane fade" id="without-gst" role="tabpanel" aria-labelledby="without-gst-tab">
+                                <div class="row">
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>Bank Name</label>
+                                            <input type="text" id="bank_name_without_gst" class="form-control" placeholder="Enter Bank Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>Branch</label>
+                                            <input type="text" id="branch_without_gst" class="form-control" placeholder="Enter Branch">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>A/C No.</label>
+                                            <input type="number" id="ac_no_without_gst" class="form-control" placeholder="Enter A/C No.">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6">
+                                        <div class="form-group">
+                                            <label>IFSC Code</label>
+                                            <input type="text" id="ifsc_code_without_gst" class="form-control" placeholder="Enter IFSC Code">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-6 mt-3">
+                                        <div class="form-group">
+                                            <label>QR (Upload Pic)</label>
+                                            <div class="image-upload">
+                                                <input type="file" id="qr_code_without_gst" accept="image/*">
+                                                <div class="image-uploads">
+                                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
+                                                        alt="img">
+                                                    <h4>Drag and drop a file to upload</h4>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2" style="position: relative; display: inline-block;">
+                                                <img id="qr_preview_without_gst" src="" alt="QR Preview Without GST" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
+                                                <button type="button" id="remove_qr_without_gst_btn" class="btn btn-sm btn-danger" onclick="removeImagePreviewWithoutGst()" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                                <input type="hidden" id="remove_qr_code_without_gst" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 mt-4">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" onclick="$('#btn-setting-submit').click();">
+                                    Save Bank Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
         </div>
 
     </div>
@@ -1356,6 +1486,10 @@
                             $("#branch").val(response.settings.branch ?? "");
                             $("#ac_no").val(response.settings.ac_no ?? "");
                             $("#ifsc_code").val(response.settings.ifsc_code ?? "");
+                            $("#bank_name_without_gst").val(response.settings.bank_name_without_gst ?? "");
+                            $("#branch_without_gst").val(response.settings.branch_without_gst ?? "");
+                            $("#ac_no_without_gst").val(response.settings.ac_no_without_gst ?? "");
+                            $("#ifsc_code_without_gst").val(response.settings.ifsc_code_without_gst ?? "");
 
                             if (response.settings.currency_position) {
                                 $("#currency_position")
@@ -1610,8 +1744,16 @@ toggleHRSubSections();
                 $('.settings-tabs .nav-link').removeClass('active');
                 $(this).addClass('active');
                 var target = $(this).attr('href') || $(this).data('target') || $(this).data('bs-target');
-                $('.tab-content .tab-pane').removeClass('show active');
+                $('#settingsTabsContent > .tab-pane').removeClass('show active');
                 $(target).addClass('show active');
+
+                if (target === '#bank-settings') {
+                    if (!$('#bank-gst-pills-content > .tab-pane.active').length) {
+                        $('#bank-gst-pills .nav-link').removeClass('active');
+                        $('#with-gst-tab').addClass('active');
+                        $('#with-gst').addClass('show active');
+                    }
+                }
             });
 
             window.removeImagePreview = function(type) {
@@ -1705,10 +1847,6 @@ toggleHRSubSections();
                     { id: 'shop_name', name: 'Shop Name' },
                     { id: 'email', name: 'Shop Email' },
                     { id: 'phone', name: 'Shop Phone' },
-                    { id: 'bank_name', name: 'Bank Name' },
-                    { id: 'branch', name: 'Branch' },
-                    { id: 'ac_no', name: 'A/C No.' },
-                    { id: 'ifsc_code', name: 'IFSC Code' },
                     { id: 'address', name: 'Shop Address' }
                 ],
                 2: [
@@ -1847,22 +1985,7 @@ toggleHRSubSections();
                         id: "address",
                         name: "Address"
                     },
-                    {
-                        id: "bank_name",
-                        name: "Bank Name"
-                    },
-                    {
-                        id: "branch",
-                        name: "Branch"
-                    },
-                    {
-                        id: "ac_no",
-                        name: "A/C No."
-                    },
-                    {
-                        id: "ifsc_code",
-                        name: "IFSC Code"
-                    },
+                    // Bank details are optional in basic step and managed in Bank Details tab
                     {
                         id: "currency_position",
                         name: "Currency Position"
@@ -1904,10 +2027,14 @@ toggleHRSubSections();
                 formData.append("phone", $("#phone").val());
                 formData.append("alt_phone", $("#alt_phone").val());
                 formData.append("address", $("#address").val());
-                formData.append("bank_name", $("#bank_name").val());
-                formData.append("branch", $("#branch").val());
-                formData.append("ac_no", $("#ac_no").val());
-                formData.append("ifsc_code", $("#ifsc_code").val());
+                formData.append("bank_name", $("#bank_name").val() || "");
+                formData.append("branch", $("#branch").val() || "");
+                formData.append("ac_no", $("#ac_no").val() || "");
+                formData.append("ifsc_code", $("#ifsc_code").val() || "");
+                formData.append("bank_name_without_gst", $("#bank_name_without_gst").val() || "");
+                formData.append("branch_without_gst", $("#branch_without_gst").val() || "");
+                formData.append("ac_no_without_gst", $("#ac_no_without_gst").val() || "");
+                formData.append("ifsc_code_without_gst", $("#ifsc_code_without_gst").val() || "");
                 formData.append("currency_position", $("#currency_position").val());
                 formData.append("currency_symbol", $("#currency_symbol").val());
                 formData.append("office_latitude", $("#office_latitude").val());
