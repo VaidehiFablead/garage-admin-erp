@@ -18,7 +18,7 @@
     <title>@yield('title', 'Default Title')</title>
 
     <link rel="shortcut icon" type="image/x-icon"
-        href="{{ optional($settings)->favicon ? image_path('storage/' . $settings->favicon) : 'https://fableadtechnolabs.com/favicon-192x192.webp' }}">
+        href="{{ image_path('admin/assets/img/favicon1.png') }}">
 
     <link rel="stylesheet" href="{{ image_path('admin/assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ image_path('admin/assets/plugins/owlcarousel/owl.carousel.min.css') }}">

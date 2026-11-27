@@ -65,6 +65,9 @@ class GeneralSettingController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'favicon' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'qr_code' => 'nullable|image|mimes:jpeg,png,jpg,webp',
+            'remove_logo' => 'nullable',
+            'remove_favicon' => 'nullable',
+            'remove_qr_code' => 'nullable',
         ]);
 
         // Find branch-specific settings
@@ -90,16 +93,24 @@ class GeneralSettingController extends Controller
         $settings->currency_position = $request->currency_position;
         $settings->currency_symbol = $request->currency_symbol;
 
-        // File uploads
-        if ($request->hasFile('logo')) {
+        // File uploads & removals
+        if ($request->remove_logo == 1) {
+            $settings->logo = null;
+        } elseif ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('logos', 'public');
             $settings->logo = $logoPath;
         }
-        if ($request->hasFile('favicon')) {
+
+        if ($request->remove_favicon == 1) {
+            $settings->favicon = null;
+        } elseif ($request->hasFile('favicon')) {
             $faviconPath = $request->file('favicon')->store('favicons', 'public');
             $settings->favicon = $faviconPath;
         }
-        if ($request->hasFile('qr_code')) {
+
+        if ($request->remove_qr_code == 1) {
+            $settings->qr_code = null;
+        } elseif ($request->hasFile('qr_code')) {
             $qrCodePath = $request->file('qr_code')->store('qr_codes', 'public');
             $settings->qr_code = $qrCodePath;
         }

@@ -168,7 +168,7 @@
             <img src="{{ !empty($settings) && !empty($settings->logo) ? image_path('storage/' . $settings->logo) : 'https://fableadtechnolabs.com/static/media/250x150%20(1).b3f5a4db48c7770366ef.webp' }}" class="logo-view">
         </a>
         <a href="{{ route('auth.dashboard') }}" class="logo-small">
-            <img src="{{ !empty($settings) && !empty($settings->favicon) ? image_path('storage/' . $settings->favicon) : 'https://fableadtechnolabs.com/favicon-192x192.webp' }}" >
+            <img src="{{ image_path('admin/assets/img/favicon1.png') }}" >
         </a>
 
         <!-- <a id="toggle_btn" href="javascript:void(0);">
