@@ -351,6 +351,19 @@
             padding: 0;
             top: 7px !important;
         }
+
+        .page-header .page-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+
+        .page-header .page-btn .btn-added {
+            display: inline-flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+            margin: 0 !important;
+        }
     </style>
     <script>
         setTimeout(function() {
@@ -368,8 +381,11 @@
             <div class="page-title">
                 <h4>All Service Categories</h4>
             </div>
-            <div class="page-btn">
+            <div class="page-btn d-flex align-items-center flex-wrap gap-2">
                 @if (app('hasPermission')(21, 'add'))
+                    <a href="{{ route('autocar.category.import') }}" class="btn btn-sm btn-added" style="background-color: #ff9f43; border-color: #ff9f43;">
+                        <i class="fas fa-file-import me-1"></i>Import Service Categories
+                    </a>
                     <a href="#" class="btn btn-sm btn-added" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                         <img src="{{ env('ImagePath') . 'admin/assets/img/icons/plus.svg' }}" class="me-1"
                             alt="img">New Service Category
@@ -379,8 +395,8 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <div class="mb-2">
-                    <div class="search-set d-flex justify-content-md-start justify-content-start w-100">
+                <div class="mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="search-set d-flex justify-content-md-start justify-content-start">
                         <div class="search-path"></div>
                         <div class="search-input">
                             <a class="btn btn-searchset">
@@ -389,6 +405,13 @@
                             </a>
                             <input type="text" id="search-input" class="form-control" placeholder="Search...">
                         </div>
+                    </div>
+                    <div>
+                        @if (app('hasPermission')(21, 'view'))
+                            <button id="exportCategoryExcel" class="btn btn-sm btn-success" style="background-color: #28a745; border-color: #28a745; font-weight: 600; padding: 6px 14px; border-radius: 6px;">
+                                <i class="fas fa-file-excel me-1"></i> Excel
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -883,6 +906,68 @@
                                     confirmButtonText: "OK"
                                 });
                             }
+                        });
+                    }
+                });
+            });
+
+            $('#exportCategoryExcel').click(function() {
+                const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+                let authToken = localStorage.getItem("authToken");
+
+                let url = `/api/export-autocar-categories?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(searchQuery || '')}`;
+
+                $.ajax({
+                    url: url,
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + authToken
+                    },
+                    beforeSend: function() {
+                        Swal.fire({
+                            title: "Exporting Excel...",
+                            text: "Please wait while we generate your file.",
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                    },
+                    success: function(response) {
+                        Swal.close();
+
+                        if (response.status && response.file_url) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Excel Exported!",
+                                text: "Click the button below to download your Excel file.",
+                                showConfirmButton: true,
+                                confirmButtonColor: "#28a745",
+                                confirmButtonText: "Download File"
+                            }).then(() => {
+                                let link = document.createElement('a');
+                                link.href = response.file_url;
+                                link.download = response.file_name || "Service_Categories.xlsx";
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Export Failed",
+                                text: response.message || "Failed to generate Excel file."
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.close();
+                        let errorMsg = "Something went wrong while exporting.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: "error",
+                            title: "Export Error",
+                            text: errorMsg
                         });
                     }
                 });
