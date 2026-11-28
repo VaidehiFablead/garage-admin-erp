@@ -68,6 +68,19 @@ class IdentifyTenant
                     AppViewData::share();
                     return $next($request);
                 } catch (\Throwable) {
+                    if (in_array(strtolower($user->role ?? ''), ['staff', 'hr'])) {
+                        $parentAdmin = \App\Models\User::where('id', $user->branch_id)->where('isDeleted', 0)->first()
+                            ?? \App\Models\User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
+                        if ($parentAdmin && !empty($parentAdmin->email)) {
+                            try {
+                                $tenant = $this->tenancy->resolveByEmail($parentAdmin->email);
+                                $request->session()->put('tenant_id', $tenant['id']);
+                                $request->session()->put('tenant', $tenant);
+                                AppViewData::share();
+                                return $next($request);
+                            } catch (\Throwable) {}
+                        }
+                    }
                     \Illuminate\Support\Facades\Auth::guard('web')->logout();
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();

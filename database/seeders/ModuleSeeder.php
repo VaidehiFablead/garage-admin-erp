@@ -9,14 +9,18 @@ class ModuleSeeder extends Seeder
 {
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('modules')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $modules = [
             ['id' => 1,  'module' => 'Items'],
-            // ['id' => 2,  'module' => 'Sales & Orders'],
+            ['id' => 2,  'module' => 'Sales & Orders'],
             ['id' => 3,  'module' => 'Purchase'],
             ['id' => 4,  'module' => 'Customers'],
             ['id' => 5,  'module' => 'Vendors / Suppliers'],
             ['id' => 6,  'module' => 'Expenses'],
-            // ['id' => 7,  'module' => 'Reports'],
+            ['id' => 7,  'module' => 'Dashboard'],
             ['id' => 8,  'module' => 'Staff'],
             ['id' => 9,  'module' => 'Attendance'],
             ['id' => 10, 'module' => 'Payroll'],
@@ -26,7 +30,7 @@ class ModuleSeeder extends Seeder
             ['id' => 14, 'module' => 'Settings'],
             ['id' => 15, 'module' => 'Inventory'],
             ['id' => 16, 'module' => 'Job Cards'],
-            // ['id' => 17, 'module' => 'Quotations'],
+            ['id' => 17, 'module' => 'Quotations'],
             ['id' => 18, 'module' => 'Categories'],
             ['id' => 19, 'module' => 'Brands'],
             ['id' => 20, 'module' => 'Labour Services'],
@@ -36,9 +40,6 @@ class ModuleSeeder extends Seeder
             ['id' => 24, 'module' => 'Daily Register'],
             ['id' => 25, 'module' => 'Credit Notes'],
             ['id' => 26, 'module' => 'Debit Notes'],
-            // ['id' => 27, 'module' => 'Sales Return'],
-            // ['id' => 28, 'module' => 'Purchase Return'],
-            // ['id' => 29, 'module' => 'Custom Invoice'],
             ['id' => 30, 'module' => 'GST Reports'],
         ];
 

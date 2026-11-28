@@ -72,9 +72,9 @@ class LoginController extends Controller
             $request->session()->put('showTodayAlertsModal', $user->role === 'admin');
 
             // If sub-admin or staff with branch_id, initialize selectedSubAdminId
-            if ($user->role === 'sub-admin') {
+            if (in_array(strtolower($user->role), ['sub-admin', 'subadmin'])) {
                 $request->session()->put('selectedSubAdminId', $user->id);
-            } elseif ($user->role === 'staff' && !empty($user->branch_id)) {
+            } elseif (in_array(strtolower($user->role), ['staff', 'hr']) && !empty($user->branch_id)) {
                 $request->session()->put('selectedSubAdminId', $user->branch_id);
             }
             $request->session()->save();
@@ -88,10 +88,12 @@ class LoginController extends Controller
             // Token generation fallback
         }
 
-        // Decide redirect based on role
+        // Decide redirect based on role and permissions
         $redirect = route('auth.dashboard'); // default
         if (strtolower($user->role) === 'staff') {
-            $redirect = route('auth.staff-dashboard');
+            if (!app('hasPermission')(7, 'view')) {
+                $redirect = route('auth.staff-dashboard');
+            }
         }
 
         return response()->json([
@@ -99,7 +101,7 @@ class LoginController extends Controller
             'token' => $token,
             'user' => $user,
             'redirect' => $redirect,
-            'showAppointments' => ($user->role !== 'staff'),
+            'showAppointments' => (strtolower($user->role) !== 'staff'),
         ], 200);
     }
 
@@ -207,6 +209,31 @@ class LoginController extends Controller
                     }
                     return null;
                 } catch (TenantResolutionException $userTenantError) {
+                    $staffUser = User::where(function ($q) use ($login) {
+                        $clean = strtolower(trim($login));
+                        if (Schema::hasColumn('users', 'username')) {
+                            $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
+                              ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
+                        } else {
+                            $q->whereRaw('LOWER(TRIM(email)) = ?', [$clean]);
+                        }
+                    })->where('isDeleted', 0)->first();
+
+                    if ($staffUser && in_array(strtolower($staffUser->role ?? ''), ['staff', 'hr'])) {
+                        $parentAdmin = User::where('id', $staffUser->branch_id)->where('isDeleted', 0)->first()
+                            ?? User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
+                        if ($parentAdmin && !empty($parentAdmin->email)) {
+                            try {
+                                $tenant = $tenancy->resolveByEmail($parentAdmin->email, true);
+                                if ($request->hasSession()) {
+                                    $request->session()->put('tenant_id', $tenant['id']);
+                                    $request->session()->put('tenant', $tenant);
+                                }
+                                return null;
+                            } catch (TenantResolutionException) {}
+                        }
+                    }
+
                     return $buildTenantErrorResponse($userTenantError);
                 }
             }
@@ -227,6 +254,31 @@ class LoginController extends Controller
                     }
                     return null;
                 } catch (TenantResolutionException $userTenantError) {
+                    $staffUser = User::where(function ($q) use ($login) {
+                        $clean = strtolower(trim($login));
+                        if (Schema::hasColumn('users', 'username')) {
+                            $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
+                              ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
+                        } else {
+                            $q->whereRaw('LOWER(TRIM(email)) = ?', [$clean]);
+                        }
+                    })->where('isDeleted', 0)->first();
+
+                    if ($staffUser && in_array(strtolower($staffUser->role ?? ''), ['staff', 'hr'])) {
+                        $parentAdmin = User::where('id', $staffUser->branch_id)->where('isDeleted', 0)->first()
+                            ?? User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
+                        if ($parentAdmin && !empty($parentAdmin->email)) {
+                            try {
+                                $tenant = $tenancy->resolveByEmail($parentAdmin->email, true);
+                                if ($request->hasSession()) {
+                                    $request->session()->put('tenant_id', $tenant['id']);
+                                    $request->session()->put('tenant', $tenant);
+                                }
+                                return null;
+                            } catch (TenantResolutionException) {}
+                        }
+                    }
+
                     return $buildTenantErrorResponse($userTenantError);
                 }
             }

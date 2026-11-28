@@ -80,6 +80,13 @@
                             </div>
                             <div class="col-lg-4 col-sm-6">
                                 <div class="form-group">
+                                    <label>Username <span class="text-danger">*</span></label>
+                                    <input type="text" name="username" id="username" class="form-control" placeholder="Enter Username" autocomplete="off">
+                                    <div class="text-danger error-username"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-sm-6">
+                                <div class="form-group">
                                     <label>Email</label>
                                     <input type="email" name="email" id="email" class="form-control" placeholder="admin@gmail.com" autocomplete="off">
                                     <div class="text-danger error-email"></div>
@@ -340,15 +347,17 @@
 
     function validateStep1() {
         let valid = true;
-        const name  = $('#customer_name').val().trim();
-        const email = $('#email').val().trim();
-        const phone = $('#phone').val().trim();
+        const name     = $('#customer_name').val().trim();
+        const username = $('#username').val().trim();
+        const email    = $('#email').val().trim();
+        const phone    = $('#phone').val().trim();
 
-        $('.error-staff_name, .error-email, .error-phone').html('');
+        $('.error-staff_name, .error-username, .error-email, .error-phone').html('');
 
-        if (!name)  { $('.error-staff_name').html('Staff name is required.'); valid = false; }
-        if (!email) { $('.error-email').html('Email is required.'); valid = false; }
-        if (!phone) { $('.error-phone').html('Phone is required.'); valid = false; }
+        if (!name)     { $('.error-staff_name').html('Staff name is required.'); valid = false; }
+        if (!username) { $('.error-username').html('Username is required.'); valid = false; }
+        if (!email)    { $('.error-email').html('Email is required.'); valid = false; }
+        if (!phone)    { $('.error-phone').html('Phone is required.'); valid = false; }
 
         if (valid) goToStep(2);
     }
@@ -422,6 +431,7 @@
                 if (response.status) {
                     let customer = response.customer;
                     $('#customer_name').val(customer.name);
+                    $('#username').val(customer.username || '');
                     $('#email').val(customer.email || '');
                     $('#phone').val(customer.phone);
                     if (customer.details) {
@@ -605,7 +615,7 @@
                             $('.error-' + key).html(val[0]);
                         });
                         // If error is on step-1 field, go back
-                        const step1Fields = ['staff_name','email','password','phone','country','city','address','role'];
+                        const step1Fields = ['staff_name','username','email','password','phone','country','city','address','role'];
                         const errKeys = Object.keys(xhr.responseJSON.errors);
                         if (errKeys.some(k => step1Fields.includes(k))) goToStep(1);
                     } else {

@@ -31,6 +31,8 @@ class User extends Authenticatable
         'isDeleted',
         'profile_image',
         'gst_num',
+        'gst_number',
+        'pan_number',
         'haspermission',    
         'branch_id',
         'face_descriptor',

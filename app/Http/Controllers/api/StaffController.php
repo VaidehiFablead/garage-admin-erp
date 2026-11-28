@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\Plan;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Schema;
 
 class StaffController extends Controller
 {
@@ -59,22 +60,29 @@ class StaffController extends Controller
 
     public function getAllStaff(Request $request)
     {
-        $authUser = Auth::guard('api')->user();
+        $authUser = Auth::guard('api')->user() ?? Auth::guard('web')->user() ?? auth()->user();
 
         $perPage = $request->input('per_page', 10);
         $page = $request->input('page', 1);
         $search = $request->input('search');
 
-        $query = User::select(
+        $gstCol = Schema::hasColumn('users', 'gst_number') ? 'gst_number' : (Schema::hasColumn('users', 'gst_num') ? 'gst_num' : null);
+
+        $columns = [
             'id',
             'name',
+            'username',
             'email',
             'phone',
             'profile_image',
             'role',
-            'gst_num', // ✅ correct column
             'branch_id'
-        )
+        ];
+        if ($gstCol) {
+            $columns[] = DB::raw("`{$gstCol}` as gst_number");
+        }
+
+        $query = User::select($columns)
             ->whereIn('role', ['Staff', 'staff', 'HR', 'hr'])
             ->where('isDeleted', 0)
             ->with('details:user_id,country,city,pan_number');
@@ -113,12 +121,15 @@ class StaffController extends Controller
 
         // ✅ Search filter (FIXED)
         if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search, $gstCol) {
                 $q->where('name', 'LIKE', "%{$search}%")
+                ->orWhere('username', 'LIKE', "%{$search}%")
                 ->orWhere('email', 'LIKE', "%{$search}%")
-                ->orWhere('phone', 'LIKE', "%{$search}%")
-                ->orWhere('gst_num', 'LIKE', "%{$search}%") // ✅ FIXED
-                ->orWhereHas('details', function ($d) use ($search) {
+                ->orWhere('phone', 'LIKE', "%{$search}%");
+                if ($gstCol) {
+                    $q->orWhere($gstCol, 'LIKE', "%{$search}%");
+                }
+                $q->orWhereHas('details', function ($d) use ($search) {
                     $d->where('country', 'LIKE', "%{$search}%")
                         ->orWhere('city', 'LIKE', "%{$search}%");
                 });
@@ -132,6 +143,7 @@ class StaffController extends Controller
             return [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username ?? '',
                 'role' => $user->role,
                 'email' => $user->email,
                 'phone' => $user->phone,
@@ -171,7 +183,7 @@ class StaffController extends Controller
     public function createStaff(Request $request)
     {
         // dd($request->all());
-        $user = Auth::guard('api')->user();
+        $user = Auth::guard('api')->user() ?? Auth::guard('web')->user() ?? auth()->user();
         $userBranchId = $user->id ?? null;
 
         $validator = Validator::make($request->all(), [
@@ -180,6 +192,14 @@ class StaffController extends Controller
                 'string',
                 'max:255',
                 'regex:/^[a-zA-Z0-9\s.,\'-]+$/u'
+            ],
+            'username' => [
+                'required',
+                'string',
+                'max:191',
+                Rule::unique('users', 'username')->where(function ($query) {
+                    return $query->where('isDeleted', 0);
+                }),
             ],
             'email' => [
                 'nullable',
@@ -226,7 +246,7 @@ class StaffController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $user = Auth::guard('api')->user();
+        $user = Auth::guard('api')->user() ?? Auth::guard('web')->user() ?? auth()->user();
 
         if (!$user) {
             return response()->json([
@@ -260,6 +280,7 @@ class StaffController extends Controller
 
         $customer = new User();
         $customer->name         = $request->staff_name;
+        $customer->username     = trim($request->username);
         $customer->email        = $request->email;
         $customer->phone        = $request->phone;
         $customer->haspermission = $request->permission_type;
@@ -267,7 +288,15 @@ class StaffController extends Controller
         $customer->role         = $request->filled('role') ? strtolower($request->role) : 'staff';
         $customer->status       = 1;
         $customer->branch_id    = $userBranchId;
-        $customer->gst_num      = $request->gst_num;
+
+        if (Schema::hasColumn('users', 'gst_number')) {
+            $customer->gst_number = $request->gst_num ?? $request->gst_number;
+        } elseif (Schema::hasColumn('users', 'gst_num')) {
+            $customer->gst_num = $request->gst_num ?? $request->gst_number;
+        }
+        if (Schema::hasColumn('users', 'pan_number')) {
+            $customer->pan_number = $request->pan_number;
+        }
 
         if ($request->hasFile('avatar')) {
             $customer->profile_image = $request->file('avatar')->store('staff', 'public');
@@ -303,14 +332,30 @@ class StaffController extends Controller
         $customerDetail->country          = $request->country;
         $customerDetail->city             = $request->city;
         $customerDetail->address          = $request->address;
-        $customerDetail->salary           = $request->salary ?? 0;
-        $customerDetail->designation_id   = $request->designation_id;
-        $customerDetail->department_id    = $request->department_id;
-        $customerDetail->joining_date     = $request->joining_date;
-        $customerDetail->shift_time       = $request->shift_time;
-        $customerDetail->working_location = $request->working_location;
-        $customerDetail->face_photo       = $facePhotoPath;
-        $customerDetail->pan_number       = $request->pan_number;
+        if (Schema::hasColumn('user_details', 'salary')) {
+            $customerDetail->salary       = $request->salary ?? 0;
+        }
+        if (Schema::hasColumn('user_details', 'designation_id')) {
+            $customerDetail->designation_id = $request->designation_id;
+        }
+        if (Schema::hasColumn('user_details', 'department_id')) {
+            $customerDetail->department_id  = $request->department_id;
+        }
+        if (Schema::hasColumn('user_details', 'joining_date')) {
+            $customerDetail->joining_date   = $request->joining_date;
+        }
+        if (Schema::hasColumn('user_details', 'shift_time')) {
+            $customerDetail->shift_time     = $request->shift_time;
+        }
+        if (Schema::hasColumn('user_details', 'working_location')) {
+            $customerDetail->working_location = $request->working_location;
+        }
+        if (Schema::hasColumn('user_details', 'face_photo')) {
+            $customerDetail->face_photo     = $facePhotoPath;
+        }
+        if (Schema::hasColumn('user_details', 'pan_number')) {
+            $customerDetail->pan_number     = $request->pan_number;
+        }
         $customerDetail->save();
 
         // ✅ Store dynamic permissions
@@ -577,8 +622,18 @@ class StaffController extends Controller
             // Validate input data
         $validator = Validator::make($request->all(), [
             'staff_name'       => 'required|string|max:255',
-            'email' => [
+            'username' => [
                 'required',
+                'string',
+                'max:191',
+                Rule::unique('users', 'username')
+                    ->ignore($id)
+                    ->where(function ($query) {
+                        return $query->where('isDeleted', 0);
+                    }),
+            ],
+            'email' => [
+                'nullable',
                 'email',
                 Rule::unique('users', 'email')
                     ->ignore($id)
@@ -639,11 +694,22 @@ class StaffController extends Controller
 
         // Update main user fields
         $customer->name          = $request->staff_name;
+        if ($request->filled('username')) {
+            $customer->username  = trim($request->username);
+        }
         $customer->email         = $request->email;
         $customer->phone         = $request->phone;
         $customer->haspermission = $request->permission_type;
         $customer->role          = $request->filled('role') ? strtolower($request->role) : $customer->role;
-        $customer->gst_num       = $request->gst_num;
+
+        if (Schema::hasColumn('users', 'gst_number')) {
+            $customer->gst_number = $request->gst_num ?? $request->gst_number;
+        } elseif (Schema::hasColumn('users', 'gst_num')) {
+            $customer->gst_num = $request->gst_num ?? $request->gst_number;
+        }
+        if (Schema::hasColumn('users', 'pan_number')) {
+            $customer->pan_number = $request->pan_number;
+        }
 
         if ($request->filled('password')) {
             $customer->password = Hash::make($request->password);
@@ -682,14 +748,28 @@ class StaffController extends Controller
         $customerDetail->country          = $request->country;
         $customerDetail->city             = $request->city;
         $customerDetail->address          = $request->address;
-        $customerDetail->salary           = $request->salary ?? $customerDetail->salary;
-        $customerDetail->designation_id   = $request->designation_id ?? $customerDetail->designation_id;
-        $customerDetail->department_id    = $request->department_id ?? $customerDetail->department_id;
-        $customerDetail->joining_date     = $request->joining_date ?? $customerDetail->joining_date;
-        $customerDetail->shift_time       = $request->shift_time ?? $customerDetail->shift_time;
-        $customerDetail->working_location = $request->working_location ?? $customerDetail->working_location;
-        $customerDetail->pan_number       = $request->pan_number ?? $customerDetail->pan_number;
-        if ($facePhotoPath) {
+        if (Schema::hasColumn('user_details', 'salary')) {
+            $customerDetail->salary       = $request->salary ?? $customerDetail->salary;
+        }
+        if (Schema::hasColumn('user_details', 'designation_id')) {
+            $customerDetail->designation_id = $request->designation_id ?? $customerDetail->designation_id;
+        }
+        if (Schema::hasColumn('user_details', 'department_id')) {
+            $customerDetail->department_id  = $request->department_id ?? $customerDetail->department_id;
+        }
+        if (Schema::hasColumn('user_details', 'joining_date')) {
+            $customerDetail->joining_date   = $request->joining_date ?? $customerDetail->joining_date;
+        }
+        if (Schema::hasColumn('user_details', 'shift_time')) {
+            $customerDetail->shift_time     = $request->shift_time ?? $customerDetail->shift_time;
+        }
+        if (Schema::hasColumn('user_details', 'working_location')) {
+            $customerDetail->working_location = $request->working_location ?? $customerDetail->working_location;
+        }
+        if (Schema::hasColumn('user_details', 'pan_number')) {
+            $customerDetail->pan_number     = $request->pan_number ?? $customerDetail->pan_number;
+        }
+        if ($facePhotoPath && Schema::hasColumn('user_details', 'face_photo')) {
             $customerDetail->face_photo = $facePhotoPath;
         }
         $customerDetail->save();

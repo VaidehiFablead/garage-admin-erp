@@ -54,7 +54,7 @@ class AuthController extends Controller
         $userRole = $user->role ?? '';
         $userId   = $user->id ?? null;
 
-        if (strtolower($userRole) === 'staff') {
+        if (strtolower($userRole) === 'staff' && !app('hasPermission')(7, 'view')) {
             return redirect()->route('auth.staff-dashboard');
         }
 
@@ -63,6 +63,8 @@ class AuthController extends Controller
         $selectedSubAdminId = session('selectedSubAdminId');
         if (!empty($selectedSubAdminId)) {
             $filterId = (int) $selectedSubAdminId; // Explicitly provided branch
+        } elseif (!empty($user->branch_id)) {
+            $filterId = (int) $user->branch_id;
         } else {
             $filterId = $userId; // Always own branch if no selection
         }

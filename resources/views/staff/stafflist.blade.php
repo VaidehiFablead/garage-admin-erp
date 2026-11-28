@@ -574,7 +574,10 @@
                                 let firstColumn = `
                                     <div style="display: flex; align-items: center;">
                                         <img src="${imageUrl}" alt="staff" class="staff-image">
-                                        <span style="color: #1b2850; font-weight: 500; word-break: break-word;">${staffName}</span>
+                                        <div>
+                                            <span style="color: #1b2850; font-weight: 500; word-break: break-word;">${staffName}</span>
+                                            ${staff.username ? `<small class="text-muted d-block font-monospace">@${staff.username}</small>` : ''}
+                                        </div>
                                     </div>
                                 `;
 
