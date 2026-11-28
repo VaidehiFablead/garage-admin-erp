@@ -404,4 +404,125 @@ class LabourServiceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Export Labour Services to Excel (.xlsx)
+     */
+    public function export_labour_services(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userId = $user->id;
+            $userRole = strtolower($user->role ?? '');
+            $selectedSubAdminId = $request->query('selectedSubAdminId') ?: $request->input('selectedSubAdminId');
+
+            if ($userRole === 'sub-admin') {
+                $branchId = $userId;
+            } elseif ($userRole === 'admin' && !empty($selectedSubAdminId) && $selectedSubAdminId !== 'null') {
+                $branchId = $selectedSubAdminId;
+            } else {
+                $branchId = $userId;
+            }
+
+            $query = LabourService::where('is_deleted', 0)
+                ->where(function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId)
+                      ->orWhereNull('branch_id');
+                });
+
+            $search = $request->query('search') ?: $request->input('search');
+            if (!empty($search)) {
+                $query->where('name', 'LIKE', "%{$search}%");
+            }
+
+            $services = $query->orderBy('created_at', 'desc')->get();
+
+            $setting = Setting::first();
+            $currencySymbol = $setting->currency_symbol ?? '₹';
+            $currencyPosition = $setting->currency_position ?? 'left';
+
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Labour Services');
+
+            // Headers
+            $headers = [
+                'A1' => 'Sr No',
+                'B1' => 'Service Name',
+                'C1' => 'Price',
+                'D1' => 'Created At',
+            ];
+
+            foreach ($headers as $cell => $text) {
+                $sheet->setCellValue($cell, $text);
+            }
+
+            // Header Styling
+            $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:D1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFF2F4F7');
+
+            $sheet->getColumnDimension('A')->setWidth(10);
+            $sheet->getColumnDimension('B')->setWidth(40);
+            $sheet->getColumnDimension('C')->setWidth(20);
+            $sheet->getColumnDimension('D')->setWidth(25);
+
+            $row = 2;
+            foreach ($services as $index => $service) {
+                $formattedPrice = number_format((float)$service->price, 2, '.', ',');
+                $priceText = $currencyPosition === 'left' ? "{$currencySymbol}{$formattedPrice}" : "{$formattedPrice}{$currencySymbol}";
+                $dateText = $service->created_at ? \Carbon\Carbon::parse($service->created_at)->format('d-M-Y, g:i a') : '-';
+
+                $sheet->setCellValue("A{$row}", $index + 1);
+                $sheet->setCellValue("B{$row}", $service->name);
+                $sheet->setCellValue("C{$row}", $priceText);
+                $sheet->setCellValue("D{$row}", $dateText);
+
+                $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                $sheet->getStyle("D{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+                $row++;
+            }
+
+            $fileName = 'Labour_Services_' . now()->format('Ymd_His') . '.xlsx';
+            $folder = 'labour-exports';
+            $relativePath = "{$folder}/{$fileName}";
+
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($folder);
+            $fullPath = storage_path("app/public/{$relativePath}");
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($fullPath);
+
+            $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Labour Services Excel exported successfully.',
+                'file_url' => $fileUrl,
+                'file_name' => $fileName,
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error exporting Excel: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

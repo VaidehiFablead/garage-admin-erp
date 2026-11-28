@@ -378,10 +378,10 @@
             <div class="page-title">
                 <h4>All Labour Services</h4>
             </div>
-            <div class="page-btn d-flex align-items-center gap-2">
+            <div class="page-btn">
                 @if (app('hasPermission')(20, 'add'))
-                    <a href="#" class="btn btn-sm btn-added me-1" data-bs-toggle="modal" data-bs-target="#importLabourModal" style="background-color: #ff9f43; border-color: #ff9f43;">
-                        <i class="fas fa-file-import me-1"></i>Import Excel / CSV
+                    <a href="{{ route('labour.import') }}" class="btn btn-sm btn-added me-2" style="background-color: #ff9f43; border-color: #ff9f43;">
+                        <i class="fas fa-file-import me-1"></i>Import Labour Services
                     </a>
                     <a href="#" class="btn btn-sm btn-added" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <img src="{{ env('ImagePath') . 'admin/assets/img/icons/plus.svg' }}" class="me-1"
@@ -392,8 +392,8 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <div class="mb-2">
-                    <div class="search-set d-flex justify-content-md-start justify-content-start w-100">
+                <div class="mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="search-set d-flex justify-content-md-start justify-content-start">
                         <div class="search-path"></div>
                         <div class="search-input">
                             <a class="btn btn-searchset">
@@ -402,6 +402,13 @@
                             </a>
                             <input type="text" id="search-input" class="form-control" placeholder="Search...">
                         </div>
+                    </div>
+                    <div>
+                        @if (app('hasPermission')(20, 'view'))
+                            <button id="exportLabourExcel" class="btn btn-sm btn-success" style="background-color: #28a745; border-color: #28a745; font-weight: 600; padding: 6px 14px; border-radius: 6px;">
+                                <i class="fas fa-file-excel me-1"></i> Excel
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -506,61 +513,6 @@
                             <button type="submit" class="btn btn-submit edit-submit" id="savePayment">Save</button>
                         </div>
                         {{-- <button type="submit" class="btn btn-submit edit-submit">Submit</button> --}}
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Import Modal -->
-    <div class="modal fade" id="importLabourModal" tabindex="-1" role="dialog" aria-labelledby="importLabourModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="importLabourModalLabel">
-                        <i class="fas fa-file-import text-warning me-2"></i>Import Labour Services
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="importLabourForm" enctype="multipart/form-data">
-                        <div class="alert alert-light border mb-3">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                                <span class="fw-bold text-dark"><i class="fas fa-info-circle me-1 text-primary"></i>Sample Files:</span>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('labour.sample.csv') }}" class="btn btn-outline-secondary btn-sm" download>
-                                        <i class="fas fa-download me-1"></i>Sample CSV
-                                    </a>
-                                    <a href="{{ route('labour.sample.excel') }}" class="btn btn-outline-secondary btn-sm" download>
-                                        <i class="fas fa-download me-1"></i>Sample Excel
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="small text-muted">
-                                <strong>Columns:</strong> <code>Service Name</code> (Required), <code>Price</code> (Required)<br>
-                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Supports .csv, .xlsx, .xls</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label fw-bold">Upload File <span class="text-danger">*</span></label>
-                            <div class="image-upload" style="border: 2px dashed #d7dde8; border-radius: 8px; padding: 25px; text-align: center; cursor: pointer; background: #fafbfc;">
-                                <input type="file" name="file" id="labour_import_file" accept=".csv, .xlsx, .xls, .txt" style="display: none;" required>
-                                <div class="image-uploads" onclick="$('#labour_import_file').click();">
-                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}" alt="upload icon" style="width: 48px; height: 48px; margin-bottom: 10px;">
-                                    <h5 class="labour-upload-message text-dark fw-bold mb-1" id="labour_upload_filename">Click or Drag & Drop File Here</h5>
-                                    <p class="text-muted small mb-0">CSV (.csv) or Excel (.xlsx, .xls) up to 10MB</p>
-                                </div>
-                            </div>
-                            <span class="text-danger small mt-1 d-block" id="labour_import_error"></span>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-submit submit" id="btnImportLabourSubmit" style="background-color: #ff9f43; border-color: #ff9f43; color: #fff;">
-                                <i class="fas fa-upload me-1"></i>Import Services
-                            </button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -974,93 +926,64 @@
                 });
             });
             // Clear errors on modal open
-            $('#addServiceModal, #editServiceModal, #importLabourModal').on('show.bs.modal', function() {
+            $('#addServiceModal, #editServiceModal').on('show.bs.modal', function() {
                 $(this).find('.text-danger').text('');
                 $(this).find('input').removeClass('is-invalid');
             });
 
-            // Handle Import file change
-            $('#labour_import_file').on('change', function() {
-                const file = this.files && this.files[0];
-                if (file) {
-                    const fileSizeKb = (file.size / 1024).toFixed(1);
-                    $('#labour_upload_filename').html(`<i class="fas fa-file-excel text-success me-1"></i> ${file.name} <span class="badge bg-secondary ms-1">(${fileSizeKb} KB)</span>`);
-                    $('#labour_import_error').text('');
-                } else {
-                    $('#labour_upload_filename').text('Click or Drag & Drop File Here');
-                }
-            });
-
-            // Handle Import Form Submission
-            $('#importLabourForm').on('submit', function(e) {
-                e.preventDefault();
-                const fileInput = $('#labour_import_file')[0];
-                if (!fileInput.files || !fileInput.files.length) {
-                    $('#labour_import_error').text('Please select a CSV or Excel file.');
-                    return;
-                }
-
-                const $btn = $('#btnImportLabourSubmit');
-                const originalHtml = $btn.html();
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Importing...');
-                $('#labour_import_error').text('');
-
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
+            // Handle Excel Export
+            $('#exportLabourExcel').click(function() {
                 const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
-                if (selectedSubAdminId) {
-                    formData.append("sub_admin_id", selectedSubAdminId);
-                    formData.append("selectedSubAdminId", selectedSubAdminId);
-                }
+                let authToken = localStorage.getItem("authToken");
+
+                let url = `/api/export-labour-services?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(searchQuery || '')}`;
 
                 $.ajax({
-                    url: "/api/importLabourServices",
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
+                    url: url,
+                    method: "GET",
                     headers: {
-                        "Authorization": "Bearer " + localStorage.getItem("authToken"),
+                        "Authorization": "Bearer " + authToken
+                    },
+                    beforeSend: function() {
+                        Swal.fire({
+                            title: "Exporting Excel...",
+                            text: "Please wait while we generate your file.",
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
                     },
                     success: function(response) {
-                        $btn.prop('disabled', false).html(originalHtml);
-                        if (response.status) {
-                            $('#importLabourModal').modal('hide');
-                            $('#importLabourForm')[0].reset();
-                            $('#labour_upload_filename').text('Click or Drag & Drop File Here');
+                        Swal.close();
 
+                        if (response.status && response.file_url) {
                             Swal.fire({
-                                title: "Import Successful!",
-                                text: response.message,
                                 icon: "success",
-                                confirmButtonColor: "#ff9f43",
-                                confirmButtonText: "OK"
+                                title: "Excel Exported!",
+                                text: "Click the button below to download your Excel file.",
+                                showConfirmButton: true,
+                                confirmButtonColor: "#28a745",
+                                confirmButtonText: "Download File"
                             }).then(() => {
-                                fetchLabourServices(1);
+                                let link = document.createElement('a');
+                                link.href = response.file_url;
+                                link.download = response.file_name || "Labour_Services.xlsx";
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
                             });
                         } else {
                             Swal.fire({
-                                title: "Import Failed",
-                                text: response.message || "Failed to import file.",
                                 icon: "error",
-                                confirmButtonColor: "#ff9f43",
-                                confirmButtonText: "OK"
+                                title: "Export Failed!",
+                                text: response.message || "Unable to export Excel file. Please try again."
                             });
                         }
                     },
-                    error: function(xhr) {
-                        $btn.prop('disabled', false).html(originalHtml);
-                        let message = "Something went wrong during import.";
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        }
-                        $('#labour_import_error').text(message);
+                    error: function(xhr, status, error) {
                         Swal.fire({
-                            title: "Error!",
-                            text: message,
                             icon: "error",
-                            confirmButtonColor: "#ff9f43",
-                            confirmButtonText: "OK"
+                            title: "Export Failed!",
+                            text: "Unable to export Excel file. Please try again."
                         });
                     }
                 });
