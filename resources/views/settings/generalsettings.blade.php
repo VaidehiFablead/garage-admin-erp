@@ -25,7 +25,8 @@
             background: #f8fafc;
             border: 1px solid #e6eaf0 !important;
             border-radius: 8px;
-            display: inline-flex;
+            display: flex;
+            flex-wrap: wrap;
             gap: 4px;
             margin-bottom: 18px;
             padding: 4px;
@@ -287,33 +288,63 @@
             <div class="card-body">
 <ul class="nav nav-tabs settings-tabs" id="settingsTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="shop-tab" data-toggle="tab" href="#shop-settings"
+                        <a class="nav-link active" id="shop-tab" data-toggle="tab" data-bs-toggle="tab" href="#shop-settings"
                             role="tab" aria-controls="shop-settings" aria-selected="true">
                             🏪 Shop Settings
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="rules-tab" data-toggle="tab" href="#company-rules"
+                        <a class="nav-link" id="rules-tab" data-toggle="tab" data-bs-toggle="tab" href="#company-rules"
                             role="tab" aria-controls="company-rules" aria-selected="false">
                             🏢 Company Rules
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="dashboard-tab" data-toggle="tab" href="#dashboard-settings"
+                        <a class="nav-link" id="terms-tab" data-toggle="tab" data-bs-toggle="tab" href="#delivery-terms"
+                            role="tab" aria-controls="delivery-terms" aria-selected="false">
+                            📄 Delivery Terms & Conditions
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="dashboard-tab" data-toggle="tab" data-bs-toggle="tab" href="#dashboard-settings"
                             role="tab" aria-controls="dashboard-settings" aria-selected="false">
                             📊 Dashboard
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="barcode-tab" data-toggle="tab" href="#barcode-settings"
+                        <a class="nav-link" id="sales-tab" data-toggle="tab" data-bs-toggle="tab" href="#sales-settings"
+                            role="tab" aria-controls="sales-settings" aria-selected="false">
+                            💰 Sales Setting
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="barcode-tab" data-toggle="tab" data-bs-toggle="tab" href="#barcode-settings"
                             role="tab" aria-controls="barcode-settings" aria-selected="false">
                             Barcode Setting
                         </a>
                     </li>
-                    <li class="nav-item sub-admin-only-tab" role="presentation" style="{{ $isSubAdminBranch ? '' : 'display: none !important;' }}">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="bank-tab" data-toggle="tab" data-bs-toggle="tab" href="#bank-settings"
+                            role="tab" aria-controls="bank-settings" aria-selected="false">
+                            🏦 Bank Details
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <a class="nav-link" id="order-format-tab" data-toggle="tab" data-bs-toggle="tab" href="#order-format-settings"
                             role="tab" aria-controls="order-format-settings" aria-selected="false">
-                            Order No Format
+                            🔢 Order No Format
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="event-calendar-tab" data-toggle="tab" data-bs-toggle="tab" href="#event-calendar-settings"
+                            role="tab" aria-controls="event-calendar-settings" aria-selected="false">
+                            📅 Event Calendar
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="layout-tab" data-toggle="tab" data-bs-toggle="tab" href="#layout-settings"
+                            role="tab" aria-controls="layout-settings" aria-selected="false">
+                            🧩 Layout Setting
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -384,6 +415,18 @@
                                 </div>
                             </div>
                             <!-- Removed Bank Details from here (moved to Bank Details tab) -->
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>CIN Number</label>
+                                    <input type="text" id="cin_no" placeholder="Enter CIN Number">
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Bank Name<span class="manitory">*</span></label>
+                                    <input type="text" id="bank_name" placeholder="Enter Bank Name">
+                                </div>
+                            </div>
 
                             <div class="col-lg-12 col-sm-12">
                                 <div class="form-group">
@@ -477,6 +520,79 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Invoice Size</label>
+                                    <select id="invoice_size" name="invoice_size" class="form-select">
+                                        <option value="small">Small Size Invoice</option>
+                                        <option value="half">Half Size Invoice</option>
+                                        <option value="big" selected>Big Size Invoice</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Send Mail</label>
+                                    <select id="send_mail" name="send_mail" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Reminder (hours before)</label>
+                                    <input type="number" id="appointment_reminder_hours_before" name="appointment_reminder_hours_before" class="form-control" placeholder="e.g. 3" min="1">
+                                    <small class="text-muted">IST. Default 3.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Variant Product</label>
+                                    <select id="enable_variant_product" name="enable_variant_product" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">On = Show Variant Product option.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Default System Language</label>
+                                    <select id="default_language" name="default_language" class="form-select">
+                                        <option value="en">English (EN)</option>
+                                        <option value="gu">Gujarati (ગુજરાતી)</option>
+                                        <option value="hi">Hindi (हिंदी)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Enable Calculator</label>
+                                    <select id="enable_calculator" name="enable_calculator" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">On = Show Floating Calculator.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Product Multiple Price</label>
+                                    <select id="enable_multiple_price" name="enable_multiple_price" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">On = Show Multiple Price option.</small>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Step 3: Media & Branding -->
@@ -537,6 +653,41 @@
                                             style="display:none; max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;">
                                         <button type="button" id="remove_qr_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('qr_code')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
                                         <input type="hidden" id="remove_qr_code" value="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Header Logo Width (px)</label>
+                                    <input type="number" id="logo_width" name="logo_width" class="form-control" placeholder="135" min="20" max="400">
+                                    <small class="text-muted" style="font-size: 11px;">Default: 135px</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Header Logo Height (px)</label>
+                                    <input type="number" id="logo_height" name="logo_height" class="form-control" placeholder="Auto" min="10" max="200">
+                                    <small class="text-muted" style="font-size: 11px;">Leave empty for auto</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-6">
+                                <div class="form-group">
+                                    <label>Shop Signature</label>
+                                    <div class="image-upload">
+                                        <input type="file" id="signature" accept="image/*">
+                                        <div class="image-uploads">
+                                            <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}" alt="img">
+                                            <h4>Drag and drop a file to upload</h4>
+                                        </div>
+                                    </div>
+                                    <div style="position: relative; display: inline-block; margin-top: 10px;">
+                                        <img id="signature_preview" src="" alt="Signature Preview"
+                                            style="display:none; max-width: 100px; max-height: 80px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;">
+                                        <button type="button" id="remove_signature_btn" class="btn btn-sm btn-danger" onclick="$('#signature_preview').attr('src','').hide(); $('#remove_signature_btn').hide(); $('#signature').val(''); $('#remove_signature').val(1);" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
+                                        <input type="hidden" id="remove_signature" value="0">
                                     </div>
                                 </div>
                             </div>
@@ -1260,6 +1411,252 @@
                                 padding: 5px;
                                 display: flex;
                             }
+                    <!-- ================= DELIVERY TERMS TAB ================= -->
+                    <div class="tab-pane fade" id="delivery-terms" role="tabpanel" aria-labelledby="terms-tab">
+                        <div class="row">
+                            <div class="col-lg-6 col-12">
+                                <div class="form-group">
+                                    <label for="terms_condition_eng">Delivery Terms & Conditions (English)</label>
+                                    <textarea id="terms_condition_eng" rows="8" class="form-control"
+                                        placeholder="Enter English delivery terms and conditions"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-12">
+                                <div class="form-group">
+                                    <label for="terms_condition_guj">Delivery Terms & Conditions (Gujarati)</label>
+                                    <textarea id="terms_condition_guj" rows="8" class="form-control"
+                                        placeholder="Enter Gujarati delivery terms and conditions"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-submit" id="saveDeliveryTerms">
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= SALES SETTINGS TAB ================= -->
+                    <div class="tab-pane fade" id="sales-settings" role="tabpanel" aria-labelledby="sales-tab">
+                        <div class="row">
+                            <div class="col-lg-12 mb-3">
+                                <p class="text-muted small">Control which features and fields are visible on the Add Sale page.</p>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Advance Receipt</label>
+                                    <select id="advance_receipt" name="advance_receipt" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0" selected>Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Advance Receipt option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Rental</label>
+                                    <select id="rental" name="rental" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0" selected>Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Rental option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Draft</label>
+                                    <select id="draft" name="draft" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0" selected>Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Draft options on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Financial Year</label>
+                                    <select id="financial_year" name="financial_year" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Enable financial year filter on sales list.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>TDS Apply</label>
+                                    <select id="tds_apply" name="tds_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show TDS Apply field on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Exchange</label>
+                                    <select id="exchange_apply" name="exchange_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Exchange option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Delivery Cost</label>
+                                    <select id="delivery_cost_apply" name="delivery_cost_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Delivery Cost option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Other Charges</label>
+                                    <select id="other_charges_apply" name="other_charges_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Other Charges option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Labour</label>
+                                    <select id="labour_apply" name="labour_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Labour option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Remarks</label>
+                                    <select id="remarks_apply" name="remarks_apply" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Remarks option on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Assign Staff</label>
+                                    <select id="show_assign_staff" name="show_assign_staff" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show "Assign Staff" field on Add Sale page.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Order Type</label>
+                                    <select id="show_order_type" name="show_order_type" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show "Order Type" field on Add Sale page.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Payment Methods</label>
+                                    <select id="payment_methods" name="payment_methods[]" class="form-control select2" multiple>
+                                        <option value="cash">Cash</option>
+                                        <option value="debit card">Debit Card</option>
+                                        <option value="cash+online">Cash + Online</option>
+                                        <option value="scan">Scan</option>
+                                        <option value="emi">EMI</option>
+                                    </select>
+                                    <small class="text-muted">Select payment methods to display on the Sale page.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Bank Details</label>
+                                    <select id="show_bank_details" name="show_bank_details" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show Bank Details on Invoice.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>QR Code</label>
+                                    <select id="show_qr_code" name="show_qr_code" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted">Show QR Code on Invoice.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Sales Discount</label>
+                                    <select id="sales_discount" name="sales_discount" class="form-select">
+                                        <option value="all">All</option>
+                                        <option value="overall">Overall</option>
+                                        <option value="product_wise">Product Wise</option>
+                                    </select>
+                                    <small class="text-muted">Choose sales discount option.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-sm-6 col-6">
+                                <div class="form-group">
+                                    <label>Default Payment Method</label>
+                                    <select id="default_payment_method" name="default_payment_method" class="form-select">
+                                        <option value="cash">Cash</option>
+                                        <option value="pending">Pay Later</option>
+                                        <option value="debit card">Debit Card</option>
+                                        <option value="cash+online">Cash + Online</option>
+                                        <option value="scan">Scan</option>
+                                        <option value="emi">EMI</option>
+                                    </select>
+                                    <small class="text-muted">Select default payment method on Add Sale.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 mt-4">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" id="saveSalesSettings">
+                                    Save Sales Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= BANK DETAILS TAB ================= -->
+                    <div class="tab-pane fade" id="bank-settings" role="tabpanel" aria-labelledby="bank-tab">
+                        <ul class="nav nav-pills mb-4" id="bank-gst-pills" role="tablist" style="max-width: 400px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 50px; padding: 5px; display: flex;">
+                            <li class="nav-item w-50" role="presentation">
+                                <button class="nav-link active w-100" id="with-gst-tab" data-bs-toggle="pill" data-bs-target="#with-gst" data-toggle="pill" href="#with-gst" type="button" role="tab" aria-controls="with-gst" aria-selected="true" style="border-radius: 50px; font-weight: 600;">With GST</button>
+                            </li>
+                            <li class="nav-item w-50" role="presentation">
+                                <button class="nav-link w-100" id="without-gst-tab" data-bs-toggle="pill" data-bs-target="#without-gst" data-toggle="pill" href="#without-gst" type="button" role="tab" aria-controls="without-gst" aria-selected="false" style="border-radius: 50px; font-weight: 600;">Without GST</button>
+                            </li>
+                        </ul>
+                        <style>
                             #bank-gst-pills .nav-link {
                                 border-radius: 50px;
                                 font-weight: 600;
@@ -1273,6 +1670,8 @@
                                 background-color: #ff9f43 !important;
                                 color: white !important;
                                 box-shadow: 0 2px 4px rgba(255, 159, 67, 0.2);
+                                color: #fff !important;
+                                box-shadow: 0 2px 4px rgba(255, 159, 67, 0.25);
                             }
                         </style>
 
@@ -1284,24 +1683,28 @@
                                         <div class="form-group">
                                             <label>Bank Name</label>
                                             <input type="text" id="bank_name" class="form-control" placeholder="Enter Bank Name">
+                                            <input type="text" id="bank_tab_name" class="form-control" placeholder="Enter Bank Name">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>Branch</label>
                                             <input type="text" id="branch" class="form-control" placeholder="Enter Branch">
+                                            <input type="text" id="bank_tab_branch" class="form-control" placeholder="Enter Branch">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>A/C No.</label>
                                             <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
+                                            <input type="number" id="bank_tab_ac_no" class="form-control" placeholder="Enter A/C No.">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>IFSC Code</label>
                                             <input type="text" id="ifsc_code" class="form-control" placeholder="Enter IFSC Code">
+                                            <input type="text" id="bank_tab_ifsc_code" class="form-control" placeholder="Enter IFSC Code">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6 mt-3">
@@ -1319,12 +1722,21 @@
                                                 <img id="qr_preview" src="" alt="QR Preview" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                                 <button type="button" id="remove_qr_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('qr_code')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
                                                 <input type="hidden" id="remove_qr_code" value="0">
+                                                <input type="file" id="bank_tab_qr_code" accept="image/*">
+                                                <div class="image-uploads">
+                                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}" alt="img">
+                                                    <h4>Drag and drop a file to upload</h4>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <img id="bank_tab_qr_preview" src="" alt="QR Preview" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <!-- Without GST Tab -->
+
                             <div class="tab-pane fade" id="without-gst" role="tabpanel" aria-labelledby="without-gst-tab">
                                 <div class="row">
                                     <div class="col-lg-3 col-sm-6 col-6">
@@ -1366,6 +1778,12 @@
                                                 <img id="qr_preview_without_gst" src="" alt="QR Preview Without GST" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                                 <button type="button" id="remove_qr_without_gst_btn" class="btn btn-sm btn-danger" onclick="removeImagePreviewWithoutGst()" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
                                                 <input type="hidden" id="remove_qr_code_without_gst" value="0">
+                                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}" alt="img">
+                                                    <h4>Drag and drop a file to upload</h4>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <img id="qr_preview_without_gst" src="" alt="QR Preview Without GST" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                             </div>
                                         </div>
                                     </div>
@@ -1376,7 +1794,114 @@
                         <div class="row">
                             <div class="col-lg-12 mt-4">
                                 <a href="javascript:void(0);" class="btn btn-submit me-2" onclick="$('#btn-setting-submit').click();">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" id="saveBankDetailsBtn">
                                     Save Bank Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= EVENT CALENDAR TAB ================= -->
+                    <div class="tab-pane fade" id="event-calendar-settings" role="tabpanel" aria-labelledby="event-calendar-tab">
+                        <div class="row">
+                            <div class="col-lg-4 col-sm-6 col-12">
+                                <div class="form-group">
+                                    <label class="fw-semibold">Event Calendar Module <span class="text-danger">*</span></label>
+                                    <select id="enable_event_calendar" name="enable_event_calendar" class="form-select">
+                                        <option value="1">On</option>
+                                        <option value="0">Off</option>
+                                    </select>
+                                    <small class="text-muted d-block mt-1">
+                                        Enable or disable Event Calendar module across the application and navigation menu.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 mt-4">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" id="saveEventCalendarSettings">
+                                    Save Event Calendar Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= LAYOUT SETTING TAB ================= -->
+                    <div class="tab-pane fade" id="layout-settings" role="tabpanel" aria-labelledby="layout-tab">
+                        <div class="layout-settings-container">
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-1" style="color: #1e293b; font-size: 18px;">
+                                    <i class="fa fa-th-large text-warning me-2"></i>Sales & POS Page Layout Design
+                                </h5>
+                                <p class="text-muted mb-0" style="font-size: 13.5px;">
+                                    Choose which layout design should open when creating new sales and bills from header "+ Bill" button, sidebar links, and shortcuts.
+                                </p>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="layout-card position-relative p-4 rounded-3 h-100" id="layoutCard1" style="border: 1.5px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer;">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <input type="radio" name="pos_layout" id="pos_layout_1" value="layout1" class="form-check-input me-3" style="width: 20px; height: 20px; cursor: pointer; accent-color: #ff9f43;">
+                                                <label for="pos_layout_1" class="fw-bold mb-0 text-dark" style="font-size: 16px; cursor: pointer;">
+                                                    Layout 1 (Classic POS)
+                                                </label>
+                                            </div>
+                                            <span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600;">pos.blade.php</span>
+                                        </div>
+                                        <p class="text-muted mb-0" style="font-size: 13px; line-height: 1.5;">
+                                            Traditional point-of-sale layout with split-screen view: visual product catalog grid on the left and full order details & payments panel on the right.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="layout-card position-relative p-4 rounded-3 h-100" id="layoutCard2" style="border: 1.5px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer;">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <input type="radio" name="pos_layout" id="pos_layout_2" value="layout2" class="form-check-input me-3" style="width: 20px; height: 20px; cursor: pointer; accent-color: #ff9f43;">
+                                                <label for="pos_layout_2" class="fw-bold mb-0 text-dark" style="font-size: 16px; cursor: pointer;">
+                                                    Layout 2 (Modern Billing)
+                                                </label>
+                                            </div>
+                                            <span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600;">new-add-sale.blade.php</span>
+                                        </div>
+                                        <p class="text-muted mb-0" style="font-size: 13px; line-height: 1.5;">
+                                            Modern streamlined design featuring compact 4-column popups, dedicated discount & TDS chips, sales return integration, and instant customer modal.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4 mt-4 pt-3 border-top">
+                                <h5 class="fw-bold mb-1" style="color: #1e293b; font-size: 18px;">
+                                    <i class="fa fa-image text-warning me-2"></i>Header Logo Dimensions
+                                </h5>
+                                <div class="row g-3 align-items-end mt-2">
+                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                                        <div class="form-group mb-0">
+                                            <label class="fw-bold">Logo Width (px)</label>
+                                            <input type="number" id="layout_logo_width" class="form-control" placeholder="135" min="20" max="400">
+                                            <small class="text-muted">Default is 135px</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12">
+                                        <div class="form-group mb-0">
+                                            <label class="fw-bold">Logo Height (px)</label>
+                                            <input type="number" id="layout_logo_height" class="form-control" placeholder="Auto" min="10" max="200">
+                                            <small class="text-muted">Leave blank for auto height</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 col-md-4 col-12">
+                                        <div class="p-3 bg-light rounded d-flex align-items-center gap-3" style="min-height: 70px; border: 1px dashed #cbd5e1;">
+                                            <span class="text-muted" style="font-size: 12px; font-weight: 600;">Preview:</span>
+                                            <img id="layout_logo_preview" src="" alt="Header Logo" style="max-height: 60px; object-fit: contain; display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 mt-4">
+                                <a href="javascript:void(0);" class="btn btn-submit me-2" id="saveLayoutSettings">
+                                    <i class="fa fa-save me-1"></i> Save Layout Settings
                                 </a>
                             </div>
                         </div>
@@ -1539,6 +2064,72 @@
                                     ? '1'
                                     : (response.settings.admin_whatsapp_message === 'off' || response.settings.admin_whatsapp_message === 0 || response.settings.admin_whatsapp_message === '0' ? '0' : '1')
                             );
+                            $("#terms_condition_eng").val(response.settings.terms_condition_eng ?? "");
+                            $("#terms_condition_guj").val(response.settings.terms_condition_guj ?? "");
+                            $("#cin_no").val(response.settings.cin_no ?? "");
+                            $("#invoice_size").val(response.settings.invoice_size || 'big');
+                            $("#send_mail").val(response.settings.send_mail === null || response.settings.send_mail === undefined ? '1' : String(Number(response.settings.send_mail)));
+                            $("#appointment_reminder_hours_before").val(response.settings.appointment_reminder_hours_before ?? 3);
+                            $("#enable_variant_product").val(response.settings.enable_variant_product === null || response.settings.enable_variant_product === undefined ? '0' : String(Number(response.settings.enable_variant_product)));
+                            $("#default_language").val(response.settings.default_language || 'en');
+                            $("#enable_calculator").val(response.settings.enable_calculator === null || response.settings.enable_calculator === undefined ? '0' : String(Number(response.settings.enable_calculator)));
+                            $("#enable_multiple_price").val(response.settings.enable_multiple_price === null || response.settings.enable_multiple_price === undefined ? '0' : String(Number(response.settings.enable_multiple_price)));
+                            $("#logo_width").val(response.settings.logo_width ?? '');
+                            $("#logo_height").val(response.settings.logo_height ?? '');
+                            if (response.settings.signature) {
+                                $("#signature_preview").attr("src", getStorageUrl(response.settings.signature)).show();
+                                $("#remove_signature_btn").show();
+                            }
+
+                            // Bank Details Tab Sync
+                            $("#bank_tab_name").val(response.settings.bank_name ?? "");
+                            $("#bank_tab_branch").val(response.settings.branch ?? "");
+                            $("#bank_tab_ac_no").val(response.settings.ac_no ?? "");
+                            $("#bank_tab_ifsc_code").val(response.settings.ifsc_code ?? "");
+                            if (response.settings.qr_code) {
+                                $("#bank_tab_qr_preview").attr("src", getStorageUrl(response.settings.qr_code)).show();
+                            }
+                            $("#bank_name_without_gst").val(response.settings.bank_name_without_gst ?? "");
+                            $("#branch_without_gst").val(response.settings.branch_without_gst ?? "");
+                            $("#ac_no_without_gst").val(response.settings.ac_no_without_gst ?? "");
+                            $("#ifsc_code_without_gst").val(response.settings.ifsc_code_without_gst ?? "");
+                            if (response.settings.qr_code_without_gst) {
+                                $("#qr_preview_without_gst").attr("src", getStorageUrl(response.settings.qr_code_without_gst)).show();
+                            }
+
+                            // Sales Settings Tab
+                            const to01 = (v, def = '0') => (v === null || v === undefined ? def : String(Number(v)));
+                            $("#advance_receipt").val(to01(response.settings.advance_receipt, '0'));
+                            $("#rental").val(to01(response.settings.rental, '0'));
+                            $("#draft").val(to01(response.settings.draft, '0'));
+                            $("#financial_year").val(to01(response.settings.financial_year, '1'));
+                            $("#tds_apply").val(to01(response.settings.tds_apply, '0'));
+                            $("#exchange_apply").val(to01(response.settings.exchange_apply, '0'));
+                            $("#delivery_cost_apply").val(to01(response.settings.delivery_cost_apply, '0'));
+                            $("#other_charges_apply").val(to01(response.settings.other_charges_apply, '0'));
+                            $("#labour_apply").val(to01(response.settings.labour_apply, '1'));
+                            $("#remarks_apply").val(to01(response.settings.remarks_apply, '1'));
+                            $("#show_assign_staff").val(to01(response.settings.show_assign_staff, '1'));
+                            $("#show_order_type").val(to01(response.settings.show_order_type, '1'));
+                            $("#show_bank_details").val(to01(response.settings.show_bank_details, '1'));
+                            $("#show_qr_code").val(to01(response.settings.show_qr_code, '1'));
+                            $("#sales_discount").val(response.settings.sales_discount || 'all');
+                            let defPay = response.settings.default_payment_method || 'cash';
+                            if (defPay === 'pay_later') defPay = 'pending';
+                            $("#default_payment_method").val(defPay);
+                            if (Array.isArray(response.settings.payment_methods)) {
+                                $("#payment_methods").val(response.settings.payment_methods).trigger('change');
+                            }
+
+                            // Event Calendar & Layout Settings
+                            $("#enable_event_calendar").val(to01(response.settings.enable_event_calendar, '1'));
+                            const posLayoutVal = response.settings.pos_layout || 'layout1';
+                            $('input[name="pos_layout"][value="' + posLayoutVal + '"]').prop('checked', true).trigger('change');
+                            $("#layout_logo_width").val(response.settings.logo_width ?? '');
+                            $("#layout_logo_height").val(response.settings.logo_height ?? '');
+                            if (response.settings.logo) {
+                                $("#layout_logo_preview").attr("src", getStorageUrl(response.settings.logo)).show();
+                            }
                             // Company Rules Fields
                             $("#working_hours").val(response.settings.working_hours ?? "");
                             if (response.settings.sunday_off === 'yes') {
@@ -1745,6 +2336,16 @@ toggleHRSubSections();
                 $(this).addClass('active');
                 var target = $(this).attr('href') || $(this).data('target') || $(this).data('bs-target');
                 $('#settingsTabsContent > .tab-pane').removeClass('show active');
+                $(target).addClass('show active');
+            });
+
+            // Handle With GST / Without GST pill switching inside Bank Details
+            $('#bank-gst-pills .nav-link').on('click', function(e) {
+                e.preventDefault();
+                $('#bank-gst-pills .nav-link').removeClass('active').attr('aria-selected', 'false');
+                $(this).addClass('active').attr('aria-selected', 'true');
+                var target = $(this).data('bs-target') || $(this).attr('href');
+                $('#bank-gst-pills-content > .tab-pane').removeClass('show active');
                 $(target).addClass('show active');
 
                 if (target === '#bank-settings') {
@@ -2022,6 +2623,7 @@ toggleHRSubSections();
                 formData.append("low_stock", $("#low_stock").val());
                 formData.append("shop_name", $("#shop_name").val());
                 formData.append("gst_num", $("#gst_num").val());
+                formData.append("cin_no", $("#cin_no").val() || "");
                 formData.append("state_code", $("#state_code").val());
                 formData.append("email", $("#email").val());
                 formData.append("phone", $("#phone").val());
@@ -2042,6 +2644,20 @@ toggleHRSubSections();
                 formData.append("radius", $("#office_radius").val());
                 formData.append("customer_whatsapp_message", $("#customer_whatsapp_message").val());
                 formData.append("admin_whatsapp_message", $("#admin_whatsapp_message").val());
+                formData.append("invoice_size", $("#invoice_size").val() || "big");
+                formData.append("send_mail", $("#send_mail").val() ?? "1");
+                if ($("#appointment_reminder_hours_before").val()) {
+                    formData.append("appointment_reminder_hours_before", $("#appointment_reminder_hours_before").val());
+                }
+                formData.append("enable_variant_product", $("#enable_variant_product").val() ?? "0");
+                formData.append("default_language", $("#default_language").val() || "en");
+                formData.append("enable_calculator", $("#enable_calculator").val() ?? "0");
+                formData.append("enable_multiple_price", $("#enable_multiple_price").val() ?? "0");
+                formData.append("logo_width", $("#logo_width").val() || "");
+                formData.append("logo_height", $("#logo_height").val() || "");
+                formData.append("remove_signature", $("#remove_signature").val() || 0);
+                const signatureFile = $("#signature")[0]?.files?.[0];
+                if (signatureFile) formData.append("signature", signatureFile);
                 
                 const logoFile = $("#logo")[0]?.files?.[0];
                 const faviconFile = $("#favicon")[0]?.files?.[0];
@@ -2652,6 +3268,223 @@ toggleHRSubSections();
                     }
                 });
             });
+
+            // ================== DELIVERY TERMS SAVE ==================
+            $("#saveDeliveryTerms").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                const formData = new FormData();
+                formData.append("terms_condition_eng", $("#terms_condition_eng").val());
+                formData.append("terms_condition_guj", $("#terms_condition_guj").val());
+                if (selectedSubAdminId) formData.append("selectedSubAdminId", selectedSubAdminId);
+                formData.append("_token", "{{ csrf_token() }}");
+
+                $.ajax({
+                    url: "{{ route('general-settings.delivery-terms') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: { "Authorization": "Bearer " + authToken },
+                    beforeSend: function() {
+                        $button.addClass("disabled").attr("aria-disabled", "true").html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+                    },
+                    success: function(response) {
+                        Swal.fire({ title: "Success!", text: response.message, icon: "success", confirmButtonColor: "#ff9f43" });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================== BANK DETAILS SAVE ==================
+            $("#saveBankDetailsBtn").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                const formData = new FormData();
+                formData.append("bank_name", $("#bank_tab_name").val() || '');
+                formData.append("branch", $("#bank_tab_branch").val() || '');
+                formData.append("ac_no", $("#bank_tab_ac_no").val() || '');
+                formData.append("ifsc_code", $("#bank_tab_ifsc_code").val() || '');
+                formData.append("bank_name_without_gst", $("#bank_name_without_gst").val() || '');
+                formData.append("branch_without_gst", $("#branch_without_gst").val() || '');
+                formData.append("ac_no_without_gst", $("#ac_no_without_gst").val() || '');
+                formData.append("ifsc_code_without_gst", $("#ifsc_code_without_gst").val() || '');
+                const qrFile = $("#bank_tab_qr_code")[0]?.files?.[0];
+                const qrWithoutGstFile = $("#qr_code_without_gst")[0]?.files?.[0];
+                if (qrFile) formData.append("qr_code", qrFile);
+                if (qrWithoutGstFile) formData.append("qr_code_without_gst", qrWithoutGstFile);
+                if (selectedSubAdminId) formData.append("selectedSubAdminId", selectedSubAdminId);
+                formData.append("_token", "{{ csrf_token() }}");
+
+                $.ajax({
+                    url: "{{ route('general-settings.bank-details') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: { "Authorization": "Bearer " + authToken },
+                    beforeSend: function() {
+                        $button.addClass("disabled").attr("aria-disabled", "true").html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+                    },
+                    success: function(response) {
+                        Swal.fire({ title: "Success!", text: response.message || "Bank details updated successfully!", icon: "success", confirmButtonColor: "#ff9f43" });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================== SALES SETTINGS SAVE ==================
+            $("#saveSalesSettings").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                const data = {
+                    advance_receipt: $("#advance_receipt").val(),
+                    rental: $("#rental").val(),
+                    draft: $("#draft").val(),
+                    financial_year: $("#financial_year").val(),
+                    tds_apply: $("#tds_apply").val(),
+                    exchange_apply: $("#exchange_apply").val(),
+                    delivery_cost_apply: $("#delivery_cost_apply").val(),
+                    other_charges_apply: $("#other_charges_apply").val(),
+                    labour_apply: $("#labour_apply").val(),
+                    remarks_apply: $("#remarks_apply").val(),
+                    show_assign_staff: $("#show_assign_staff").val(),
+                    show_order_type: $("#show_order_type").val(),
+                    show_bank_details: $("#show_bank_details").val(),
+                    show_qr_code: $("#show_qr_code").val(),
+                    sales_discount: $("#sales_discount").val(),
+                    default_payment_method: $("#default_payment_method").val(),
+                    payment_methods: $("#payment_methods").val() || [],
+                };
+                if (selectedSubAdminId) data.selectedSubAdminId = selectedSubAdminId;
+
+                $.ajax({
+                    url: "{{ route('sales-settings.update') }}",
+                    type: "POST",
+                    headers: { "Authorization": "Bearer " + authToken, "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    data: data,
+                    beforeSend: function() {
+                        $button.addClass("disabled").attr("aria-disabled", "true").html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+                    },
+                    success: function(response) {
+                        Swal.fire({ title: "Success!", text: response.message || "Sales settings updated successfully!", icon: "success", confirmButtonColor: "#ff9f43" });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================== EVENT CALENDAR SAVE ==================
+            $("#saveEventCalendarSettings").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                const data = { enable_event_calendar: $("#enable_event_calendar").val() };
+                if (selectedSubAdminId) data.selectedSubAdminId = selectedSubAdminId;
+
+                $.ajax({
+                    url: "{{ route('event-calendar-settings.update') }}",
+                    type: "POST",
+                    headers: { "Authorization": "Bearer " + authToken, "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    data: data,
+                    beforeSend: function() {
+                        $button.addClass("disabled").attr("aria-disabled", "true").html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+                    },
+                    success: function(response) {
+                        Swal.fire({ title: "Success!", text: response.message || "Event Calendar settings updated successfully!", icon: "success", confirmButtonColor: "#ff9f43" });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // ================== LAYOUT SETTING SAVE ==================
+            $(document).on("click", ".layout-card", function(e) {
+                if ($(e.target).is('input[type="radio"]')) return;
+                $(this).find('input[type="radio"]').prop("checked", true).trigger("change");
+            });
+            $(document).on("change", 'input[name="pos_layout"]', function() {
+                $(".layout-card").css("border-color", "#e2e8f0");
+                $(this).closest(".layout-card").css("border-color", "#ff9f43");
+            });
+            $("#saveLayoutSettings").on("click", function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const defaultHtml = $button.html();
+                const data = {
+                    pos_layout: $('input[name="pos_layout"]:checked').val() || 'layout1',
+                    logo_width: $("#layout_logo_width").val() || '135',
+                    logo_height: $("#layout_logo_height").val() || '',
+                };
+                if (selectedSubAdminId) data.selectedSubAdminId = selectedSubAdminId;
+
+                $.ajax({
+                    url: "{{ route('layout-settings.update') }}",
+                    type: "POST",
+                    headers: { "Authorization": "Bearer " + authToken, "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    data: data,
+                    beforeSend: function() {
+                        $button.addClass("disabled").attr("aria-disabled", "true").html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+                    },
+                    success: function(response) {
+                        Swal.fire({ title: "Success!", text: response.message || "Layout settings updated successfully!", icon: "success", confirmButtonColor: "#ff9f43" });
+                    },
+                    error: function(xhr) {
+                        Swal.fire("Error!", (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong!", "error");
+                    },
+                    complete: function() {
+                        $button.removeClass("disabled").removeAttr("aria-disabled").html(defaultHtml);
+                    }
+                });
+            });
+
+            // Persist active settings tab across reloads & ensure reliable tab switching
+            $(document).on('click', '#settingsTabs .nav-link', function(e) {
+                const targetHref = $(this).attr('href');
+                if (targetHref && targetHref.startsWith('#')) {
+                    sessionStorage.setItem('settings_active_tab', targetHref);
+                }
+            });
+            const savedTab = sessionStorage.getItem('settings_active_tab');
+            if (savedTab && $('#settingsTabs .nav-link[href="' + savedTab + '"]').length) {
+                const tabEl = document.querySelector('#settingsTabs .nav-link[href="' + savedTab + '"]');
+                if (window.bootstrap && bootstrap.Tab) {
+                    new bootstrap.Tab(tabEl).show();
+                } else if (typeof $(tabEl).tab === 'function') {
+                    $(tabEl).tab('show');
+                }
+            }
+
+            // Keep Bank Details tab and Shop Settings bank fields in sync
+            $('#bank_name').on('input', function() { $('#bank_tab_name').val($(this).val()); });
+            $('#bank_tab_name').on('input', function() { $('#bank_name').val($(this).val()); });
+            $('#branch').on('input', function() { $('#bank_tab_branch').val($(this).val()); });
+            $('#bank_tab_branch').on('input', function() { $('#branch').val($(this).val()); });
+            $('#ac_no').on('input', function() { $('#bank_tab_ac_no').val($(this).val()); });
+            $('#bank_tab_ac_no').on('input', function() { $('#ac_no').val($(this).val()); });
+            $('#ifsc_code').on('input', function() { $('#bank_tab_ifsc_code').val($(this).val()); });
+            $('#bank_tab_ifsc_code').on('input', function() { $('#ifsc_code').val($(this).val()); });
         });
     </script>
 
