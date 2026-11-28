@@ -52,6 +52,7 @@ class JobCard extends Model
         'user_id',
         'type',
         'quotation_status',
+        'is_invoice',
         'record_date',
         'start_date',
         'end_date',

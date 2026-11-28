@@ -131,6 +131,42 @@ class JobCardController extends Controller
     }
 
 
+    public function invoiceIndex(Request $request)
+    {
+        return view('job-card.index', ['isInvoicePage' => true]);
+    }
+
+    public function convertToInvoice(Request $request, $id)
+    {
+        $jobCard = JobCard::where('isDeleted', 0)->findOrFail($id);
+
+        $oldTotal = (float) ($jobCard->total_subtotal_amount ?? 0);
+        $totalLabour = (float) $request->input('total_labour', $jobCard->total_labour ?? 0);
+        $totalParts = (float) $request->input('total_parts', $jobCard->total_parts ?? 0);
+        $newTotal = (float) $request->input('grand_total', $totalLabour + $totalParts);
+
+        $diff = $newTotal - $oldTotal;
+        $currentRemaining = (float) ($jobCard->remaining_amount ?? $oldTotal);
+        $updatedRemaining = max(0, $currentRemaining + $diff);
+
+        $jobCard->update([
+            'total_labour' => $totalLabour,
+            'total_parts' => $totalParts,
+            'total_subtotal_amount' => $newTotal,
+            'remaining_amount' => $updatedRemaining,
+            'date' => $request->input('date', $jobCard->date),
+            'gst' => $request->input('gst', $jobCard->gst),
+            'remark' => $request->input('remark', $jobCard->remark),
+            'is_invoice' => 1,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Job card converted to invoice successfully.',
+            'job_card_id' => $jobCard->id,
+        ]);
+    }
+
     public function getJobCards(Request $request)
     {
         $query = JobCard::where('type', 'jobCard')
@@ -776,6 +812,7 @@ class JobCardController extends Controller
         $user = Auth::user();
         $BranchId = $user->branch_id;
         $validated['type'] =  'jobCard';
+        $validated['is_invoice'] = ($action === 'generate_bill') ? 1 : 0;
         if (session()->has('selectedSubAdminId')) {
             $validated['user_id'] = session('selectedSubAdminId');
             $validated['subbranch_id'] = session('selectedSubAdminId');
@@ -1140,6 +1177,10 @@ class JobCardController extends Controller
                 $updatedRemaining = $currentRemaining + $diff;
                 $validated['remaining_amount'] = $updatedRemaining > 0 ? $updatedRemaining : 0;
             }
+        }
+
+        if ($request->input('action') === 'convert_invoice') {
+            $validated['is_invoice'] = 1;
         }
 
         // Update the job card

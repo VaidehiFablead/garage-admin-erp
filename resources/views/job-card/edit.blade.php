@@ -1028,15 +1028,23 @@
 
                     <hr>
                     {{-- Submit --}}
-                    <div class="text-end">
-                        <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn">
-                            Update Job Card
-                        </button>
-                        {{--
-                        <button type="submit" name="action" value="pay_now" class="btn btn-submit action-btn">
-                            Pay Now
-                        </button>
-                        --}}
+                    <div class="text-end d-flex justify-content-end flex-wrap gap-2">
+                        @if (request('convert_to_invoice') == '1')
+                            <button type="submit" name="action" value="convert_invoice" class="btn btn-submit action-btn">
+                                <i class="fas fa-file-invoice me-1"></i> Convert to Invoice &amp; Print
+                            </button>
+                            <button type="submit" name="action" value="generate_bill" class="btn btn-outline-secondary action-btn">
+                                Update Job Card
+                            </button>
+                        @else
+                            <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn">
+                                Update Job Card
+                            </button>
+                            <button type="submit" name="action" value="convert_invoice" class="btn btn-primary action-btn"
+                                style="background-color:#1e293b; border-color:#1e293b; font-weight:600;">
+                                <i class="fas fa-file-invoice me-1"></i> Convert to Invoice &amp; Print
+                            </button>
+                        @endif
                         <a href="{{ route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
                     </div>
                         <div class="mobile-step-actions">
@@ -1358,14 +1366,24 @@
                 },
                 success: function (response) {
                     if (response.status === true) {
+                        const isConvertToInvoice = clickedAction === 'convert_invoice'
+                            || new URLSearchParams(window.location.search).get('convert_to_invoice') === '1';
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            text: 'Job card updated successfully!',
+                            text: isConvertToInvoice
+                                ? 'Job card converted to invoice successfully!'
+                                : 'Job card updated successfully!',
                             confirmButtonColor: '#3085d6'
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                window.location.href = '{{ route("job_card.index") }}';
+                                if (isConvertToInvoice) {
+                                    window.open("/job-card/" + response.job_card_id + "/download-pdf-view", "_blank");
+                                    window.location.href = '{{ route("job_card.invoices") }}';
+                                } else {
+                                    window.location.href = '{{ route("job_card.index") }}';
+                                }
                             }
                         });
                     } else {
