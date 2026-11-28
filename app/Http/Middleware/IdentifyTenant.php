@@ -59,35 +59,43 @@ class IdentifyTenant
         // recover tenant using authenticated user's email or cleanly log out to prevent redirect loops.
         if ($request->hasSession() && \Illuminate\Support\Facades\Auth::guard('web')->check()) {
             $user = \Illuminate\Support\Facades\Auth::guard('web')->user();
-            if ($user && !empty($user->email)) {
-                try {
-                    $tenant = $this->tenancy->resolveByEmail($user->email);
-                    $request->session()->put('tenant_id', $tenant['id']);
-                    $request->session()->put('tenant', $tenant);
-
+            if ($user) {
+                if (in_array(strtolower($user->role ?? ''), ['staff', 'hr'])) {
+                    $parentAdmin = \App\Models\User::where('id', $user->branch_id)->where('isDeleted', 0)->first()
+                        ?? \App\Models\User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
+                    $candidates = array_filter([$parentAdmin?->email, $parentAdmin?->username, $request->getHost()]);
+                    foreach ($candidates as $cand) {
+                        try {
+                            $tenant = (str_contains($cand, '.') && !str_contains($cand, '@'))
+                                ? $this->tenancy->resolveByHost($cand)
+                                : $this->tenancy->resolveByEmail($cand);
+                            $request->session()->put('tenant_id', $tenant['id']);
+                            $request->session()->put('tenant', $tenant);
+                            AppViewData::share();
+                            return $next($request);
+                        } catch (\Throwable) {}
+                    }
                     AppViewData::share();
                     return $next($request);
-                } catch (\Throwable) {
-                    if (in_array(strtolower($user->role ?? ''), ['staff', 'hr'])) {
-                        $parentAdmin = \App\Models\User::where('id', $user->branch_id)->where('isDeleted', 0)->first()
-                            ?? \App\Models\User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
-                        if ($parentAdmin && !empty($parentAdmin->email)) {
-                            try {
-                                $tenant = $this->tenancy->resolveByEmail($parentAdmin->email);
-                                $request->session()->put('tenant_id', $tenant['id']);
-                                $request->session()->put('tenant', $tenant);
-                                AppViewData::share();
-                                return $next($request);
-                            } catch (\Throwable) {}
-                        }
+                }
+
+                if (!empty($user->email)) {
+                    try {
+                        $tenant = $this->tenancy->resolveByEmail($user->email);
+                        $request->session()->put('tenant_id', $tenant['id']);
+                        $request->session()->put('tenant', $tenant);
+
+                        AppViewData::share();
+                        return $next($request);
+                    } catch (\Throwable) {
+                        \Illuminate\Support\Facades\Auth::guard('web')->logout();
+                        $request->session()->invalidate();
+                        $request->session()->regenerateToken();
                     }
+                } else {
                     \Illuminate\Support\Facades\Auth::guard('web')->logout();
                     $request->session()->invalidate();
-                    $request->session()->regenerateToken();
                 }
-            } else {
-                \Illuminate\Support\Facades\Auth::guard('web')->logout();
-                $request->session()->invalidate();
             }
         }
 
