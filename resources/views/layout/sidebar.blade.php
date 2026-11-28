@@ -149,13 +149,15 @@
                     $canMyPlanDetails = in_array($role, ['admin', 'sub-admin']) && tenant_has_module(['My Plan Details', 'Settings']) && tenant_has_sub_module('My Plan Details', 'My Plan Details');
                     $canMyBranch = in_array($role, ['admin', 'sub-admin']) && tenant_has_module(['My Branch', 'Branch', 'Branches']);
                     $canShopSettings = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings']) && tenant_has_sub_module('Shop Settings', 'Shop Settings');
+                    $canChangePassword = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings', 'Change Password']);
+                    $canSmtpSettings = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings', 'Smtp Settings']);
                     $canWhatsAppConfig = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings', 'WhatsApp Configuration']);
                     $canTaxRates = tenant_has_module(['Tax Rates', 'Settings']) && tenant_has_sub_module('Tax Rates', 'Tax Rates');
                     $canDepartments = tenant_has_module(['Departments', 'Settings']) && tenant_has_sub_module('Departments', 'Departments');
                     $canDesignations = tenant_has_module(['Designations', 'Settings']) && tenant_has_sub_module('Designations', 'Designations');
 
-                    $showSettingsSection = tenant_has_module(['Settings', 'My Plan Details', 'My Branch', 'Branch', 'Branches', 'Shop Settings', 'WhatsApp Configuration', 'Tax Rates', 'Departments', 'Designations']) && (
-                        $canMyPlanDetails || $canMyBranch || $canShopSettings || $canWhatsAppConfig || $canTaxRates || $canDepartments || $canDesignations
+                    $showSettingsSection = tenant_has_module(['Settings', 'My Plan Details', 'My Branch', 'Branch', 'Branches', 'Shop Settings', 'Change Password', 'Smtp Settings', 'WhatsApp Configuration', 'Tax Rates', 'Departments', 'Designations']) && (
+                        $canMyPlanDetails || $canMyBranch || $canChangePassword || $canShopSettings || $canSmtpSettings || $canWhatsAppConfig || $canTaxRates || $canDepartments || $canDesignations
                     );
                 @endphp
 
@@ -703,9 +705,17 @@
                             @if ($canMyBranch)
                                 <li><a href="{{ route('subbranch.list') }}" class="{{ request()->routeIs('subbranch.*') ? 'active' : '' }}"><i class="fa fa-code-branch"></i><span>My Branch</span></a></li>
                             @endif
+                            @if ($canChangePassword)
+                                <li><a href="{{ route('auth.change-password') }}" class="{{ request()->routeIs('auth.change-password') ? 'active' : '' }}"><i
+                                            class="fa fa-key"></i><span>Change Password</span></a></li>
+                            @endif
                             @if ($canShopSettings)
                                 <li><a href="{{ route('setting.generalsettings') }}"><i
                                             class="fa fa-store"></i><span>Shop Settings</span></a></li>
+                            @endif
+                            @if ($canSmtpSettings)
+                                <li><a href="{{ route('setting.smtpsettings') }}" class="{{ request()->routeIs('setting.smtpsettings') ? 'active' : '' }}"><i
+                                            class="fa fa-envelope"></i><span>Smtp Settings</span></a></li>
                             @endif
                             @if ($canWhatsAppConfig)
                                 <li><a href="{{ route('setting.facebookappconfiguration') }}" class="{{ request()->routeIs('setting.facebookappconfiguration') ? 'active' : '' }}"><i

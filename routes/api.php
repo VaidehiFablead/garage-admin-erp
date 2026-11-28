@@ -10,6 +10,7 @@ use App\Http\Controllers\api\AutoCarCategoryController;
 use App\Http\Controllers\api\AutoCarModelController;
 use App\Http\Controllers\api\BrandController;
 use App\Http\Controllers\api\CategoryController;
+use App\Http\Controllers\api\ChangePasswordController;
 use App\Http\Controllers\api\CreditNoteItemApiController;
 use App\Http\Controllers\api\CreditNotesTypeController;
 use App\Http\Controllers\api\CurrencyController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\api\PurchaseController;
 use App\Http\Controllers\api\SalaryController;
 use App\Http\Controllers\api\SaleReturnController;
 use App\Http\Controllers\api\SalesController;
+use App\Http\Controllers\api\SmtpSettingController;
 use App\Http\Controllers\api\StaffController;
 use App\Http\Controllers\api\SubBranchController;
 use App\Http\Controllers\api\SupplierController;
@@ -199,11 +201,20 @@ Route::middleware(['auth.api'])->group(function () {
 
     Route::get('/general-settings', [GeneralSettingController::class, 'show'])->name('general-settings.show');
     Route::post('/general-settings/update', [GeneralSettingController::class, 'update'])->name('general-settings.update');
+    Route::post('/general-settings/bank-details', [GeneralSettingController::class, 'updateBankDetails'])->name('general-settings.bank-details');
+    Route::post('/general-settings/delivery-terms', [GeneralSettingController::class, 'updateDeliveryTerms'])->name('general-settings.delivery-terms');
     Route::post('/company-rules/update', [GeneralSettingController::class, 'updateCompanyRules'])->name('company-rules.update');
     Route::post('/dashboard-settings/update', [GeneralSettingController::class, 'updateDashboardSettings'])->name('general-dashboard-settings.update');
     Route::post('/barcode-settings/update', [GeneralSettingController::class, 'updateBarcodeSettings'])->name('barcode-settings.update');
-    Route::post('/sales-settings/update', [GeneralSettingController::class, 'updateBarcodeSettings'])->name('sales-settings.update');
+    Route::post('/sales-settings/update', [GeneralSettingController::class, 'updateSalesSettings'])->name('sales-settings.update');
     Route::post('/order-format-settings/update', [GeneralSettingController::class, 'updateOrderFormatSettings'])->name('order-format-settings.update');
+    Route::post('/event-calendar-settings/update', [GeneralSettingController::class, 'updateEventCalendarSettings'])->name('event-calendar-settings.update');
+    Route::post('/layout-settings/update', [GeneralSettingController::class, 'updateLayoutSettings'])->name('layout-settings.update');
+
+    Route::post('change-password', [ChangePasswordController::class, 'changePassword'])->name('change-password');
+    Route::post('change-password-web', [ChangePasswordController::class, 'changePasswordWeb'])->name('change-password-web');
+    Route::get('/smtp-settings', [SmtpSettingController::class, 'show'])->name('smtp-settings.show');
+    Route::post('/smtp-settings/update', [SmtpSettingController::class, 'update'])->name('smtp-settings.update');
 
     Route::get('/facebook-app-configurations', [FacebookAppConfigurationController::class, 'index'])->name('facebook-app-configurations.index');
     Route::post('/facebook-app-configurations', [FacebookAppConfigurationController::class, 'store'])->name('facebook-app-configurations.store');

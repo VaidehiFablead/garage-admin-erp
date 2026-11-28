@@ -72,9 +72,21 @@ class GeneralSettingController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'favicon' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'qr_code' => 'nullable|image|mimes:jpeg,png,jpg,webp',
+            'signature' => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'remove_logo' => 'nullable',
             'remove_favicon' => 'nullable',
             'remove_qr_code' => 'nullable',
+            'remove_signature' => 'nullable',
+            'cin_no' => 'nullable|string|max:100',
+            'invoice_size' => 'nullable|in:small,big,half',
+            'send_mail' => 'nullable|boolean',
+            'appointment_reminder_hours_before' => 'nullable|integer|min:1',
+            'enable_variant_product' => 'nullable|boolean',
+            'default_language' => 'nullable|string|max:10',
+            'enable_calculator' => 'nullable|boolean',
+            'enable_multiple_price' => 'nullable|boolean',
+            'logo_width' => 'nullable|string|max:50',
+            'logo_height' => 'nullable|string|max:50',
             'customer_whatsapp_message' => 'nullable|boolean',
             'admin_whatsapp_message' => 'nullable|boolean',
         ]);
@@ -88,6 +100,7 @@ class GeneralSettingController extends Controller
 
         // Assign values
         $settings->gst_num = $request->gst_num;
+        $settings->cin_no = $request->cin_no;
         $settings->state_code = $request->state_code;
         $settings->low_stock = $request->low_stock;
         $settings->name = $request->shop_name;
@@ -134,10 +147,43 @@ class GeneralSettingController extends Controller
             $settings->qr_code_without_gst = $qrCodeWithoutGstPath;
         }
 
+        if ($request->remove_signature == 1) {
+            $settings->signature = null;
+        } elseif ($request->hasFile('signature')) {
+            $settings->signature = $request->file('signature')->store('signatures', 'public');
+        }
+
         $settings->office_latitude = $request->office_latitude;
         $settings->office_longitude = $request->office_longitude;
         $settings->radius = $request->radius ?? 200;
         $settings->shop_address = $request->address;
+        if ($request->has('invoice_size')) {
+            $settings->invoice_size = $request->invoice_size;
+        }
+        if ($request->has('send_mail')) {
+            $settings->send_mail = (int) $request->send_mail;
+        }
+        if ($request->has('appointment_reminder_hours_before')) {
+            $settings->appointment_reminder_hours_before = $request->appointment_reminder_hours_before ?: 3;
+        }
+        if ($request->has('enable_variant_product')) {
+            $settings->enable_variant_product = (int) $request->enable_variant_product;
+        }
+        if ($request->filled('default_language')) {
+            $settings->default_language = $request->default_language;
+        }
+        if ($request->has('enable_calculator')) {
+            $settings->enable_calculator = (int) $request->enable_calculator;
+        }
+        if ($request->has('enable_multiple_price')) {
+            $settings->enable_multiple_price = (int) $request->enable_multiple_price;
+        }
+        if ($request->has('logo_width')) {
+            $settings->logo_width = $request->logo_width;
+        }
+        if ($request->has('logo_height')) {
+            $settings->logo_height = $request->logo_height;
+        }
         if ($request->has('customer_whatsapp_message')) {
             $settings->customer_whatsapp_message = (int) $request->customer_whatsapp_message;
         }
@@ -472,5 +518,342 @@ class GeneralSettingController extends Controller
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Could not alter settings table: ' . $e->getMessage());
         }
+    }
+
+    public function updateDeliveryTerms(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            $selectedSubAdminId = $subAdmin ? $subAdmin->id : $userBranchId;
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'terms_condition_eng' => 'nullable|string',
+            'terms_condition_guj' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+        $settings->terms_condition_eng = $request->terms_condition_eng;
+        $settings->terms_condition_guj = $request->terms_condition_guj;
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Delivery terms & conditions updated successfully',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function updateBankDetails(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            $selectedSubAdminId = $subAdmin ? $subAdmin->id : $userBranchId;
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'bank_name'             => 'nullable|string',
+            'branch'                => 'nullable|string',
+            'ac_no'                 => 'nullable|string',
+            'ifsc_code'             => 'nullable|string',
+            'bank_name_without_gst' => 'nullable|string',
+            'branch_without_gst'    => 'nullable|string',
+            'ac_no_without_gst'     => 'nullable|string',
+            'ifsc_code_without_gst' => 'nullable|string',
+            'qr_code'               => 'nullable|image|mimes:jpeg,png,jpg,webp',
+            'qr_code_without_gst'   => 'nullable|image|mimes:jpeg,png,jpg,webp',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+        $settings->bank_name             = $request->bank_name;
+        $settings->branch                = $request->branch;
+        $settings->ac_no                 = $request->ac_no;
+        $settings->ifsc_code             = $request->ifsc_code;
+        $settings->bank_name_without_gst = $request->bank_name_without_gst;
+        $settings->branch_without_gst    = $request->branch_without_gst;
+        $settings->ac_no_without_gst     = $request->ac_no_without_gst;
+        $settings->ifsc_code_without_gst = $request->ifsc_code_without_gst;
+
+        if ($request->remove_qr_code == 1) {
+            $settings->qr_code = null;
+        } elseif ($request->hasFile('qr_code')) {
+            $settings->qr_code = $request->file('qr_code')->store('qr_codes', 'public');
+        }
+
+        if ($request->remove_qr_code_without_gst == 1) {
+            $settings->qr_code_without_gst = null;
+        } elseif ($request->hasFile('qr_code_without_gst')) {
+            $settings->qr_code_without_gst = $request->file('qr_code_without_gst')->store('qr_codes', 'public');
+        }
+
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Bank details & QR code updated successfully',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function updateSalesSettings(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            $selectedSubAdminId = $subAdmin ? $subAdmin->id : $userBranchId;
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'advance_receipt'        => 'nullable|boolean',
+            'rental'                 => 'nullable|boolean',
+            'draft'                  => 'nullable|boolean',
+            'financial_year'         => 'nullable|boolean',
+            'tds_apply'              => 'nullable|boolean',
+            'exchange_apply'         => 'nullable|boolean',
+            'delivery_cost_apply'    => 'nullable|boolean',
+            'other_charges_apply'    => 'nullable|boolean',
+            'labour_apply'           => 'nullable|boolean',
+            'remarks_apply'          => 'nullable|boolean',
+            'show_assign_staff'      => 'nullable|boolean',
+            'show_order_type'        => 'nullable|boolean',
+            'enable_manufacture'     => 'nullable|boolean',
+            'show_bank_details'      => 'nullable|boolean',
+            'show_qr_code'           => 'nullable|boolean',
+            'sales_discount'         => 'nullable|string|in:all,overall,product_wise',
+            'default_payment_method' => 'nullable|string',
+            'barcode_type'           => 'nullable|in:barcode,qrcode',
+            'barcode_setting_type'   => 'nullable|in:simple,detailed',
+            'barcode_detail_option'  => 'nullable|in:long,short',
+            'payment_methods'        => 'nullable|array',
+            'payment_methods.*'      => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+
+        foreach ([
+            'advance_receipt', 'rental', 'draft', 'financial_year', 'tds_apply',
+            'exchange_apply', 'delivery_cost_apply', 'other_charges_apply',
+            'labour_apply', 'remarks_apply', 'show_assign_staff', 'show_order_type',
+            'enable_manufacture', 'show_bank_details', 'show_qr_code'
+        ] as $boolField) {
+            if ($request->has($boolField)) {
+                $settings->{$boolField} = (int) $request->{$boolField};
+            }
+        }
+
+        if ($request->has('sales_discount')) {
+            $settings->sales_discount = $request->sales_discount;
+        }
+        if ($request->has('default_payment_method')) {
+            $settings->default_payment_method = $request->default_payment_method;
+        }
+        if ($request->has('barcode_type')) {
+            $settings->barcode_type = $request->barcode_type;
+        }
+        if ($request->has('barcode_setting_type')) {
+            $settings->barcode_setting_type = $request->barcode_setting_type;
+            if ($request->barcode_setting_type === 'simple') {
+                $settings->barcode_detail_option = null;
+            }
+        }
+        if ($request->has('barcode_detail_option') && $request->barcode_setting_type === 'detailed') {
+            $settings->barcode_detail_option = $request->barcode_detail_option;
+        }
+        if ($request->has('payment_methods')) {
+            $settings->payment_methods = $request->payment_methods;
+        } elseif ($request->hasAny(['advance_receipt', 'rental', 'draft', 'financial_year', 'tds_apply', 'exchange_apply', 'delivery_cost_apply', 'other_charges_apply', 'labour_apply', 'remarks_apply', 'show_assign_staff', 'show_order_type', 'enable_manufacture', 'show_bank_details', 'show_qr_code', 'sales_discount'])) {
+            $settings->payment_methods = [];
+        }
+
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Sales settings updated successfully',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function updateEventCalendarSettings(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            $selectedSubAdminId = $subAdmin ? $subAdmin->id : $userBranchId;
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'enable_event_calendar' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+        if ($request->has('enable_event_calendar')) {
+            $settings->enable_event_calendar = (int) $request->enable_event_calendar;
+        }
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Event Calendar settings updated successfully',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function updateLayoutSettings(Request $request)
+    {
+        $user         = Auth::guard('api')->user();
+        $role         = $user->role;
+        $userBranchId = $user->id;
+
+        $selectedSubAdminId = $request->selectedSubAdminId;
+        if ($selectedSubAdminId === 'null' || $selectedSubAdminId === null || $selectedSubAdminId === '') {
+            $selectedSubAdminId = null;
+        }
+
+        if ($role === 'admin' && !empty($selectedSubAdminId)) {
+            $subAdmin = User::where('id', $selectedSubAdminId)->first();
+            $selectedSubAdminId = $subAdmin ? $subAdmin->id : $userBranchId;
+        } else {
+            $selectedSubAdminId = $userBranchId;
+        }
+
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if ($value === 'undefined' || $value === 'null') {
+                unset($input[$key]);
+            }
+        }
+        $request->replace($input);
+
+        $validator = Validator::make($request->all(), [
+            'pos_layout'  => 'required|in:layout1,layout2',
+            'logo_width'  => 'nullable|string|max:50',
+            'logo_height' => 'nullable|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $settings = Setting::firstOrNew(['branch_id' => $selectedSubAdminId]);
+        $settings->pos_layout = $request->pos_layout;
+        if ($request->has('logo_width')) {
+            $settings->logo_width = $request->logo_width;
+        }
+        if ($request->has('logo_height')) {
+            $settings->logo_height = $request->logo_height;
+        }
+        $settings->save();
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Layout settings updated successfully',
+            'settings' => $settings,
+        ]);
     }
 }

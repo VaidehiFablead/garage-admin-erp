@@ -51,6 +51,7 @@ use App\Http\Controllers\admin\DesignationController;
 use App\Http\Controllers\admin\PlanController;
 use App\Http\Controllers\api\LeaveTypeController as ApiLeaveTypeController;
 use App\Http\Controllers\LicenseController;
+use App\Http\Controllers\SmtpSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -189,6 +190,9 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/api/dashboard-filtered', [AuthController::class, 'getFilteredDashboardData']);
 
         Route::get('/profile', [AuthController::class, 'profile'])->name('auth.profile');
+        Route::get('/change-password', function () {
+            return view('change-password');
+        })->name('auth.change-password');
         Route::get('/taxrates', [AuthController::class, 'taxrates'])->name('auth.taxrates');
         Route::get('/currency', [AuthController::class, 'currency'])->name('auth.currency');
 
@@ -262,6 +266,7 @@ Route::middleware(['check.license'])->group(function () {
         //settings
         Route::get('/setting', [SettingController::class, 'generalsettings'])->name('setting.generalsettings');
         Route::get('/setting/facebook-app-configuration', [SettingController::class, 'facebookappconfiguration'])->name('setting.facebookappconfiguration');
+        Route::get('/settings/smtp', [SmtpSettingController::class, 'index'])->name('setting.smtpsettings');
 
         //salesreturn
 
