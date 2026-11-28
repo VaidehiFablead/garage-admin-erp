@@ -240,6 +240,10 @@
                                             <li><a href="{{ route('labour.import') }}" class="{{ request()->routeIs('labour.import') ? 'active' : '' }}"><i
                                                         class="fa fa-file-import"></i><span>Import Labour Services</span></a></li>
                                         @endif
+                                        @if ($canAllServiceCategory)
+                                            <li><a href="{{ route('autocar.category.import') }}" class="{{ request()->routeIs('autocar.category.import') ? 'active' : '' }}"><i
+                                                        class="fa fa-file-import"></i><span>Import Service Categories</span></a></li>
+                                        @endif
                                     </ul>
                                 </li>
                             @endif

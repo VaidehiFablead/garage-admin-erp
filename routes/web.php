@@ -151,6 +151,10 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/autocar-categories', [AutoCarCategoryController::class, 'autoCategoryList'])->name('autocar.category.list');
         Route::get('/add-autocar-category', [AutoCarCategoryController::class, 'addAutoCategory'])->name('autocar.category.add');
         Route::get('/edit-autocar-category/{id}', [AutoCarCategoryController::class, 'editAutoCategory'])->name('autocar.category.edit');
+        Route::get('/import-autocar-category', [AutoCarCategoryController::class, 'importCategoryView'])->name('autocar.category.import');
+        Route::get('/autocar-category/sample-file', [AutoCarCategoryController::class, 'downloadSampleExcel'])->name('autocar.category.import.sample');
+        Route::get('/autocar-category-sample-csv', [AutoCarCategoryController::class, 'downloadSampleCsv'])->name('autocar.category.sample.csv');
+        Route::get('/autocar-category-sample-excel', [AutoCarCategoryController::class, 'downloadSampleExcel'])->name('autocar.category.sample.excel');
 
         Route::get('/autocar-models', [AutoCarModelController::class, 'modelList'])->name('autocar.model.list');
         Route::get('/add-autocar-model', [AutoCarModelController::class, 'addModel'])->name('autocar.model.add');

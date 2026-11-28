@@ -157,6 +157,8 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/addcategory', [AutoCarCategoryController::class, 'addCategory']);
     Route::post('/autocar/updatecategory', [AutoCarCategoryController::class, 'updateCategory']);
     Route::delete('/deletecategory/{id}', [AutoCarCategoryController::class, 'deleteCategory']);
+    Route::post('/importAutoCarCategories', [AutoCarCategoryController::class, 'importCategories'])->name('importAutoCarCategories');
+    Route::get('/export-autocar-categories', [AutoCarCategoryController::class, 'export_categories'])->name('exportAutoCarCategories');
 
     Route::get('/getAllModels', [AutoCarModelController::class, 'getAllModels']);
     Route::post('/addmodel', [AutoCarModelController::class, 'addModel']);
