@@ -3,483 +3,231 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Invoice PDF</title>
+    <title>Invoice - {{ $jobCard->bill_no ?? $jobCard->job_card_number ?? '' }}</title>
     <style>
         @page {
             size: A4;
-            margin: 1mm 1mm;
+            margin: 7mm 8mm;
         }
 
         body {
-            font-family: 'DejaVu Sans', 'Helvetica Neue', 'Helvetica', Arial, sans-serif;
-            font-size: 12px;
-            /* Set base font size here */
+            font-family: 'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10px;
+            color: #1f2937;
             margin: 0;
             padding: 0;
-            background: white;
-        }
-        .pdf-wrapper {
-            margin-top: 3mm; /* ensures top border is visible */
+            background: #ffffff;
         }
 
-        .card-body {
-            width: 95%;
-            min-height: 95%;
-            padding: 3mm;
-            margin: auto;
+        .jobcard-box {
+            border: 1.5px solid #1f2937;
+            padding: 9px 11px;
+            position: relative;
+            min-height: 270mm;
             box-sizing: border-box;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid black;
-            font-size: 12px;
-        }
-
-        table,
-        table td,
-        table th {
-            font-size: inherit;
-            /* Make sure tables inherit the font size */
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            /* margin-bottom: 20px; */
-        }
-
-        .header-table {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            margin-bottom: 30px;
         }
 
         .header-table td {
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
-        .table-bordered th,
-        .table-bordered td {
-            border: 1px solid #dee2e6;
-            padding: 4px 8px;
-        }
-
-        .table-bordered thead tr {
-            background-color: #e9ecf0ff;
-            color: #333;
-        }
-
-        .table-bordered tbody tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        .table-bordered tfoot tr {
+        .badge-title {
+            display: inline-block;
+            background: #1f2937;
+            color: #ffffff;
+            font-size: 11.5px;
             font-weight: bold;
-            background-color: #e9ecef;
+            letter-spacing: 0.8px;
+            padding: 4px 10px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
         }
 
-        .text-end {
-            text-align: right;
+        .meta-bar {
+            width: 100%;
+            margin: 6px 0 7px 0;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .meta-bar td {
+            padding: 4px 6px;
+            border-right: 1px solid #cbd5e1;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 9.5px;
+        }
+
+        .meta-bar tr td:last-child {
+            border-right: none;
+        }
+
+        .meta-bar tr:last-child td {
+            border-bottom: none;
+        }
+
+        .section-title {
+            background: #e2e8f0;
+            color: #0f172a;
+            font-weight: bold;
+            font-size: 9.5px;
+            text-transform: uppercase;
+            padding: 3px 7px;
+            border: 1px solid #cbd5e1;
+            margin-top: 6px;
+        }
+
+        .info-grid {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            margin-bottom: 6px;
+        }
+
+        .info-grid > tbody > tr > td {
+            padding: 4px 7px;
+            vertical-align: top;
+            font-size: 9.5px;
+        }
+
+        .info-subtable td {
+            padding: 2px 3px;
+            border-bottom: 1px dotted #e2e8f0;
+            font-size: 9.5px;
+        }
+
+        .info-subtable tr:last-child td {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #475569;
+            width: 35%;
+        }
+
+        .work-table {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        .work-table th {
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 9px;
+            text-transform: uppercase;
+            padding: 4px 5px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+        }
+
+        .work-table td {
+            padding: 3px 5px;
+            border: 1px solid #cbd5e1;
+            font-size: 9.5px;
         }
 
         .text-center {
             text-align: center;
         }
 
-        .mb-0 {
-            margin-bottom: 0;
-        }
-
-        h3,
-        h4 {
-            margin: 0 0 10px 0;
-            color: #343a40;
-        }
-
-        .invoice-title {
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 2px solid #e5e7ebff;
-            display: inline-block;
-            padding-bottom: 5px;
-            margin-bottom: 20px;
-        }
-
-        .logo-container {
-            position: relative;
-            min-height: 50px;
-            margin-bottom: 10px;
-        }
-
-        .logo-container .qr-code {
-            height: 60px;
-            position: absolute;
-            /* top: 0;
-            left: 0; */
-        }
-
-        .logo-container .company-logo {
-            height: 50px;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .logo-container .company-details {
-            text-align: center;
-        }
-
-
-        .signature-section img {
-            height: 50px;
-            margin-top: 5px;
-        }
-
-        .signature-section {
-            margin-top: 50px;
+        .text-right, .text-end {
             text-align: right;
         }
 
-        @php
-            $totalthing = count($partsData) + count($labourData);
-            $footerBottom = ($totalthing > 13) ? 60 : 45;
-        @endphp
-        
-        .footer-section {
-            width: 95%;
-            position: fixed;
-            bottom: {{ $footerBottom }}px;
-            left: 20px;
-            right: 0;
+        .text-left, .text-start {
+            text-align: left;
         }
-        /* .page-break {
-            page-break-before: auto;
-        } */
+
+        .summary-grid {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            margin-top: 6px;
+        }
+
+        .summary-grid > tbody > tr > td {
+            padding: 5px 8px;
+            vertical-align: top;
+            font-size: 9.5px;
+        }
+
+        .grand-total-row {
+            border-top: 1.5px solid #0f172a;
+            margin-top: 4px;
+            padding-top: 4px;
+            font-size: 11.5px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .signature-table {
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+            padding-top: 20px;
+            font-size: 9.5px;
+            color: #334155;
+        }
+
+        .sig-line {
+            border-top: 1px solid #475569;
+            width: 70%;
+            margin: 0 auto 3px auto;
+        }
     </style>
 </head>
 
 <body>
-<div class="pdf-wrapper">
-    <div class="card-body">
-        <table style="width:100%; margin-bottom: 10px; border-collapse: collapse;">
-            <tr>
-                <!-- Logo on the left -->
-                <td style="width: 150px; vertical-align: top;">
-                    @if (isset($setting->logo) && file_exists(storage_path('app/public/' . $setting->logo)))
-                        @php
-                            $logoPath = storage_path('app/public/' . $setting->logo);
-                            $logoData = base64_encode(file_get_contents($logoPath));
-                            $logoMime = mime_content_type($logoPath);
-                        @endphp
-                        <img src="data:{{ $logoMime }};base64,{{ $logoData }}" alt="Company Logo"
-                            style="height: 60px; width: auto;">
-                    @endif
-                </td>
+    @php
+        $currency = $setting->currency_symbol ?? 'Rs.';
+        $isQuotation = strtolower($jobCard->type ?? '') === 'quotation';
+        $formattedDate = $jobCard->date ? \Carbon\Carbon::parse($jobCard->date)->format('d-m-Y') : '--';
+        $formattedDueDate = $jobCard->next_due_date ? \Carbon\Carbon::parse($jobCard->next_due_date)->format('d-m-Y') : '--';
+        $gstEnabled = ((string) ($jobCard->gst ?? '')) === '1';
 
-                <!-- Company info on the right -->
-                <td style="vertical-align: middle; text-align: right; padding-left: 15px;">
-                    <h3 style="margin: 0; text-transform: uppercase;">
-                        {{ $setting->name ?? '' }}
-                    </h3>
-                    <small style="text-transform: uppercase;">
-                        {{ $setting->address ?? '' }}<br> 
-                        Phone: {{ $setting->phone ?? '' }} | 
-                        Email: <span style="text-transform: none;">{{ $setting->email ?? '' }}</span>
-                    </small>
-                </td>
-            </tr>
-        </table>
+        $customerName = $jobCard->customer->name ?? ($jobCard->customer_name ?: ($jobCard->customer_id ?? '--'));
+        $customerGst = $jobCard->gst_no ?: ($jobCard->customer->gst_num ?? '--');
+        $customerEmail = $jobCard->customer->email ?? null;
 
+        // Decode JSON discounts
+        $labourDiscount = json_decode($jobCard->labour_discount ?? '{}', true) ?: [];
+        $partsDiscount = json_decode($jobCard->parts_discount ?? '{}', true) ?: [];
 
-
-        <hr style="height: 2px; background-color: #d7cdcd; border: none; margin-top: 0; margin-bottom: 20px;">
-
-
-        <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-    <tr>
-        <td style="text-align: left; width: 33%;">
-            <strong>INVOICE NO : {{ $jobCard->bill_no ?? ' -- ' }}</strong>
-        </td>
-        <td style="text-align: center; width: 34%;">
-            <h3 style="margin: 0; text-transform: uppercase; text-decoration: underline;">Bill of Supply</h3>
-        </td>
-        <td style="text-align: right; width: 33%;">
-            <strong>GST NO : {{ $setting->gst_num ?? ' -- ' }}</strong>
-        </td>
-    </tr>
-</table>
-
-
-        <table style="width:100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px;">
-            <tr>
-                <!-- Customer Details -->
-                <!-- Customer Details -->
-                <td
-                    style="width:33%; position: relative; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <strong style="text-transform: uppercase; display: block; margin-bottom: 1rem;">Customer
-                        Details:</strong>
-                    <table style="width:100%; border-collapse: collapse; font-size: 10px; color: inherit;">
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Name :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                {{ $jobCard->customer->name ?? ($jobCard->customer_id ?? '--') }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Location :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                @php
-                                    $address = $jobCard->address ?? '--';
-                                    if ($address !== '--') {
-                                        $words = explode(' ', $address);
-                                        $chunks = array_chunk($words, 3);
-                                        $formattedAddress = implode(' ', array_map(fn($chunk) => implode(' ', $chunk), $chunks));
-                                        echo $formattedAddress;
-                                    } else {
-                                        echo $address;
-                                    }
-                                @endphp
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Mobile :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->mobile ?? '--' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">GST No :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->customer->gst_num ?? '--' }}</td>
-                        </tr>
-                    </table>
-
-                    <div style="position: absolute; right: 0; top: 2%; height: 12%; border-right: 1px solid #ff9f43;"></div>
-                </td>
-
-                <!-- Vehicle Details -->
-                <td style="width:33%; position: relative; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <strong style="text-transform: uppercase; display: block; margin-bottom: 1rem;">Vehicle
-                        Details:</strong>
-                    <table style="width:100%; border-collapse: collapse; font-size: 10px; color: inherit;">
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Reg No :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->vehicle_no ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Model :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $model_name }}</td>
-                        </tr>
-                        <!-- <tr>
-                            <td style="padding: 0 0 8px 0;">Engine No :</td>
-                            <td style="text-align: right; padding: 0;">{{ $jobCard->engine_no ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Chassis No :</td>
-                            <td style="text-align: right; padding: 0;">{{ $jobCard->chassis_no ?? '-' }}</td>
-                        </tr> -->
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">KM :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->km_hours ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Due KM :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->due_km_hours ?? '-' }}</td>
-                        </tr>
-                    </table>
-                    <div style="position: absolute; right: 0; top: 2%; height: 12%; border-right: 1px solid #ff9f43;"></div>
-                </td>
-
-
-                <!-- Invoice Details -->
-                <td
-                    style="width:34%; border: 0px solid #dee2e6; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <strong style="text-transform: uppercase; display: block; margin-bottom: 1rem;">Invoice
-                        Details:</strong>
-                        @php
-                            $isQuotation = strtolower($jobCard->type ?? '') === 'quotation';  
-                        @endphp
-                    <table style="width:100%; border-collapse: collapse; font-size: 10px; color: inherit;">
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">{{ $isQuotation ? 'Quotation No :' : 'Job No :' }}</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->job_card_number ?? '-' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Type :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $jobCard->type }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Date :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                {{ \Carbon\Carbon::parse($jobCard->date)->format('d-M-Y') ?? '-' }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 8px 0;">Due Date :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                {{ \Carbon\Carbon::parse($jobCard->next_due_date)->format('d-M-Y') ?? '-' }}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-
-
-        <div class="text-center">
-            <h4 style="text-transform: uppercase;">Labour</h4>
-        </div>
-        <table class="table-bordered" style="border: 1px solid #d8dadd;">
-            <thead>
-                <tr>
-                    <th style="width:10%; background-color:#FF9F43; color:#fff;">Sr No</th>
-                    <th class="text-center" style="background-color:#FF9F43; color:#fff;">Description</th>
-                    <th class="text-center" style="width:15%; background-color:#FF9F43; color:#fff;">Rate</th>
-
-                    {{-- Dynamic Tax Columns --}}
-                    @foreach ($labourGst as $tax)
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">
-                            {{ $tax['tax_name'] }} ({{ $tax['rate'] }}%)
-                        </th>
-                    @endforeach
-
-                    <th class="text-center" style="width:20%; background-color:#FF9F43; color:#fff;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $labourTotal = 0; @endphp
-                @forelse($labourData as $index => $labour)
-                    @php
-                        $price = $labour['price'] ?? 0;
-                        $rowTotal = $price;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $loop->iteration }}</td>
-                        <td class="text-start">{{ $labour['name'] ?? 'N/A' }}</td>
-                        <td class="text-center">{{ number_format($price, 2) }}</td>
-
-                        {{-- Row-wise tax calculation (only if GST is available) --}}
-                        @if (!empty($labourGst))
-                            @foreach ($labourGst as $tax)
-                                @php
-                                    $taxRate = $tax['rate'] ?? 0;
-                                    $taxAmount = ($price * $taxRate) / 100;
-                                    $rowTotal += $taxAmount;
-                                @endphp
-                                <td class="text-center">{{ number_format($taxAmount, 2) }}</td>
-                            @endforeach
-                        @endif
-
-                        <td class="text-center">{{ number_format($rowTotal, 2) }}</td>
-                    </tr>
-                    @php $labourTotal += $rowTotal; @endphp
-                @empty
-                    <tr>
-                        <td colspan="{{ 3 + (!empty($labourGst) ? count($labourGst) : 0) + 1 }}" class="text-center">
-                            No labour data available
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-
-        </table>
-
-
-        <br>
-
-        @if (count($partsData) > 0)
-            <div class="text-center">
-                <h4 style="text-transform: uppercase;">Parts</h4>
-            </div>
-            <table class="table-bordered" style="border: 1px solid #d8dadd;">
-                <thead>
-                    <tr>
-                        <th style="width:10%; background-color:#FF9F43; color:#fff;">Sr No</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">Description</th>
-                        <th class="text-center" style="width:10%; background-color:#FF9F43; color:#fff;">Qty</th>
-                        <th class="text-center" style="width:15%; background-color:#FF9F43; color:#fff;">Rate</th>
-
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">CGST (%)</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">CGST (Rs.)</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">SGST (%)</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">SGST (Rs.)</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">IGST (%)</th>
-                        <th class="text-center" style="background-color:#FF9F43; color:#fff;">IGST (Rs.)</th>
-
-                        <th class="text-center" style="width:20%; background-color:#FF9F43; color:#fff;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $partsTotal = 0; @endphp
-                    @foreach ($partsData as $index => $part)
-                        @php
-                            $qty = $part['qty'] ?? 1;
-                            $rate = $part['price'] ?? 0;
-                            $baseAmount = $qty * $rate;
-                            
-                            $cgstP = $part['cgst_percent'] ?? 0;
-                            $sgstP = $part['sgst_percent'] ?? 0;
-                            $igstP = $part['igst_percent'] ?? 0;
-
-                            $cgstA = ($baseAmount * $cgstP) / 100;
-                            $sgstA = ($baseAmount * $sgstP) / 100;
-                            $igstA = ($baseAmount * $igstP) / 100;
-
-                            $rowTotal = $baseAmount + $cgstA + $sgstA + $igstA;
-                        @endphp
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="text-start">{{ $part['name'] ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $qty }}</td>
-                            <td class="text-center">{{ number_format($rate, 2) }}</td>
-
-                            <td class="text-center">{{ $cgstP }}</td>
-                            <td class="text-center">{{ number_format($cgstA, 2) }}</td>
-                            <td class="text-center">{{ $sgstP }}</td>
-                            <td class="text-center">{{ number_format($sgstA, 2) }}</td>
-                            <td class="text-center">{{ $igstP }}</td>
-                            <td class="text-center">{{ number_format($igstA, 2) }}</td>
-
-                            <td class="text-center">{{ number_format($rowTotal, 2) }}</td>
-                        </tr>
-                        @php $partsTotal += $rowTotal; @endphp
-                    @endforeach
-
-                </tbody>
-            </table>
-        @endif
-
-        @php
-
-            // Decode JSON discounts
-            $labourDiscount = json_decode($jobCard->labour_discount ?? '{}', true);
-            $partsDiscount = json_decode($jobCard->parts_discount ?? '{}', true);
-
-            // Compute actual discount amounts
-            $labourDiscountAmount = 0;
-            if (!empty($labourDiscount)) {
-                if (($labourDiscount['type'] ?? '') === '%') {
-                    $labourDiscountAmount = ($labourTotal ?? 0) * ($labourDiscount['amount'] ?? 0) / 100;
-                } else {
-                    $labourDiscountAmount = $labourDiscount['amount'] ?? 0;
-                }
+        // Compute actual discount amounts
+        $labourDiscountAmount = 0;
+        if (!empty($labourDiscount)) {
+            if (($labourDiscount['type'] ?? '') === '%') {
+                $labourDiscountAmount = ($labourTotal ?? 0) * (float) ($labourDiscount['amount'] ?? 0) / 100;
+            } else {
+                $labourDiscountAmount = (float) ($labourDiscount['amount'] ?? 0);
             }
+        }
 
-            $partsDiscountAmount = 0;
-            if (!empty($partsDiscount)) {
-                if (($partsDiscount['type'] ?? '') === '%') {
-                    $partsDiscountAmount = ($partsTotal ?? 0) * ($partsDiscount['amount'] ?? 0) / 100;
-                } else {
-                    $partsDiscountAmount = $partsDiscount['amount'] ?? 0;
-                }
+        $partsDiscountAmount = 0;
+        if (!empty($partsDiscount)) {
+            if (($partsDiscount['type'] ?? '') === '%') {
+                $partsDiscountAmount = ($partsTotal ?? 0) * (float) ($partsDiscount['amount'] ?? 0) / 100;
+            } else {
+                $partsDiscountAmount = (float) ($partsDiscount['amount'] ?? 0);
             }
+        }
 
-            // Compute grand total after discount
+        $extraDiscount = (float) ($jobCard->discount ?? 0);
+        $grandTotal = (float) ($jobCard->total_subtotal_amount ?? (($labourTotal ?? 0) + ($partsTotal ?? 0) - $labourDiscountAmount - $partsDiscountAmount - $extraDiscount));
+        $remainingAmount = (float) ($jobCard->remaining_amount ?? $grandTotal);
+        $paidAmount = max($grandTotal - $extraDiscount - $remainingAmount, 0);
 
-
-        @endphp
-
-        @php
-            $grandTotal = ($labourTotal ?? 0) + ($partsTotal ?? 0) - $labourDiscountAmount - $partsDiscountAmount;
-
+        if (!function_exists('convertNumberToWords')) {
             function convertNumberToWords($number)
             {
                 $hyphen = '-';
@@ -517,7 +265,7 @@
                 ];
 
                 if (!is_numeric($number)) {
-                    return false;
+                    return '';
                 }
 
                 if ($number < 0) {
@@ -557,138 +305,358 @@
                 }
                 return $string;
             }
+        }
 
-            $amountInWords = ucwords(convertNumberToWords((int) $grandTotal)) . ' Rupees';
-        @endphp
-        @php
-            $totalthing = count($partsData) + count($labourData);
-        @endphp
-        
-        @if($totalthing > 13 && $totalthing <= 27)
-            <div style="page-break-before: always;"></div>
-        @endif
-        @if($totalthing > 27)
-            <div style="page-break-before: auto;"></div>
-        @endif
-<div class="footer-section">
-        <!-- Bank Details + Totals: table layout -->
-        <table style="width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 12px; color: #000;">
+        $amountInWords = ucwords(convertNumberToWords((int) round($grandTotal))) . ' Rupees';
+    @endphp
+
+    <div class="jobcard-box">
+        {{-- Garage Header --}}
+        <table class="header-table">
             <tr>
-                <!-- Bank Details -->
-                <td
-                    style="width:50%; border: 2px solid #FF9F43; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <strong style="display: block; margin-bottom: 1rem; text-transform: uppercase;">Bank
-                        Details:</strong>
-                    <table style="width:100%; border-collapse: collapse; font-size: 12px; color: inherit;">
+                <td style="width: 22%;">
+                    @php
+                        $logoSrc = null;
+                        $candidatePaths = [];
+                        if (!empty($setting->logo)) {
+                            $candidatePaths[] = storage_path('app/public/' . $setting->logo);
+                            $candidatePaths[] = public_path('storage/' . $setting->logo);
+                        }
+                        $candidatePaths[] = public_path('admin/assets/img/logo.png');
+                        $candidatePaths[] = public_path('admin/assets/img/logo3.png');
+
+                        foreach ($candidatePaths as $path) {
+                            if ($path && file_exists($path) && is_file($path)) {
+                                $mime = mime_content_type($path);
+                                if ($mime === 'image/webp' && function_exists('imagecreatefromwebp')) {
+                                    $img = @imagecreatefromwebp($path);
+                                    if ($img) {
+                                        ob_start();
+                                        imagepng($img);
+                                        $pngData = ob_get_clean();
+                                        imagedestroy($img);
+                                        if ($pngData) {
+                                            $logoSrc = 'data:image/png;base64,' . base64_encode($pngData);
+                                            break;
+                                        }
+                                    }
+                                } elseif ($mime !== 'image/webp') {
+                                    $logoSrc = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+                                    break;
+                                }
+                            }
+                        }
+                    @endphp
+                    @if ($logoSrc)
+                        <img src="{{ $logoSrc }}" alt="Company Logo" style="max-height: 52px; max-width: 140px; width: auto;">
+                    @endif
+                </td>
+                <td style="width: 50%; text-align: center;">
+                    <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">
+                        {{ $setting->name ?? 'Garage Workshop' }}
+                    </div>
+                    <div style="font-size: 9px; color: #475569; margin-top: 2px;">
+                        {{ $setting->address ?? '' }}<br>
+                        @if(!empty($setting->phone)) Ph: {{ $setting->phone }} @endif
+                        @if(!empty($setting->alt_phone)) / {{ $setting->alt_phone }} @endif
+                        @if(!empty($setting->email)) | {{ $setting->email }} @endif
+                        @if(!empty($setting->gst_num)) <br>GSTIN: {{ $setting->gst_num }} @endif
+                    </div>
+                </td>
+                <td style="width: 28%; text-align: right;">
+                    <div class="badge-title">{{ $isQuotation ? 'QUOTATION' : 'TAX INVOICE' }}</div>
+                    <div style="font-size: 9.5px; color: #475569; margin-top: 2px;">
+                        <strong>Invoice #:</strong> {{ $jobCard->bill_no ?: ($jobCard->job_card_number ?? '--') }}<br>
+                        <strong>Job Card #:</strong> {{ $jobCard->job_card_number ?? '--' }}<br>
+                        <strong>Date:</strong> {{ $formattedDate }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Invoice Key Meta Bar --}}
+        <table class="meta-bar">
+            <tr>
+                <td><strong>Invoice Date:</strong> {{ $formattedDate }}</td>
+                <td><strong>Next Due Date:</strong> {{ $formattedDueDate }}</td>
+                <td><strong>Type:</strong> {{ $jobCard->type ?? ($isQuotation ? 'Quotation' : 'Invoice') }}</td>
+                <td><strong>Payment Status:</strong> {{ ucfirst($jobCard->payment_status ?? ($remainingAmount <= 0 && $grandTotal > 0 ? 'Completed' : 'Pending')) }}</td>
+                <td><strong>GST Mode:</strong> {{ $gstEnabled ? 'With GST' : 'Without GST' }}</td>
+            </tr>
+        </table>
+
+        {{-- Customer & Vehicle Details --}}
+        <div class="section-title">Customer &amp; Vehicle Details</div>
+        <table class="info-grid">
+            <tr>
+                <td style="width: 50%; border-right: 1px solid #cbd5e1;">
+                    <table class="info-subtable">
                         <tr>
-                            <td style="padding: 0 0 5px 0;">Bank Name :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $setting->bank_name ?? 'N/A' }}</td>
+                            <td class="label">Customer Name</td>
+                            <td><strong>{{ $customerName }}</strong></td>
                         </tr>
                         <tr>
-                            <td style="padding: 0 0 5px 0;">Branch :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $setting->branch ?? 'N/A' }}</td>
+                            <td class="label">Mobile No</td>
+                            <td>{{ $jobCard->mobile ?: '--' }}</td>
+                        </tr>
+                        @if ($customerEmail)
+                            <tr>
+                                <td class="label">Email</td>
+                                <td>{{ $customerEmail }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td class="label">Address</td>
+                            <td>{{ $jobCard->address ?: '--' }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 0 0 5px 0;">A/C No :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $setting->ac_no ?? 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0 0 5px 0;">IFSC Code :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ $setting->ifsc_code ?? 'N/A' }}</td>
+                            <td class="label">Customer GST No</td>
+                            <td>{{ $customerGst }}</td>
                         </tr>
                     </table>
                 </td>
-
-
-                <!-- QR Code -->
-                <td
-                    style="width: 25%; border: 2px solid #FF9F43; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <table style="width: 100%; font-size: 12px; border-collapse: collapse; color: inherit;">
+                <td style="width: 50%;">
+                    <table class="info-subtable">
                         <tr>
-                            <td style="text-align: center; vertical-align: middle;">
+                            <td class="label">Vehicle Reg No</td>
+                            <td><strong>{{ $jobCard->vehicle_no ?: '--' }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Model / Make</td>
+                            <td>{{ $model_name ?? '--' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Chassis No</td>
+                            <td>{{ $jobCard->chassis_no ?: '--' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Engine No</td>
+                            <td>{{ $jobCard->engine_no ?: '--' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Odometer (KM/Hr)</td>
+                            <td>{{ $jobCard->km_hours ?? '--' }} &nbsp;|&nbsp; <strong>Next Due:</strong> {{ $jobCard->due_km_hours ?? '--' }}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Labour / Services Table --}}
+        <div class="section-title">Labour &amp; Services</div>
+        <table class="work-table">
+            <thead>
+                <tr>
+                    <th style="width: 6%;" class="text-center">#</th>
+                    <th>Service / Labour Description</th>
+                    <th style="width: 14%;" class="text-right">Rate ({{ $currency }})</th>
+                    @if (!empty($labourGst))
+                        @foreach ($labourGst as $tax)
+                            <th style="width: 12%;" class="text-center">
+                                {{ $tax['tax_name'] }} ({{ $tax['rate'] }}%)
+                            </th>
+                        @endforeach
+                    @endif
+                    <th style="width: 15%;" class="text-right">Total ({{ $currency }})</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $labourTotal = 0; @endphp
+                @forelse($labourData as $index => $labour)
+                    @php
+                        $price = (float) ($labour['price'] ?? 0);
+                        $rowTotal = $price;
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td>{{ $labour['name'] ?? 'N/A' }}</td>
+                        <td class="text-right">{{ number_format($price, 2) }}</td>
+                        @if (!empty($labourGst))
+                            @foreach ($labourGst as $tax)
+                                @php
+                                    $taxRate = (float) ($tax['rate'] ?? 0);
+                                    $taxAmount = ($price * $taxRate) / 100;
+                                    $rowTotal += $taxAmount;
+                                @endphp
+                                <td class="text-center">{{ number_format($taxAmount, 2) }}</td>
+                            @endforeach
+                        @endif
+                        <td class="text-right">{{ number_format($rowTotal, 2) }}</td>
+                    </tr>
+                    @php $labourTotal += $rowTotal; @endphp
+                @empty
+                    <tr>
+                        <td colspan="{{ 3 + (!empty($labourGst) ? count($labourGst) : 0) }}" class="text-center" style="color: #64748b;">
+                            No labour data available.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        {{-- Parts & Materials Table --}}
+        @if (count($partsData) > 0)
+            <div class="section-title">Parts &amp; Consumables</div>
+            <table class="work-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;" class="text-center">#</th>
+                        <th>Part Description</th>
+                        <th style="width: 6%;" class="text-center">Qty</th>
+                        <th style="width: 11%;" class="text-right">Rate</th>
+                        <th style="width: 7%;" class="text-center">CGST (%)</th>
+                        <th style="width: 8%;" class="text-right">CGST</th>
+                        <th style="width: 7%;" class="text-center">SGST (%)</th>
+                        <th style="width: 8%;" class="text-right">SGST</th>
+                        <th style="width: 7%;" class="text-center">IGST (%)</th>
+                        <th style="width: 8%;" class="text-right">IGST</th>
+                        <th style="width: 13%;" class="text-right">Total ({{ $currency }})</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $partsTotal = 0; @endphp
+                    @foreach ($partsData as $index => $part)
+                        @php
+                            $qty = (float) ($part['qty'] ?? 1);
+                            $rate = (float) ($part['price'] ?? 0);
+                            $baseAmount = $qty * $rate;
+
+                            $cgstP = (float) ($part['cgst_percent'] ?? 0);
+                            $sgstP = (float) ($part['sgst_percent'] ?? 0);
+                            $igstP = (float) ($part['igst_percent'] ?? 0);
+
+                            $cgstA = ($baseAmount * $cgstP) / 100;
+                            $sgstA = ($baseAmount * $sgstP) / 100;
+                            $igstA = ($baseAmount * $igstP) / 100;
+
+                            $rowTotal = $baseAmount + $cgstA + $sgstA + $igstA;
+                        @endphp
+                        <tr>
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td>{{ $part['name'] ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $qty }}</td>
+                            <td class="text-right">{{ number_format($rate, 2) }}</td>
+                            <td class="text-center">{{ $cgstP > 0 ? $cgstP . '%' : '-' }}</td>
+                            <td class="text-right">{{ number_format($cgstA, 2) }}</td>
+                            <td class="text-center">{{ $sgstP > 0 ? $sgstP . '%' : '-' }}</td>
+                            <td class="text-right">{{ number_format($sgstA, 2) }}</td>
+                            <td class="text-center">{{ $igstP > 0 ? $igstP . '%' : '-' }}</td>
+                            <td class="text-right">{{ number_format($igstA, 2) }}</td>
+                            <td class="text-right">{{ number_format($rowTotal, 2) }}</td>
+                        </tr>
+                        @php $partsTotal += $rowTotal; @endphp
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+
+        {{-- Bank Details & Totals Summary --}}
+        <table class="summary-grid">
+            <tr>
+                {{-- Left: Bank Details, QR & Remarks --}}
+                <td style="width: 54%; border-right: 1px solid #cbd5e1;">
+                    <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 3px; font-size: 9.5px; color: #0f172a;">
+                        Bank Details:
+                    </div>
+                    <table style="width: 100%; font-size: 9px; margin-bottom: 5px;">
+                        <tr>
+                            <td style="width: 65%; vertical-align: top;">
+                                <div><strong>Bank:</strong> {{ $setting->bank_name ?? 'N/A' }}</div>
+                                <div><strong>Branch:</strong> {{ $setting->branch ?? 'N/A' }}</div>
+                                <div><strong>A/C No:</strong> {{ $setting->ac_no ?? 'N/A' }}</div>
+                                <div><strong>IFSC:</strong> {{ $setting->ifsc_code ?? 'N/A' }}</div>
+                            </td>
+                            <td style="width: 35%; text-align: center; vertical-align: middle;">
                                 @if (isset($setting->qr_code) && file_exists(storage_path('app/public/' . $setting->qr_code)))
                                     @php
-                                        $imageData = base64_encode(file_get_contents(storage_path('app/public/' . $setting->qr_code)));
-                                        $mimeType = mime_content_type(storage_path('app/public/' . $setting->qr_code));
+                                        $qrPath = storage_path('app/public/' . $setting->qr_code);
+                                        $qrData = base64_encode(file_get_contents($qrPath));
+                                        $qrMime = mime_content_type($qrPath);
                                     @endphp
-                                    <img src="data:{{ $mimeType }};base64,{{ $imageData }}"
-                                        style="width:80px; height:80px;">
+                                    <img src="data:{{ $qrMime }};base64,{{ $qrData }}" style="width: 58px; height: 58px; border: 1px solid #cbd5e1;">
                                 @endif
                             </td>
                         </tr>
                     </table>
+
+                    <div style="border-top: 1px dotted #cbd5e1; padding-top: 3px; margin-top: 3px;">
+                        <strong>Amount In Words:</strong><br>
+                        <span style="font-size: 9px; color: #334155;">{{ $amountInWords }} Only</span>
+                    </div>
+
+                    @if (!empty($jobCard->remark))
+                        <div style="margin-top: 3px; font-size: 9px;">
+                            <strong>Remarks:</strong> {{ $jobCard->remark }}
+                        </div>
+                    @endif
                 </td>
 
-
-                <!-- Totals -->
-                <td
-                    style="width: 25%; border: 2px solid #FF9F43; padding: 8px 12px; vertical-align: top; background-color: #eaedf0;">
-                    <table style="width: 100%; font-size: 12px; border-collapse: collapse; color: inherit;">
+                {{-- Right: Totals Breakdown --}}
+                <td style="width: 46%; text-align: right;">
+                    <table style="width: 100%; font-size: 9.5px;">
                         <tr>
-                            <td style="padding: 0;">Total Parts :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ number_format($partsTotal ?? 0, 2) }}
+                            <td class="text-left" style="color: #475569;">Total Labour:</td>
+                            <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($labourTotal ?? 0), 2) }}</strong></td>
+                        </tr>
+                        @if ($labourDiscountAmount > 0)
+                            <tr>
+                                <td class="text-left" style="color: #dc2626;">Labour Discount:</td>
+                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($labourDiscountAmount, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td class="text-left" style="color: #475569;">Total Parts:</td>
+                            <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($partsTotal ?? 0), 2) }}</strong></td>
+                        </tr>
+                        @if ($partsDiscountAmount > 0)
+                            <tr>
+                                <td class="text-left" style="color: #dc2626;">Parts Discount:</td>
+                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($partsDiscountAmount, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($extraDiscount > 0)
+                            <tr>
+                                <td class="text-left" style="color: #dc2626;">Additional Discount:</td>
+                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($extraDiscount, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr>
+                            <td class="text-left" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">Grand Total:</td>
+                            <td class="text-right" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">
+                                {{ $currency }} {{ number_format($grandTotal, 2) }}
                             </td>
                         </tr>
-                        <tr>
-                            <td style="padding: 0;">Total Labour :</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">{{ number_format($labourTotal ?? 0, 2) }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0;">Labour Discount:</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                {{ $labourDiscountData['type'] ?? '' }} {{ number_format($labourDiscountAmount, 2) }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0;">Parts Discount:</td>
-                            <td style="text-align: right; padding: 0 0 8px 0;">
-                                {{ $partsDiscountData['type'] ?? '' }} {{ number_format($partsDiscountAmount, 2) }}
-                            </td>
-                        </tr>
+                        @if ($paidAmount > 0)
+                            <tr>
+                                <td class="text-left" style="color: #16a34a; font-size: 9px;">Paid Amount:</td>
+                                <td class="text-right" style="color: #16a34a; font-size: 9px;">{{ $currency }} {{ number_format($paidAmount, 2) }}</td>
+                            </tr>
+                        @endif
+                        @if ($remainingAmount > 0 && $remainingAmount < $grandTotal)
+                            <tr>
+                                <td class="text-left" style="color: #ea580c; font-size: 9px;">Remaining Balance:</td>
+                                <td class="text-right" style="color: #ea580c; font-size: 9px;">{{ $currency }} {{ number_format($remainingAmount, 2) }}</td>
+                            </tr>
+                        @endif
                     </table>
                 </td>
             </tr>
         </table>
 
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000;">
+        {{-- Signatures --}}
+        <table class="signature-table">
             <tr>
-                <td style="width: 50%; border: 2px solid #92969bff; padding: 8px 12px; vertical-align: top;">
-                    <strong>{{ $amountInWords }} Only</strong>
+                <td>
+                    <div class="sig-line"></div>
+                    Customer Signature
                 </td>
-                <td
-                    style="width: 50%; border: 2px solid #92969bff; padding: 8px 12px; text-align: right; vertical-align: top; background-color:#FF9F43; color:#fff;">
-                    @php
-                        $grandTotal = ($labourTotal ?? 0) + ($partsTotal ?? 0) - $labourDiscountAmount - $partsDiscountAmount;
-                    @endphp
-
-                    <strong>Grand Total : {{ number_format($grandTotal, 2) }}</strong>
-
+                <td>
+                    <div class="sig-line"></div>
+                    For, {{ $setting->name ?? 'Auto Care' }}<br>(Authorized Signatory)
                 </td>
             </tr>
         </table>
-
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: #000;">
-            <tr>
-                <!-- Remarks -->
-                <td style="width: 50%; border: 2px solid #92969bff; padding: 8px 12px; vertical-align: top;">
-                    <strong>Remarks :</strong><br>
-                    <span>{{ $jobCard->remark ?? 'N/A' }}</span>
-                </td>
-
-                <!-- Authorized Signatory -->
-                <td
-                    style="width: 50%; border: 2px solid #92969bff; padding: 8px 12px; text-align: right; vertical-align: top;">
-                    <p style="margin: 0;">For, {{ $setting->name ?? ' Auto Care' }}</p>
-                    <br><br><br>
-                    <p style="margin: 0;">(Authorized Signatory)</p>
-                </td>
-            </tr>
-        </table>
-        </div>
     </div>
-    </div>
-
 </body>
 
 </html>
