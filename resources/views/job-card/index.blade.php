@@ -821,6 +821,13 @@
                                 </li>
                             `;
                         }
+                        menuItems += `
+                            <li>
+                                <a class="dropdown-item send-jobcard-whatsapp" href="javascript:void(0);" data-id="${jobCard.id}" data-as-invoice="${activeDocTab === 'invoice' ? '1' : '0'}">
+                                    <i class="fab fa-whatsapp" style="color:#25d366;"></i> Send WhatsApp
+                                </a>
+                            </li>
+                        `;
                     }
 
                     if (canDelete) {
@@ -2105,6 +2112,55 @@
                         e.preventDefault();
                         triggerModalPrint();
                     }
+                });
+
+                $(document).off('click.sendJobcardWhatsapp').on('click.sendJobcardWhatsapp', '.send-jobcard-whatsapp', function(e) {
+                    e.preventDefault();
+                    const jobCardId = $(this).data('id');
+                    const asInvoice = $(this).data('as-invoice');
+                    if (!jobCardId) return;
+
+                    Swal.fire({
+                        title: 'Send WhatsApp?',
+                        text: asInvoice == 1 ? 'Send this Job Card Invoice message and PDF to the customer.' : 'Send this Job Card message and PDF to the customer.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Send',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#25d366'
+                    }).then(function(result) {
+                        if (!result.isConfirmed) return;
+                        Swal.fire({
+                            title: 'Sending...',
+                            allowOutsideClick: false,
+                            didOpen: function() { Swal.showLoading(); }
+                        });
+                        $.ajax({
+                            url: '/job-cards/' + jobCardId + '/send-whatsapp',
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                as_invoice: asInvoice
+                            },
+                            success: function(response) {
+                                const pdfOk = !response || response.pdf !== false;
+                                Swal.fire({
+                                    icon: pdfOk ? 'success' : 'warning',
+                                    title: pdfOk ? 'Sent' : 'Sent without PDF',
+                                    text: (response && response.message) ? response.message : 'WhatsApp sent to the customer.',
+                                    confirmButtonColor: '#ff9f43'
+                                });
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Not sent',
+                                    text: (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not send WhatsApp.',
+                                    confirmButtonColor: '#ff9f43'
+                                });
+                            }
+                        });
+                    });
                 });
             })();
         </script>
