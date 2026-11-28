@@ -112,17 +112,22 @@ class LoginController extends Controller
     protected function authenticateByEmailPassword(string $login, string $password): array
     {
         $cleanLogin = strtolower(trim($login));
-        $candidates = User::where(function ($q) use ($cleanLogin) {
-            if (Schema::hasColumn('users', 'username')) {
+        $candidates = collect();
+
+        try {
+            $candidates = User::where(function ($q) use ($cleanLogin) {
                 $q->whereRaw('LOWER(TRIM(username)) = ?', [$cleanLogin])
                   ->orWhereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin]);
                 if (!str_contains($cleanLogin, '_')) {
                     $q->orWhereRaw('LOWER(TRIM(username)) LIKE ?', ['%_' . $cleanLogin]);
                 }
-            } else {
-                $q->whereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin]);
-            }
-        })->orderByDesc('id')->get();
+            })->orderByDesc('id')->get();
+        } catch (\Throwable) {
+            try {
+                $candidates = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin])
+                    ->orderByDesc('id')->get();
+            } catch (\Throwable) {}
+        }
 
         $inactiveMatch = null;
 
@@ -203,14 +208,16 @@ class LoginController extends Controller
         try {
             $clean = strtolower(trim($login));
             $localUser = User::where(function ($q) use ($clean) {
-                if (Schema::hasColumn('users', 'username')) {
-                    $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
-                      ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                } else {
-                    $q->whereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                }
+                $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
+                  ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
             })->where('isDeleted', 0)->first();
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+            try {
+                $clean = strtolower(trim($login));
+                $localUser = User::whereRaw('LOWER(TRIM(email)) = ?', [$clean])
+                    ->where('isDeleted', 0)->first();
+            } catch (\Throwable) {}
+        }
 
         if ($localUser && in_array(strtolower($localUser->role ?? ''), ['staff', 'hr'])) {
             // Find parent admin to verify tenant plan status if possible
