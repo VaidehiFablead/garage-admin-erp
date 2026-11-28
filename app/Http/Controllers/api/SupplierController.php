@@ -15,6 +15,12 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use App\Services\ApiKeyService;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class SupplierController extends Controller
 {
@@ -538,5 +544,199 @@ class SupplierController extends Controller
             'city' => $user->userDetail->city ?? '',
             'country' => $user->userDetail->country ?? '',
         ]);
+    }
+
+    public function export_vendor_excel(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userBranchId = $user->id;
+            if ($user->role === 'staff' && $user->branch_id) {
+                $userBranchId = $user->branch_id;
+            } elseif (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId !== 'null') {
+                $userBranchId = $request->selectedSubAdminId;
+            } else {
+                $userBranchId = $user->id;
+            }
+
+            $search = $request->get('search', '');
+
+            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+                ->where('role', 'vendor')
+                ->where('isDeleted', 0)
+                ->where('branch_id', $userBranchId)
+                ->with('details:country,user_id,city,address');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%")
+                        ->orWhere('gst_number', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $vendors = $query->orderBy('id', 'desc')->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet       = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Vendors');
+
+            $headers = [
+                'A1' => 'Sr No',
+                'B1' => 'Vendor Name',
+                'C1' => 'Email',
+                'D1' => 'Phone',
+                'E1' => 'GST Number',
+                'F1' => 'Country',
+                'G1' => 'City',
+                'H1' => 'Address',
+                'I1' => 'Created At',
+            ];
+
+            foreach ($headers as $cell => $text) {
+                $sheet->setCellValue($cell, $text);
+            }
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+
+            $row = 2;
+            foreach ($vendors as $index => $vendor) {
+                $country = $vendor->details->country ?? '-';
+                $city    = $vendor->details->city ?? '-';
+                $address = $vendor->details->address ?? '-';
+                $gstNum  = $vendor->gst_number ?? 'N/A';
+                $created = $vendor->created_at ? Carbon::parse($vendor->created_at)->format('d-M-Y') : '-';
+
+                $sheet->setCellValue("A{$row}", $index + 1);
+                $sheet->setCellValue("B{$row}", $vendor->name ?? '-');
+                $sheet->setCellValue("C{$row}", $vendor->email ?? '-');
+                $sheet->setCellValueExplicit("D{$row}", (string) ($vendor->phone ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValue("E{$row}", $gstNum);
+                $sheet->setCellValue("F{$row}", $country);
+                $sheet->setCellValue("G{$row}", $city);
+                $sheet->setCellValue("H{$row}", $address);
+                $sheet->setCellValue("I{$row}", $created);
+
+                $row++;
+            }
+
+            foreach (range('A', 'I') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $fileName     = 'Vendors_' . now()->format('Ymd_His') . '.xlsx';
+            $folder       = 'vendor-exports';
+            $relativePath = "{$folder}/{$fileName}";
+
+            Storage::disk('public')->makeDirectory($folder);
+            $writer = new Xlsx($spreadsheet);
+            $writer->save(storage_path("app/public/{$relativePath}"));
+
+            $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+            return response()->json([
+                'status'    => true,
+                'message'   => 'Vendor Excel exported successfully.',
+                'file_url'  => $fileUrl,
+                'file_name' => $fileName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('export_vendor_excel error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to export Vendor Excel: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function export_vendor_pdf(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userBranchId = $user->id;
+            if ($user->role === 'staff' && $user->branch_id) {
+                $userBranchId = $user->branch_id;
+            } elseif (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId !== 'null') {
+                $userBranchId = $request->selectedSubAdminId;
+            } else {
+                $userBranchId = $user->id;
+            }
+
+            $search = $request->get('search', '');
+
+            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+                ->where('role', 'vendor')
+                ->where('isDeleted', 0)
+                ->where('branch_id', $userBranchId)
+                ->with('details:country,user_id,city,address');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%")
+                        ->orWhere('gst_number', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $vendors = $query->orderBy('id', 'desc')->get();
+
+            $settings = DB::table('settings')
+                ->where('branch_id', $userBranchId)
+                ->first();
+
+            $pdf = Pdf::loadView('Supplier.vendor_pdf', [
+                'vendors'  => $vendors,
+                'settings' => $settings,
+                'userName' => $user->name ?? 'N/A',
+                'gstNum'   => $user->gst_number ?? 'N/A',
+            ])->setPaper('A4', 'landscape');
+
+            $fileName     = 'Vendors_' . now()->format('Ymd_His') . '.pdf';
+            $folder       = 'vendor-exports';
+            $relativePath = "{$folder}/{$fileName}";
+
+            Storage::disk('public')->makeDirectory($folder);
+            Storage::disk('public')->put($relativePath, $pdf->output());
+
+            $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+            return response()->json([
+                'status'    => true,
+                'message'   => 'Vendor PDF generated successfully.',
+                'file_url'  => $fileUrl,
+                'file_name' => $fileName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('export_vendor_pdf error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to export Vendor PDF: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

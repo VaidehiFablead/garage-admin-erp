@@ -266,8 +266,8 @@
 
         <div class="card">
             <div class="card-body">
-                <div class="mb-2">
-                    <div class="search-set d-flex justify-content-md-start justify-content-start w-100">
+                <div class="mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="search-set d-flex justify-content-md-start justify-content-start">
                         <div class="search-path"></div>
                         <div class="search-input">
                             <a class="btn btn-searchset">
@@ -275,6 +275,16 @@
                             </a>
                             <input type="text" id="search-input" class="form-control" placeholder="Search...">
                         </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        @if (app('hasPermission')(5, 'view'))
+                            <button id="exportVendorExcel" class="btn btn-sm text-white d-flex align-items-center gap-1" style="background-color: #28c76f; border-color: #28c76f; padding: 4px 12px; font-weight: 600; border-radius: 5px; height: 32px; font-size: 13px;">
+                                <i class="fas fa-file-excel"></i> Excel
+                            </button>
+                            <button id="exportVendorPdf" class="btn btn-sm text-white d-flex align-items-center gap-1" style="background-color: #ea5455; border-color: #ea5455; padding: 4px 12px; font-weight: 600; border-radius: 5px; height: 32px; font-size: 13px;">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -628,6 +638,132 @@
                     $('.vendor-details-row').removeClass('show');
                     $('.mobile-toggle-btn-vendor').removeClass('minus').find('.toggle-icon').text('+');
                 }
+            });
+
+            // ── Export Vendor Excel ──
+            $('#exportVendorExcel').click(function () {
+                const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+                let authToken = localStorage.getItem("authToken");
+
+                let url = `/api/export-vendor-excel?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(searchQuery || '')}`;
+
+                $.ajax({
+                    url: url,
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + authToken
+                    },
+                    beforeSend: function () {
+                        Swal.fire({
+                            title: "Exporting Excel...",
+                            text: "Please wait while we generate your file.",
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                    },
+                    success: function (response) {
+                        Swal.close();
+
+                        if (response.status && response.file_url) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Excel Exported!",
+                                text: "Click the button below to download your Excel file.",
+                                showConfirmButton: true,
+                                confirmButtonColor: "#28a745",
+                                confirmButtonText: "Download File"
+                            }).then(() => {
+                                let link = document.createElement('a');
+                                link.href = response.file_url;
+                                link.download = response.file_name || "Vendors.xlsx";
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Export Failed",
+                                text: response.message || "Failed to generate Excel file."
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.close();
+                        let errorMsg = "Something went wrong while exporting.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: "error",
+                            title: "Export Error",
+                            text: errorMsg
+                        });
+                    }
+                });
+            });
+
+            // ── Export Vendor PDF ──
+            $('#exportVendorPdf').click(function () {
+                const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+                let authToken = localStorage.getItem("authToken");
+
+                let url = `/api/export-vendor-pdf?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(searchQuery || '')}`;
+
+                $.ajax({
+                    url: url,
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + authToken
+                    },
+                    beforeSend: function () {
+                        Swal.fire({
+                            title: "Generating PDF...",
+                            text: "Please wait while we generate your PDF file.",
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                    },
+                    success: function (response) {
+                        Swal.close();
+
+                        if (response.status && response.file_url) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "PDF Exported!",
+                                text: "Click the button below to download your PDF file.",
+                                showConfirmButton: true,
+                                confirmButtonColor: "#ea5455",
+                                confirmButtonText: "Download File"
+                            }).then(() => {
+                                let link = document.createElement('a');
+                                link.href = response.file_url;
+                                link.download = response.file_name || "Vendors.pdf";
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Export Failed",
+                                text: response.message || "Failed to generate PDF file."
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.close();
+                        let errorMsg = "Something went wrong while generating PDF.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: "error",
+                            title: "Export Error",
+                            text: errorMsg
+                        });
+                    }
+                });
             });
 
             // Initial load

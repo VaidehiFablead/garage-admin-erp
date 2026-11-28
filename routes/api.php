@@ -137,6 +137,8 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/updateSupplier/{id}', [SupplierController::class, 'updateSupplier'])->name('updateSupplier');
     Route::get('getAllSupplier', [SupplierController::class, 'getAllSupplier'])->name('getAllSupplier');
     Route::get('vendor/{id}', [SupplierController::class, 'getVendorProfile']);
+    Route::get('/export-vendor-excel', [SupplierController::class, 'export_vendor_excel'])->name('exportVendorExcel');
+    Route::get('/export-vendor-pdf', [SupplierController::class, 'export_vendor_pdf'])->name('exportVendorPdf');
 
     Route::get('getAllCategory', [CategoryController::class, 'getAllCategory'])->name('getAllCategory');
     Route::post('addcategory_cat', [CategoryController::class, 'addcategory_cat'])->name('addcategory_cat');
