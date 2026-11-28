@@ -734,7 +734,9 @@ class JobCardController extends Controller
         $validated['km_hours'] = $request->km_hours ?? null;
         $validated['due_km_hours'] = $request->due_km ?? null;
 
-        $validated['model'] = $validated['model_make'];
+        $user = Auth::user();
+        $branchIdForModel = (int) (session('selectedSubAdminId') ?? ($user->branch_id ?? $user->id));
+        $validated['model'] = $this->resolveModelId($validated['model_make'], $branchIdForModel);
         $validated['remark'] = $validated['remark_printable'];
         // $validated['payment_method'] = $validated['paid_by'] ?? 'Cash';
         if ($action === 'generate_bill') {
@@ -1076,7 +1078,9 @@ class JobCardController extends Controller
 
         $validated['km_hours'] = $request->km_hours ?? null;
         $validated['due_km_hours'] = $request->due_km ?? null;
-        $validated['model'] = $validated['model_make'];
+        $user = Auth::user();
+        $branchIdForModel = (int) (session('selectedSubAdminId') ?? ($user->branch_id ?? $user->id));
+        $validated['model'] = $this->resolveModelId($validated['model_make'], $branchIdForModel);
         $validated['remark'] = $validated['remark_printable'];
         $validated['remark_printable'] = $request->remark_printable ?? '';
         $validated['remark_non_printable'] = $request->remark_non_printable ?? '';
@@ -1956,6 +1960,24 @@ class JobCardController extends Controller
                 return ['id' => $v->vehicle_no, 'text' => $v->vehicle_no];
             }),
         ]);
+    }
+
+    /**
+     * Resolve or create an AutoCarModel record when a custom Model/Make name is entered.
+     */
+    private function resolveModelId(string $modelMake, int $branchId): string
+    {
+        $trimmed = trim($modelMake);
+        if (is_numeric($trimmed) && AutoCarModel::where('id', (int) $trimmed)->exists()) {
+            return (string) ((int) $trimmed);
+        }
+
+        $model = AutoCarModel::firstOrCreate(
+            ['model_name' => $trimmed, 'branch_id' => $branchId],
+            ['model_brand' => '', 'is_deleted' => 0]
+        );
+
+        return (string) $model->id;
     }
 
     /**
