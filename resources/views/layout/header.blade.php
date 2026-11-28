@@ -402,7 +402,7 @@
                     </div>
                 @endif
 
-                @if (tenant_has_module(['Appointment', 'CRM']))
+                @if (tenant_has_module(['Appointment', 'CRM']) && strtolower(auth()->user()->role ?? '') !== 'staff')
                 <li class="nav-item me-3" style="list-style: none;">
                     <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#todayAppointmentsModal"
                         class="d-flex align-items-center justify-content-center"
