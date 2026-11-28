@@ -127,6 +127,10 @@ class JobCardConroller extends Controller
                 'total_labour' => number_format($cardLabourTotal, 2, '.', ''),
                 'total_parts' => number_format($cardPartsTotal, 2, '.', ''),
                 'grand_total' => number_format($cardGrandTotal, 2, '.', ''),
+                'remaining_amount' => number_format((float) ($jobCard->remaining_amount ?? $cardGrandTotal), 2, '.', ''),
+                'payment_method' => $jobCard->payment_method ?? 'pending',
+                'emi_duration' => (int) ($jobCard->emi_duration ?? 0),
+                'emi_months' => $jobCard->emi_months ?? null,
             ];
         })->values();
         // dd($data);

@@ -1560,16 +1560,20 @@ class JobCardController extends Controller
             // Create payment
 
 
+            $paymentDate = $request->filled('payment_date')
+                ? Carbon::parse($request->payment_date, $tz)
+                : $yesterday;
+
             $payment = PaymentStore::create([
                 'user_id' => $user_id,
                 'jobcard_id' => $request->job_card_id,
                 'payment_amount' => $paymentAmount,
                 'remaining_amount' => $newRemaining,
                 'payment_method' => $request->payment_method ?? $request->payment_type ?? '',
-                'payment_date' => $yesterday,
+                'payment_date' => $paymentDate,
                 'payment_type' => $type,
-                'cash_amount' => $request->cash_amount,
-                'upi_amount' => $request->upi_amount,
+                'cash_amount' => (float) ($request->cash_amount ?? $request->fully_cash_amount ?? $request->cashAmount ?? 0),
+                'upi_amount' => (float) ($request->upi_amount ?? $request->online_amount ?? $request->full_online_amount ?? $request->upi_online_amount ?? 0),
                 'emi_month' => $request->emi_month ?? 1,
                 'remark' => $request->remark,
                 'isDeleted' => 0,
@@ -1713,8 +1717,8 @@ class JobCardController extends Controller
                     'payment_method' => $request->payment_method ?? $request->payment_type ?? 'Cash',
                     'payment_date' => $yesterday,
                     'payment_type' => $type,
-                    'cash_amount' => $request->cash_amount,
-                    'upi_amount' => $request->upi_amount,
+                    'cash_amount' => (float) ($request->cash_amount ?? $request->fully_cash_amount ?? $request->cashAmount ?? 0),
+                    'upi_amount' => (float) ($request->upi_amount ?? $request->online_amount ?? $request->full_online_amount ?? $request->upi_online_amount ?? 0),
                     'emi_month' => $request->emi_month ?? 1,
                     'discount_amount' => $discount ?? 0,
                     'remark' => $request->remark,
@@ -1744,8 +1748,8 @@ class JobCardController extends Controller
                     'payment_method' => $request->payment_method ?? $request->payment_type ?? 'Cash',
                     'payment_date' => $yesterday,
                     'payment_type' => $type,
-                    'cash_amount' => $request->cash_amount,
-                    'upi_amount' => $request->upi_amount,
+                    'cash_amount' => (float) ($request->cash_amount ?? $request->fully_cash_amount ?? $request->cashAmount ?? 0),
+                    'upi_amount' => (float) ($request->upi_amount ?? $request->online_amount ?? $request->full_online_amount ?? $request->upi_online_amount ?? 0),
                     'emi_month' => $request->emi_month ?? 1,
                     'discount_amount' => $discount ?? 0,
                     'remark' => $request->remark,
