@@ -458,33 +458,6 @@
         </div>
 
         <div class="bottom-section">
-            {{-- Cost & Payment Summary --}}
-        <table class="summary-grid">
-            <tr>
-                <td style="width: 50%;"></td>
-                <td style="width: 50%; text-align: right;">
-                    <div>
-                        <strong>Total Labour:</strong> {{ $currency }} {{ number_format((float) ($jobCard->total_labour ?? 0), 2) }}
-                        @if (!empty($labourDiscount['amount']) && (float) $labourDiscount['amount'] > 0)
-                            <span style="color:#64748b;">(Disc: {{ $labourDiscount['amount'] }}{{ ($labourDiscount['type'] ?? '') === '%' ? '%' : ' ' . $currency }})</span>
-                        @endif
-                    </div>
-                    <div>
-                        <strong>Total Parts:</strong> {{ $currency }} {{ number_format((float) ($jobCard->total_parts ?? 0), 2) }}
-                        @if (!empty($partsDiscount['amount']) && (float) $partsDiscount['amount'] > 0)
-                            <span style="color:#64748b;">(Disc: {{ $partsDiscount['amount'] }}{{ ($partsDiscount['type'] ?? '') === '%' ? '%' : ' ' . $currency }})</span>
-                        @endif
-                    </div>
-                    @if ($extraDiscount > 0)
-                        <div><strong>Additional Discount:</strong> - {{ $currency }} {{ number_format($extraDiscount, 2) }}</div>
-                    @endif
-                    <div style="font-size: 11.5px; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 3px;">
-                        <strong>Estimated / Grand Total:</strong> {{ $currency }} {{ number_format($grandTotal, 2) }}
-                    </div>
-                </td>
-            </tr>
-        </table>
-
         {{-- Signatures --}}
         <table class="signature-table">
             <tr>
