@@ -23,8 +23,15 @@
             border: 1.5px solid #1f2937;
             padding: 9px 11px;
             position: relative;
-            min-height: 270mm;
+            height: 272mm;
             box-sizing: border-box;
+        }
+
+        .bottom-section {
+            position: absolute;
+            bottom: 10px;
+            left: 11px;
+            right: 11px;
         }
 
         table {
@@ -157,15 +164,6 @@
             font-size: 9.5px;
         }
 
-        .grand-total-row {
-            border-top: 1.5px solid #0f172a;
-            margin-top: 4px;
-            padding-top: 4px;
-            font-size: 11.5px;
-            font-weight: bold;
-            color: #0f172a;
-        }
-
         .signature-table {
             width: 100%;
             margin-top: 14px;
@@ -192,12 +190,36 @@
         $currency = $setting->currency_symbol ?? 'Rs.';
         $isQuotation = strtolower($jobCard->type ?? '') === 'quotation';
         $formattedDate = $jobCard->date ? \Carbon\Carbon::parse($jobCard->date)->format('d-m-Y') : '--';
-        $formattedDueDate = $jobCard->next_due_date ? \Carbon\Carbon::parse($jobCard->next_due_date)->format('d-m-Y') : '--';
+        $formattedDueDate = $jobCard->next_due_date ? \Carbon\Carbon::parse($jobCard->next_due_date)->format('d-m-Y') : '';
         $gstEnabled = ((string) ($jobCard->gst ?? '')) === '1';
 
-        $customerName = $jobCard->customer->name ?? ($jobCard->customer_name ?: ($jobCard->customer_id ?? '--'));
-        $customerGst = $jobCard->gst_no ?: ($jobCard->customer->gst_num ?? '--');
-        $customerEmail = $jobCard->customer->email ?? null;
+        // Value check helper
+        $hasVal = function($val) {
+            if ($val === null) return false;
+            $v = trim((string) $val);
+            return $v !== '' && $v !== '--' && $v !== '-' && strtolower($v) !== 'n/a' && strtolower($v) !== 'null';
+        };
+
+        $customerName = $jobCard->customer->name ?? ($jobCard->customer_name ?: ($jobCard->customer_id ?? ''));
+        $customerGst = $jobCard->gst_no ?: ($jobCard->customer->gst_num ?? '');
+        $customerEmail = $jobCard->customer->email ?? '';
+
+        // Check which GST columns exist with values in parts
+        $hasCgst = false;
+        $hasSgst = false;
+        $hasIgst = false;
+
+        foreach ($partsData as $part) {
+            if ((float) ($part['cgst_percent'] ?? 0) > 0 || (float) ($part['cgst_amount'] ?? 0) > 0) {
+                $hasCgst = true;
+            }
+            if ((float) ($part['sgst_percent'] ?? 0) > 0 || (float) ($part['sgst_amount'] ?? 0) > 0) {
+                $hasSgst = true;
+            }
+            if ((float) ($part['igst_percent'] ?? 0) > 0 || (float) ($part['igst_amount'] ?? 0) > 0) {
+                $hasIgst = true;
+            }
+        }
 
         // Decode JSON discounts
         $labourDiscount = json_decode($jobCard->labour_discount ?? '{}', true) ?: [];
@@ -378,10 +400,12 @@
         <table class="meta-bar">
             <tr>
                 <td><strong>Invoice Date:</strong> {{ $formattedDate }}</td>
-                <td><strong>Next Due Date:</strong> {{ $formattedDueDate }}</td>
+                @if ($hasVal($formattedDueDate))
+                    <td><strong>Next Due Date:</strong> {{ $formattedDueDate }}</td>
+                @endif
                 <td><strong>Type:</strong> {{ $jobCard->type ?? ($isQuotation ? 'Quotation' : 'Invoice') }}</td>
                 <td><strong>Payment Status:</strong> {{ ucfirst($jobCard->payment_status ?? ($remainingAmount <= 0 && $grandTotal > 0 ? 'Completed' : 'Pending')) }}</td>
-                <td><strong>GST Mode:</strong> {{ $gstEnabled ? 'With GST' : 'Without GST' }}</td>
+                <td><strong>GST Mode:</strong> {{ ($hasCgst || $hasSgst || $hasIgst || !empty($labourGst) || $gstEnabled) ? 'With GST' : 'Without GST' }}</td>
             </tr>
         </table>
 
@@ -391,52 +415,80 @@
             <tr>
                 <td style="width: 50%; border-right: 1px solid #cbd5e1;">
                     <table class="info-subtable">
-                        <tr>
-                            <td class="label">Customer Name</td>
-                            <td><strong>{{ $customerName }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="label">Mobile No</td>
-                            <td>{{ $jobCard->mobile ?: '--' }}</td>
-                        </tr>
-                        @if ($customerEmail)
+                        @if ($hasVal($customerName))
+                            <tr>
+                                <td class="label">Customer Name</td>
+                                <td><strong>{{ $customerName }}</strong></td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($jobCard->mobile))
+                            <tr>
+                                <td class="label">Mobile No</td>
+                                <td>{{ $jobCard->mobile }}</td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($customerEmail))
                             <tr>
                                 <td class="label">Email</td>
                                 <td>{{ $customerEmail }}</td>
                             </tr>
                         @endif
-                        <tr>
-                            <td class="label">Address</td>
-                            <td>{{ $jobCard->address ?: '--' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Customer GST No</td>
-                            <td>{{ $customerGst }}</td>
-                        </tr>
+                        @if ($hasVal($jobCard->address))
+                            <tr>
+                                <td class="label">Address</td>
+                                <td>{{ $jobCard->address }}</td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($customerGst))
+                            <tr>
+                                <td class="label">Customer GST No</td>
+                                <td>{{ $customerGst }}</td>
+                            </tr>
+                        @endif
                     </table>
                 </td>
                 <td style="width: 50%;">
                     <table class="info-subtable">
-                        <tr>
-                            <td class="label">Vehicle Reg No</td>
-                            <td><strong>{{ $jobCard->vehicle_no ?: '--' }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="label">Model / Make</td>
-                            <td>{{ $model_name ?? '--' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Chassis No</td>
-                            <td>{{ $jobCard->chassis_no ?: '--' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Engine No</td>
-                            <td>{{ $jobCard->engine_no ?: '--' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Odometer (KM/Hr)</td>
-                            <td>{{ $jobCard->km_hours ?? '--' }} &nbsp;|&nbsp; <strong>Next Due:</strong> {{ $jobCard->due_km_hours ?? '--' }}</td>
-                        </tr>
+                        @if ($hasVal($jobCard->vehicle_no))
+                            <tr>
+                                <td class="label">Vehicle Reg No</td>
+                                <td><strong>{{ $jobCard->vehicle_no }}</strong></td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($model_name))
+                            <tr>
+                                <td class="label">Model / Make</td>
+                                <td>{{ $model_name }}</td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($jobCard->chassis_no))
+                            <tr>
+                                <td class="label">Chassis No</td>
+                                <td>{{ $jobCard->chassis_no }}</td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($jobCard->engine_no))
+                            <tr>
+                                <td class="label">Engine No</td>
+                                <td>{{ $jobCard->engine_no }}</td>
+                            </tr>
+                        @endif
+                        @if ($hasVal($jobCard->km_hours) || $hasVal($jobCard->due_km_hours))
+                            <tr>
+                                <td class="label">Odometer (KM/Hr)</td>
+                                <td>
+                                    @if ($hasVal($jobCard->km_hours))
+                                        {{ $jobCard->km_hours }}
+                                    @endif
+                                    @if ($hasVal($jobCard->km_hours) && $hasVal($jobCard->due_km_hours))
+                                        &nbsp;|&nbsp;
+                                    @endif
+                                    @if ($hasVal($jobCard->due_km_hours))
+                                        <strong>Next Due:</strong> {{ $jobCard->due_km_hours }}
+                                    @endif
+                                </td>
+                            </tr>
+                        @endif
                     </table>
                 </td>
             </tr>
@@ -503,14 +555,20 @@
                         <th style="width: 5%;" class="text-center">#</th>
                         <th>Part Description</th>
                         <th style="width: 6%;" class="text-center">Qty</th>
-                        <th style="width: 11%;" class="text-right">Rate</th>
-                        <th style="width: 7%;" class="text-center">CGST (%)</th>
-                        <th style="width: 8%;" class="text-right">CGST</th>
-                        <th style="width: 7%;" class="text-center">SGST (%)</th>
-                        <th style="width: 8%;" class="text-right">SGST</th>
-                        <th style="width: 7%;" class="text-center">IGST (%)</th>
-                        <th style="width: 8%;" class="text-right">IGST</th>
-                        <th style="width: 13%;" class="text-right">Total ({{ $currency }})</th>
+                        <th style="width: 12%;" class="text-right">Rate</th>
+                        @if ($hasCgst)
+                            <th style="width: 8%;" class="text-center">CGST (%)</th>
+                            <th style="width: 9%;" class="text-right">CGST</th>
+                        @endif
+                        @if ($hasSgst)
+                            <th style="width: 8%;" class="text-center">SGST (%)</th>
+                            <th style="width: 9%;" class="text-right">SGST</th>
+                        @endif
+                        @if ($hasIgst)
+                            <th style="width: 8%;" class="text-center">IGST (%)</th>
+                            <th style="width: 9%;" class="text-right">IGST</th>
+                        @endif
+                        <th style="width: 14%;" class="text-right">Total ({{ $currency }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -536,12 +594,18 @@
                             <td>{{ $part['name'] ?? 'N/A' }}</td>
                             <td class="text-center">{{ $qty }}</td>
                             <td class="text-right">{{ number_format($rate, 2) }}</td>
-                            <td class="text-center">{{ $cgstP > 0 ? $cgstP . '%' : '-' }}</td>
-                            <td class="text-right">{{ number_format($cgstA, 2) }}</td>
-                            <td class="text-center">{{ $sgstP > 0 ? $sgstP . '%' : '-' }}</td>
-                            <td class="text-right">{{ number_format($sgstA, 2) }}</td>
-                            <td class="text-center">{{ $igstP > 0 ? $igstP . '%' : '-' }}</td>
-                            <td class="text-right">{{ number_format($igstA, 2) }}</td>
+                            @if ($hasCgst)
+                                <td class="text-center">{{ $cgstP > 0 ? $cgstP . '%' : '-' }}</td>
+                                <td class="text-right">{{ number_format($cgstA, 2) }}</td>
+                            @endif
+                            @if ($hasSgst)
+                                <td class="text-center">{{ $sgstP > 0 ? $sgstP . '%' : '-' }}</td>
+                                <td class="text-right">{{ number_format($sgstA, 2) }}</td>
+                            @endif
+                            @if ($hasIgst)
+                                <td class="text-center">{{ $igstP > 0 ? $igstP . '%' : '-' }}</td>
+                                <td class="text-right">{{ number_format($igstA, 2) }}</td>
+                            @endif
                             <td class="text-right">{{ number_format($rowTotal, 2) }}</td>
                         </tr>
                         @php $partsTotal += $rowTotal; @endphp
@@ -550,112 +614,114 @@
             </table>
         @endif
 
-        {{-- Bank Details & Totals Summary --}}
-        <table class="summary-grid">
-            <tr>
-                {{-- Left: Bank Details, QR & Remarks --}}
-                <td style="width: 54%; border-right: 1px solid #cbd5e1;">
-                    <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 3px; font-size: 9.5px; color: #0f172a;">
-                        Bank Details:
-                    </div>
-                    <table style="width: 100%; font-size: 9px; margin-bottom: 5px;">
-                        <tr>
-                            <td style="width: 65%; vertical-align: top;">
-                                <div><strong>Bank:</strong> {{ $setting->bank_name ?? 'N/A' }}</div>
-                                <div><strong>Branch:</strong> {{ $setting->branch ?? 'N/A' }}</div>
-                                <div><strong>A/C No:</strong> {{ $setting->ac_no ?? 'N/A' }}</div>
-                                <div><strong>IFSC:</strong> {{ $setting->ifsc_code ?? 'N/A' }}</div>
-                            </td>
-                            <td style="width: 35%; text-align: center; vertical-align: middle;">
-                                @if (isset($setting->qr_code) && file_exists(storage_path('app/public/' . $setting->qr_code)))
-                                    @php
-                                        $qrPath = storage_path('app/public/' . $setting->qr_code);
-                                        $qrData = base64_encode(file_get_contents($qrPath));
-                                        $qrMime = mime_content_type($qrPath);
-                                    @endphp
-                                    <img src="data:{{ $qrMime }};base64,{{ $qrData }}" style="width: 58px; height: 58px; border: 1px solid #cbd5e1;">
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
-
-                    <div style="border-top: 1px dotted #cbd5e1; padding-top: 3px; margin-top: 3px;">
-                        <strong>Amount In Words:</strong><br>
-                        <span style="font-size: 9px; color: #334155;">{{ $amountInWords }} Only</span>
-                    </div>
-
-                    @if (!empty($jobCard->remark))
-                        <div style="margin-top: 3px; font-size: 9px;">
-                            <strong>Remarks:</strong> {{ $jobCard->remark }}
+        <div class="bottom-section">
+            {{-- Bank Details & Totals Summary --}}
+            <table class="summary-grid">
+                <tr>
+                    {{-- Left: Bank Details, QR & Remarks --}}
+                    <td style="width: 54%; border-right: 1px solid #cbd5e1;">
+                        <div style="font-weight: bold; text-transform: uppercase; margin-bottom: 3px; font-size: 9.5px; color: #0f172a;">
+                            Bank Details:
                         </div>
-                    @endif
-                </td>
+                        <table style="width: 100%; font-size: 9px; margin-bottom: 5px;">
+                            <tr>
+                                <td style="width: 65%; vertical-align: top;">
+                                    <div><strong>Bank:</strong> {{ $setting->bank_name ?? 'N/A' }}</div>
+                                    <div><strong>Branch:</strong> {{ $setting->branch ?? 'N/A' }}</div>
+                                    <div><strong>A/C No:</strong> {{ $setting->ac_no ?? 'N/A' }}</div>
+                                    <div><strong>IFSC:</strong> {{ $setting->ifsc_code ?? 'N/A' }}</div>
+                                </td>
+                                <td style="width: 35%; text-align: center; vertical-align: middle;">
+                                    @if (isset($setting->qr_code) && file_exists(storage_path('app/public/' . $setting->qr_code)))
+                                        @php
+                                            $qrPath = storage_path('app/public/' . $setting->qr_code);
+                                            $qrData = base64_encode(file_get_contents($qrPath));
+                                            $qrMime = mime_content_type($qrPath);
+                                        @endphp
+                                        <img src="data:{{ $qrMime }};base64,{{ $qrData }}" style="width: 58px; height: 58px; border: 1px solid #cbd5e1;">
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
 
-                {{-- Right: Totals Breakdown --}}
-                <td style="width: 46%; text-align: right;">
-                    <table style="width: 100%; font-size: 9.5px;">
-                        <tr>
-                            <td class="text-left" style="color: #475569;">Total Labour:</td>
-                            <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($labourTotal ?? 0), 2) }}</strong></td>
-                        </tr>
-                        @if ($labourDiscountAmount > 0)
-                            <tr>
-                                <td class="text-left" style="color: #dc2626;">Labour Discount:</td>
-                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($labourDiscountAmount, 2) }}</td>
-                            </tr>
-                        @endif
-                        <tr>
-                            <td class="text-left" style="color: #475569;">Total Parts:</td>
-                            <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($partsTotal ?? 0), 2) }}</strong></td>
-                        </tr>
-                        @if ($partsDiscountAmount > 0)
-                            <tr>
-                                <td class="text-left" style="color: #dc2626;">Parts Discount:</td>
-                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($partsDiscountAmount, 2) }}</td>
-                            </tr>
-                        @endif
-                        @if ($extraDiscount > 0)
-                            <tr>
-                                <td class="text-left" style="color: #dc2626;">Additional Discount:</td>
-                                <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($extraDiscount, 2) }}</td>
-                            </tr>
-                        @endif
-                        <tr>
-                            <td class="text-left" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">Grand Total:</td>
-                            <td class="text-right" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">
-                                {{ $currency }} {{ number_format($grandTotal, 2) }}
-                            </td>
-                        </tr>
-                        @if ($paidAmount > 0)
-                            <tr>
-                                <td class="text-left" style="color: #16a34a; font-size: 9px;">Paid Amount:</td>
-                                <td class="text-right" style="color: #16a34a; font-size: 9px;">{{ $currency }} {{ number_format($paidAmount, 2) }}</td>
-                            </tr>
-                        @endif
-                        @if ($remainingAmount > 0 && $remainingAmount < $grandTotal)
-                            <tr>
-                                <td class="text-left" style="color: #ea580c; font-size: 9px;">Remaining Balance:</td>
-                                <td class="text-right" style="color: #ea580c; font-size: 9px;">{{ $currency }} {{ number_format($remainingAmount, 2) }}</td>
-                            </tr>
-                        @endif
-                    </table>
-                </td>
-            </tr>
-        </table>
+                        <div style="border-top: 1px dotted #cbd5e1; padding-top: 3px; margin-top: 3px;">
+                            <strong>Amount In Words:</strong><br>
+                            <span style="font-size: 9px; color: #334155;">{{ $amountInWords }} Only</span>
+                        </div>
 
-        {{-- Signatures --}}
-        <table class="signature-table">
-            <tr>
-                <td>
-                    <div class="sig-line"></div>
-                    Customer Signature
-                </td>
-                <td>
-                    <div class="sig-line"></div>
-                    For, {{ $setting->name ?? 'Auto Care' }}<br>(Authorized Signatory)
-                </td>
-            </tr>
-        </table>
+                        @if ($hasVal($jobCard->remark))
+                            <div style="margin-top: 3px; font-size: 9px;">
+                                <strong>Remarks:</strong> {{ $jobCard->remark }}
+                            </div>
+                        @endif
+                    </td>
+
+                    {{-- Right: Totals Breakdown --}}
+                    <td style="width: 46%; text-align: right;">
+                        <table style="width: 100%; font-size: 9.5px;">
+                            <tr>
+                                <td class="text-left" style="color: #475569;">Total Labour:</td>
+                                <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($labourTotal ?? 0), 2) }}</strong></td>
+                            </tr>
+                            @if ($labourDiscountAmount > 0)
+                                <tr>
+                                    <td class="text-left" style="color: #dc2626;">Labour Discount:</td>
+                                    <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($labourDiscountAmount, 2) }}</td>
+                                </tr>
+                            @endif
+                            <tr>
+                                <td class="text-left" style="color: #475569;">Total Parts:</td>
+                                <td class="text-right"><strong>{{ $currency }} {{ number_format((float) ($partsTotal ?? 0), 2) }}</strong></td>
+                            </tr>
+                            @if ($partsDiscountAmount > 0)
+                                <tr>
+                                    <td class="text-left" style="color: #dc2626;">Parts Discount:</td>
+                                    <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($partsDiscountAmount, 2) }}</td>
+                                </tr>
+                            @endif
+                            @if ($extraDiscount > 0)
+                                <tr>
+                                    <td class="text-left" style="color: #dc2626;">Additional Discount:</td>
+                                    <td class="text-right" style="color: #dc2626;">- {{ $currency }} {{ number_format($extraDiscount, 2) }}</td>
+                                </tr>
+                            @endif
+                            <tr>
+                                <td class="text-left" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">Grand Total:</td>
+                                <td class="text-right" style="border-top: 1px solid #cbd5e1; padding-top: 3px; font-weight: bold; color: #0f172a; font-size: 11px;">
+                                    {{ $currency }} {{ number_format($grandTotal, 2) }}
+                                </td>
+                            </tr>
+                            @if ($paidAmount > 0)
+                                <tr>
+                                    <td class="text-left" style="color: #16a34a; font-size: 9px;">Paid Amount:</td>
+                                    <td class="text-right" style="color: #16a34a; font-size: 9px;">{{ $currency }} {{ number_format($paidAmount, 2) }}</td>
+                                </tr>
+                            @endif
+                            @if ($remainingAmount > 0 && $remainingAmount < $grandTotal)
+                                <tr>
+                                    <td class="text-left" style="color: #ea580c; font-size: 9px;">Remaining Balance:</td>
+                                    <td class="text-right" style="color: #ea580c; font-size: 9px;">{{ $currency }} {{ number_format($remainingAmount, 2) }}</td>
+                                </tr>
+                            @endif
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            {{-- Signatures --}}
+            <table class="signature-table">
+                <tr>
+                    <td>
+                        <div class="sig-line"></div>
+                        Customer Signature
+                    </td>
+                    <td>
+                        <div class="sig-line"></div>
+                        For, {{ $setting->name ?? 'Auto Care' }}<br>(Authorized Signatory)
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 </body>
 
