@@ -143,6 +143,9 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/labours', [LabourServiceController::class, 'labour_list'])->name('labour.list');
         Route::get('/add-labour', [LabourServiceController::class, 'add_labour'])->name('labour.add');
         Route::get('/edit-labour/{id}', [LabourServiceController::class, 'edit_labour'])->name('labour.edit');
+        Route::get('/import-labour', [LabourServiceController::class, 'import_labour'])->name('labour.import');
+        Route::get('/labour-sample-csv', [LabourServiceController::class, 'downloadSampleCsv'])->name('labour.sample.csv');
+        Route::get('/labour-sample-excel', [LabourServiceController::class, 'downloadSampleExcel'])->name('labour.sample.excel');
 
         Route::get('/autocar-categories', [AutoCarCategoryController::class, 'autoCategoryList'])->name('autocar.category.list');
         Route::get('/add-autocar-category', [AutoCarCategoryController::class, 'addAutoCategory'])->name('autocar.category.add');

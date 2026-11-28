@@ -149,6 +149,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/updateservice', [LabourServiceController::class, 'updateService']);
     Route::delete('/deleteservice/{id}', [LabourServiceController::class, 'deleteService']);
     Route::get('/getService/{id}', [LabourServiceController::class, 'getService']);
+    Route::post('/importLabourServices', [LabourServiceController::class, 'importLabourServices'])->name('importLabourServices');
 
     // Autocar Categorys
     Route::get('/getAllCategories', [AutoCarCategoryController::class, 'getAllCategories']);

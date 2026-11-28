@@ -236,6 +236,10 @@
                                             <li><a href="{{ route('product.import') }}" class="{{ request()->routeIs('product.import') ? 'active' : '' }}"><i
                                                         class="fa fa-file-import"></i><span>Import Items</span></a></li>
                                         @endif
+                                        @if ($canAllLabourServices)
+                                            <li><a href="{{ route('labour.import') }}" class="{{ request()->routeIs('labour.import') ? 'active' : '' }}"><i
+                                                        class="fa fa-file-import"></i><span>Import Labour Services</span></a></li>
+                                        @endif
                                     </ul>
                                 </li>
                             @endif
