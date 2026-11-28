@@ -475,18 +475,15 @@
                                 </div>
                             </div>
 
-                            <!-- KM/Hours -->
+                            <!-- KM -->
                             <div class="form-group d-flex align-items-center mb-2">
                                 <label for="due_km_hours" class="mb-0 me-2"
-                                    style="white-space: nowrap; min-width: 120px;">KM/Hours</label>
+                                    style="white-space: nowrap; min-width: 120px;">KM</label>
                                 <div class="flex-grow-1">
-                                    <div class="d-flex gap-2">
-                                        <input type="number" id="due_km_hours" name="km_hours"
-                                            class="form-control me-2 @error('km_hours') is-invalid @enderror"
-                                            placeholder="0" value="{{ $jobCard->km_hours ?? old('km_hours') }}" min="0">
-                                        <input type="text" id="due_km" name="due_km" class="form-control" placeholder="2500"
-                                            value="{{ $jobCard->due_km_hours ?? '' }}" readonly>
-                                    </div>
+                                    <input type="number" id="due_km_hours" name="km_hours"
+                                        class="form-control @error('km_hours') is-invalid @enderror"
+                                        placeholder="0" value="{{ $jobCard->km_hours ?? old('km_hours') }}" min="0">
+                                    <input type="hidden" id="due_km" name="due_km" value="{{ $jobCard->due_km_hours ?? '' }}">
                                     <span id="due_km_hours_error" class="text-danger"></span>
                                     @error('km_hours')
                                         <small class="text-danger">{{ $message }}</small>
@@ -1089,23 +1086,20 @@
                             <button type="submit" name="action" value="convert_invoice" class="btn btn-submit action-btn">
                                 <i class="fas fa-file-invoice me-1"></i> Convert to Invoice &amp; Print
                             </button>
-                            <button type="submit" name="action" value="generate_bill" class="btn btn-outline-secondary action-btn">
-                                Update Job Card
+                        @elseif (!empty($jobCard->is_invoice))
+                            <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn">
+                                Update Invoice
                             </button>
                         @else
                             <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn">
                                 Update Job Card
-                            </button>
-                            <button type="submit" name="action" value="convert_invoice" class="btn btn-primary action-btn"
-                                style="background-color:#1e293b; border-color:#1e293b; font-weight:600;">
-                                <i class="fas fa-file-invoice me-1"></i> Convert to Invoice &amp; Print
                             </button>
                         @endif
                         @if (request('modal') == '1')
                             <button type="button" class="btn btn-cancel"
                                 onclick="window.parent.postMessage({ type: 'jc_close_convert_modal' }, '*')">Cancel</button>
                         @else
-                            <a href="{{ route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
+                            <a href="{{ !empty($jobCard->is_invoice) ? route('job_card.invoices') : route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
                         @endif
                     </div>
                         <div class="mobile-step-actions">

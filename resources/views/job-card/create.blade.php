@@ -529,18 +529,15 @@
                                 </div>
                             </div>
 
-                            <!-- KM/Hours -->
+                            <!-- KM -->
                             <div class="form-group d-flex align-items-center mb-2">
                                 <label for="due_km_hours" class="mb-0 me-2"
-                                    style="white-space: nowrap; min-width: 120px;">KM/Hours</label>
+                                    style="white-space: nowrap; min-width: 120px;">KM</label>
                                 <div class="flex-grow-1">
-                                    <div class="d-flex gap-2">
-                                        <input type="number" id="due_km_hours" name="km_hours"
-                                            class="form-control me-2 @error('km_hours') is-invalid @enderror"
-                                            placeholder="0" value="{{ old('km_hours') }}" min="0">
-                                        <input type="text" id="due_km" name="due_km" class="form-control" placeholder="2500"
-                                            readonly>
-                                    </div>
+                                    <input type="number" id="due_km_hours" name="km_hours"
+                                        class="form-control @error('km_hours') is-invalid @enderror"
+                                        placeholder="0" value="{{ old('km_hours') }}" min="0">
+                                    <input type="hidden" id="due_km" name="due_km" value="">
                                     <span id="due_km_hours_error" class="text-danger"></span>
                                     @error('km_hours')
                                         <small class="text-danger">{{ $message }}</small>
@@ -1146,11 +1143,7 @@
                     <hr>
                     {{-- Submit --}}
                     <div class="text-end d-flex justify-content-end flex-wrap gap-2">
-                        <button type="submit" name="action" value="generate_bill" class="btn btn-submit action-btn" id="generateBillBtn">
-                            <span class="btn-text">Generate Bill (Invoice)</span>
-                            <span class="spinner-border spinner-border-sm d-none" role="status" id="generateBillSpinner"></span>
-                        </button>
-                        <button type="submit" name="action" value="create_print" class="btn btn-primary action-btn" id="createPrintBtn" style="background-color:#1e293b; border-color:#1e293b; font-weight:600;">
+                        <button type="submit" name="action" value="create_print" class="btn btn-submit action-btn" id="createPrintBtn">
                             <span class="btn-text"><i class="fas fa-print me-1"></i> Create Job Card &amp; Print</span>
                             <span class="spinner-border spinner-border-sm d-none" role="status" id="createPrintSpinner"></span>
                         </button>
@@ -1338,14 +1331,10 @@
 
 
         // --------------------------------- Handle form submission ---------------------------------
-        let clickedAction = 'generate_bill';
+        let clickedAction = 'create_print';
         let isSubmitting = false;
 
         function resetSubmitButtons() {
-            $('#generateBillBtn').prop('disabled', false);
-            $('#generateBillBtn .btn-text').text('Generate Bill (Invoice)');
-            $('#generateBillSpinner').addClass('d-none');
-
             $('#createPrintBtn').prop('disabled', false);
             $('#createPrintBtn .btn-text').html('<i class="fas fa-print me-1"></i> Create Job Card &amp; Print');
             $('#createPrintSpinner').addClass('d-none');
