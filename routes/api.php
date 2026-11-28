@@ -131,6 +131,8 @@ Route::middleware(['auth.api'])->group(function () {
     Route::get('getAllCustomer', [CustomerController::class, 'getAllCustomer'])->name('getAllCustomer');
     // Route::get('/customer-view/{id}/data', [CustomerController::class, 'getCustomerData']);
     Route::get('customer/{id}', [CustomerController::class, 'getCustomerProfile']);
+    Route::get('/export-customer-excel', [CustomerController::class, 'export_customer_excel'])->name('exportCustomerExcel');
+    Route::get('/export-customer-pdf', [CustomerController::class, 'export_customer_pdf'])->name('exportCustomerPdf');
 
     Route::post('/fetch-gst-details', [SupplierController::class, 'fetch'])->name('gst.fetch');
     Route::post('createSupplier', [SupplierController::class, 'createSupplier'])->name('createSupplier');
