@@ -258,12 +258,18 @@
                                     </a>
                                     <ul>
                                         @if ($canAllJobCards)
-                                            <li><a href="{{ route('job_card.index') }}" class="{{ request()->routeIs('job_card.index') ? 'active' : '' }}"><i
+                                            <li><a href="{{ route('job_card.index') }}"
+                                                    class="{{ request()->routeIs('job_card.index') ? 'active' : '' }}"><i
                                                         class="fa fa-list"></i><span>All Job Cards</span></a></li>
                                         @endif
                                         @if ($canNewJobCard)
                                             <li><a href="{{ route('job_card.create') }}" class="{{ request()->routeIs('job_card.create') ? 'active' : '' }}"><i
                                                         class="fa fa-plus-circle"></i><span>New Job Card</span></a></li>
+                                        @endif
+                                        @if ($canAllJobCards)
+                                            <li><a href="{{ route('job_card.invoices') }}"
+                                                    class="{{ request()->routeIs('job_card.invoices') ? 'active' : '' }}"><i
+                                                        class="fa fa-file-invoice"></i><span>Invoice</span></a></li>
                                         @endif
                                     </ul>
                                 </li>

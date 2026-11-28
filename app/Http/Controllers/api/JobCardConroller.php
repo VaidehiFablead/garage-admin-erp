@@ -21,6 +21,16 @@ class JobCardConroller extends Controller
             ->where('type', 'jobCard')
             ->where('isDeleted', 0);
 
+        $docType = $request->input('doc_type');
+        if ($docType === 'invoice') {
+            $baseQuery->where('is_invoice', 1);
+        } elseif ($docType === 'jobcard') {
+            $baseQuery->where(function ($q) {
+                $q->whereNull('is_invoice')
+                    ->orWhere('is_invoice', 0);
+            });
+        }
+
         if (strtolower($authUser->role) === 'staff') {
             // $baseQuery->where('user_id', $authUser->branch_id);
             $baseQuery->where('user_id', $authUser->id);
@@ -131,6 +141,9 @@ class JobCardConroller extends Controller
                 'payment_method' => $jobCard->payment_method ?? 'pending',
                 'emi_duration' => (int) ($jobCard->emi_duration ?? 0),
                 'emi_months' => $jobCard->emi_months ?? null,
+                'date_raw' => $jobCard->date ? Carbon::parse($jobCard->date)->format('Y-m-d') : '',
+                'gst' => (string) ($jobCard->gst ?? '0'),
+                'remark' => $jobCard->remark ?? '',
             ];
         })->values();
         // dd($data);

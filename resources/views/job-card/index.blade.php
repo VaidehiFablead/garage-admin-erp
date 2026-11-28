@@ -200,20 +200,10 @@
     <div class="content">
         <div class="page-header">
             <div class="page-title">
-                <h4>All Job Card</h4>
+                <h4>{{ !empty($isInvoicePage) ? 'All Invoices' : 'All Job Card' }}</h4>
                 <!-- <h6>Manage your purchases</h6> -->
             </div>
-            <div class="page-btn d-flex align-items-center flex-wrap gap-2">
-                <div class="btn-group" role="group" aria-label="Document Type Tabs">
-                    <button type="button" class="btn btn-sm doc-tab-btn active" data-tab="invoice"
-                        style="background-color: #ff9f43; color: #fff; border: 1px solid #ff9f43; font-weight: 600;">
-                        <i class="fas fa-file-invoice me-1"></i> Invoice
-                    </button>
-                    <button type="button" class="btn btn-sm doc-tab-btn" data-tab="jobcard"
-                        style="background-color: #fff; color: #334155; border: 1px solid #cbd5e1; font-weight: 600;">
-                        <i class="fas fa-clipboard-list me-1"></i> Job Card
-                    </button>
-                </div>
+            <div class="page-btn">
                 @if (app('hasPermission')(16, 'add'))
                     <a href="{{ route('job_card.create') }}" class="btn btn-sm btn-added">
                         <img src="{{ env('ImagePath') . 'admin/assets/img/icons/plus.svg' }}" alt="img">New Job Card
@@ -790,33 +780,45 @@
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                             </li>
+                            ${activeDocTab === 'jobcard' ? `
+                                <li>
+                                    <a class="dropdown-item" href="/job-cards/${jobCard.id}/edit?convert_to_invoice=1">
+                                        <i class="fas fa-file-invoice"></i> Convert to Invoice
+                                    </a>
+                                </li>
+                            ` : ''}
                         `;
                     }
 
                     if (canView) {
-                        menuItems += `
-                            <li>
-                                <a class="dropdown-item" href="/job-card/${jobCard.id}/download-pdf">
-                                    <i class="fas fa-file-invoice"></i> Download Invoice PDF
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
-                                    data-pdf-url="/job-card/${jobCard.id}/download-pdf-view"
-                                    data-details-url="/job-card/${jobCard.id}/view-pdf"
-                                    data-title="Bill Generated">
-                                    <i class="fas fa-print"></i> Print Invoice
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
-                                    data-pdf-url="/job-card/${jobCard.id}/job-card-print"
-                                    data-details-url="/job-card/${jobCard.id}/job-card-print"
-                                    data-title="Job Card Print">
-                                    <i class="fas fa-clipboard-list"></i> Print Job Card
-                                </a>
-                            </li>
-                        `;
+                        if (activeDocTab === 'invoice') {
+                            menuItems += `
+                                <li>
+                                    <a class="dropdown-item" href="/job-card/${jobCard.id}/download-pdf">
+                                        <i class="fas fa-file-invoice"></i> Download Invoice PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
+                                        data-pdf-url="/job-card/${jobCard.id}/download-pdf-view"
+                                        data-details-url="/job-card/${jobCard.id}/view-pdf"
+                                        data-title="Bill Generated">
+                                        <i class="fas fa-print"></i> Print Invoice
+                                    </a>
+                                </li>
+                            `;
+                        } else {
+                            menuItems += `
+                                <li>
+                                    <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
+                                        data-pdf-url="/job-card/${jobCard.id}/job-card-print"
+                                        data-details-url="/job-card/${jobCard.id}/job-card-print"
+                                        data-title="Job Card Print">
+                                        <i class="fas fa-clipboard-list"></i> Print Job Card
+                                    </a>
+                                </li>
+                            `;
+                        }
                     }
 
                     if (canDelete) {
@@ -832,6 +834,12 @@
 
                     return `
                         <div class="jc-action-group">
+                            ${canEdit && activeDocTab === 'jobcard' ? `
+                                <a class="jc-action-icon-btn" href="/job-cards/${jobCard.id}/edit?convert_to_invoice=1"
+                                    title="Convert to Invoice">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                            ` : ''}
                             ${canView ? `
                                 <button type="button" class="jc-action-icon-btn jc-open-print-modal"
                                     data-pdf-url="${printUrl}"
@@ -976,7 +984,8 @@
                     $("#job-card-tbody").html(tableRows);
                 }
 
-                let activeDocTab = 'invoice';
+                const isInvoicePage = @json(!empty($isInvoicePage));
+                let activeDocTab = isInvoicePage ? 'invoice' : 'jobcard';
                 let lastFetchedRows = [];
 
                 $(document).on('click', '.jc-dots-toggle', function(e) {
@@ -1018,21 +1027,6 @@
                     $('.jc-action-dropdown.show').removeClass('show');
                 });
 
-                $(document).on('click', '.doc-tab-btn', function() {
-                    activeDocTab = $(this).data('tab') || 'invoice';
-                    $('.doc-tab-btn').removeClass('active').css({
-                        'background-color': '#fff',
-                        'color': '#334155',
-                        'border-color': '#cbd5e1'
-                    });
-                    $(this).addClass('active').css({
-                        'background-color': '#ff9f43',
-                        'color': '#fff',
-                        'border-color': '#ff9f43'
-                    });
-                    renderTable(lastFetchedRows);
-                });
-
                 function fetchJobCards(page = 1) {
                     let month = $('#filterMonth').val();
                     let year = $('#filterYear').val();
@@ -1043,6 +1037,7 @@
                         url: "/api/getAllJobCards",
                         type: "GET",
                         data: {
+                            doc_type: activeDocTab,
                             month: month,
                             year: year,
                             customer: customer,
@@ -1880,6 +1875,69 @@
             });
         </script>
 
+        {{-- Convert to Invoice Edit Modal --}}
+        <div class="modal fade" id="convertToInvoiceModal" tabindex="-1" aria-labelledby="convertToInvoiceModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form id="convertToInvoiceForm">
+                    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);">
+                        <div class="modal-header border-bottom">
+                            <h5 class="modal-title fw-bold" id="convertToInvoiceModalLabel">Convert Job Card to Invoice</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="convertJobCardId">
+                            <div class="p-2 mb-3 rounded border bg-light" style="font-size: 13px;">
+                                <strong>Job Card No:</strong> <span id="convertJobCardNo"></span> &nbsp;|&nbsp;
+                                <strong>Customer:</strong> <span id="convertCustomerName"></span><br>
+                                <strong>Vehicle No:</strong> <span id="convertVehicleNo"></span>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label mb-1">Invoice Date</label>
+                                    <input type="date" id="convertDate" name="date" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label mb-1">Tax Mode</label>
+                                    <select id="convertGst" name="gst" class="form-select">
+                                        <option value="1">With GST</option>
+                                        <option value="0">Without GST</option>
+                                    </select>
+                                </div>
+                                <div class="col-4 mt-2">
+                                    <label class="form-label mb-1">Total Labour</label>
+                                    <input type="number" step="0.01" min="0" id="convertTotalLabour" name="total_labour" class="form-control">
+                                </div>
+                                <div class="col-4 mt-2">
+                                    <label class="form-label mb-1">Total Parts</label>
+                                    <input type="number" step="0.01" min="0" id="convertTotalParts" name="total_parts" class="form-control">
+                                </div>
+                                <div class="col-4 mt-2">
+                                    <label class="form-label mb-1">Grand Total</label>
+                                    <input type="number" step="0.01" min="0" id="convertGrandTotal" name="grand_total" class="form-control">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label mb-1">Remarks</label>
+                                    <textarea id="convertRemark" name="remark" rows="2" class="form-control" placeholder="Remarks..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <a id="convertFullEditLink" href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit me-1"></i> Full Edit
+                            </a>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" id="convertSubmitBtn" class="btn text-white" style="background-color: #ff9f43; font-weight: 600;">
+                                    <i class="fas fa-print me-1"></i> Convert &amp; Print Invoice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         {{-- Bill Generated / Print Preview Modal --}}
         <div class="modal fade" id="billPrintModal" tabindex="-1" aria-labelledby="billPrintModalTitle" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 860px;">
@@ -1965,6 +2023,70 @@
         <script>
             (function() {
                 let currentPrintPdfUrl = '';
+                let redirectAfterPrintUrl = '';
+
+                $(document).on('click', '.jc-convert-invoice-btn', function(e) {
+                    e.preventDefault();
+                    $('.jc-action-dropdown.show').removeClass('show');
+
+                    const id = $(this).data('id');
+                    $('#convertJobCardId').val(id);
+                    $('#convertJobCardNo').text($(this).data('number') || '-');
+                    $('#convertCustomerName').text($(this).data('customer') || '-');
+                    $('#convertVehicleNo').text($(this).data('vehicle') || '-');
+                    $('#convertDate').val($(this).data('date') || '{{ date('Y-m-d') }}');
+                    $('#convertGst').val(String($(this).data('gst')) === '1' ? '1' : '0');
+                    $('#convertTotalLabour').val($(this).data('labour') || '0.00');
+                    $('#convertTotalParts').val($(this).data('parts') || '0.00');
+                    $('#convertGrandTotal').val($(this).data('grand') || '0.00');
+                    $('#convertRemark').val($(this).data('remark') || '');
+                    $('#convertFullEditLink').attr('href', `/job-cards/${id}/edit?convert_to_invoice=1`);
+
+                    $('#convertToInvoiceModal').modal('show');
+                });
+
+                $('#convertTotalLabour, #convertTotalParts').on('input', function() {
+                    const labour = parseFloat($('#convertTotalLabour').val()) || 0;
+                    const parts = parseFloat($('#convertTotalParts').val()) || 0;
+                    $('#convertGrandTotal').val((labour + parts).toFixed(2));
+                });
+
+                $('#convertToInvoiceForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const id = $('#convertJobCardId').val();
+                    const $btn = $('#convertSubmitBtn');
+                    $btn.prop('disabled', true).text('Converting...');
+
+                    $.ajax({
+                        url: `/job-cards/${id}/convert-to-invoice`,
+                        type: 'POST',
+                        data: $(this).serialize(),
+                        headers: {
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                        },
+                        success: function(res) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-print me-1"></i> Convert &amp; Print Invoice');
+                            if (res.status) {
+                                $('#convertToInvoiceModal').modal('hide');
+                                const invoicePdfUrl = `/job-card/${id}/download-pdf-view`;
+                                redirectAfterPrintUrl = "{{ route('job_card.invoices') }}";
+                                currentPrintPdfUrl = invoicePdfUrl;
+                                $('#billPrintModalTitle').text('Bill Generated');
+                                $('#billDetailsLink').attr('href', `/job-card/${id}/view-pdf`);
+                                $('#billPrintIframe').attr('src', invoicePdfUrl + '#view=FitH');
+                                $('#billPrintModal').modal('show');
+                            }
+                        },
+                        error: function() {
+                            $btn.prop('disabled', false).html('<i class="fas fa-print me-1"></i> Convert &amp; Print Invoice');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to convert job card to invoice.'
+                            });
+                        }
+                    });
+                });
 
                 function triggerModalPrint() {
                     if (!currentPrintPdfUrl) return;
@@ -2008,6 +2130,11 @@
                 $('#billPrintModal').on('hidden.bs.modal', function() {
                     $('#billPrintIframe').attr('src', 'about:blank');
                     currentPrintPdfUrl = '';
+                    if (redirectAfterPrintUrl) {
+                        const target = redirectAfterPrintUrl;
+                        redirectAfterPrintUrl = '';
+                        window.location.href = target;
+                    }
                 });
 
                 $('#togglePrinterSettingsBtn').on('click', function() {

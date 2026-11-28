@@ -366,6 +366,8 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/view-subbranch/{id}', [SubBranchController::class, 'view_subbranch'])->name('subbranch.view');
 
         Route::get('/job-cards', [JobCardController::class, 'index'])->name('job_card.index');
+        Route::get('/job-card-invoices', [JobCardController::class, 'invoiceIndex'])->name('job_card.invoices');
+        Route::post('/job-cards/{id}/convert-to-invoice', [JobCardController::class, 'convertToInvoice'])->name('job_card.convert_to_invoice');
         Route::get('/job-cards/create', [JobCardController::class, 'create'])->name('job_card.create');
         Route::post('/job-cards/store', [JobCardController::class, 'store'])->name('job_card.store');
         Route::get('/job-cards/{id}', [JobCardController::class, 'show'])->name('job_card.show');
