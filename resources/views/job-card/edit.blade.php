@@ -3,6 +3,20 @@
 @section('title', 'Edit Job Card')
 
 @section('content')
+    @if (request('modal') == '1')
+        <style>
+            .header, .sidebar, .sidebar-overlay, footer, .page-header .btn-added {
+                display: none !important;
+            }
+            .page-wrapper {
+                margin-left: 0 !important;
+                padding-top: 10px !important;
+            }
+            .content {
+                padding: 10px 14px !important;
+            }
+        </style>
+    @endif
     <style>
         .is-invalid {
             border-color: #dc3545;
@@ -1026,6 +1040,10 @@
                         @endforeach
                     @endif
 
+                    @if (request('convert_to_invoice') == '1')
+                        @include('job-card.partials.payment_details')
+                    @endif
+
                     <hr>
                     {{-- Submit --}}
                     <div class="text-end d-flex justify-content-end flex-wrap gap-2">
@@ -1045,7 +1063,12 @@
                                 <i class="fas fa-file-invoice me-1"></i> Convert to Invoice &amp; Print
                             </button>
                         @endif
-                        <a href="{{ route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
+                        @if (request('modal') == '1')
+                            <button type="button" class="btn btn-cancel"
+                                onclick="window.parent.postMessage({ type: 'jc_close_convert_modal' }, '*')">Cancel</button>
+                        @else
+                            <a href="{{ route('job_card.index') }}" class="btn btn-cancel">Cancel</a>
+                        @endif
                     </div>
                         <div class="mobile-step-actions">
                             <button type="button" class="btn btn-cancel js-step-prev">Back</button>
@@ -1368,6 +1391,15 @@
                     if (response.status === true) {
                         const isConvertToInvoice = clickedAction === 'convert_invoice'
                             || new URLSearchParams(window.location.search).get('convert_to_invoice') === '1';
+
+                        const isModalMode = new URLSearchParams(window.location.search).get('modal') === '1' && window.self !== window.top;
+                        if (isModalMode && isConvertToInvoice) {
+                            window.parent.postMessage({
+                                type: 'jc_converted_to_invoice',
+                                job_card_id: response.job_card_id
+                            }, '*');
+                            return;
+                        }
 
                         Swal.fire({
                             icon: 'success',
@@ -2555,6 +2587,9 @@ $(document).ready(function () {
             // Update both summary and hidden total
             $('#grand_total_summary').val(grandTotalFormatted);
             $('#grand_total_form').val(grandTotalFormatted);
+            if ($('#payable_amount').length) {
+                $('#payable_amount').val(grandTotalFormatted).trigger('input');
+            }
 
             // EMI auto-fill
             if ($('#paid_by').val() === 'EMI') {
