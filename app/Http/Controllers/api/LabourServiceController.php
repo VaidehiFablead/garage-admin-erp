@@ -9,6 +9,7 @@ use App\Models\LabourService;
 use App\Models\Setting;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class LabourServiceController extends Controller
 {
@@ -210,6 +211,196 @@ class LabourServiceController extends Controller
                 'status' => false,
                 'message' => 'Something went wrong',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Import Labour Services from Excel (.xlsx, .xls) or CSV (.csv, .txt)
+     */
+    public function importLabourServices(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userId = $user->id;
+            $userRole = strtolower($user->role ?? '');
+            $selectedSubAdminId = $request->input('selectedSubAdminId') ?: $request->input('sub_admin_id') ?: $request->query('selectedSubAdminId');
+
+            if ($userRole === 'sub-admin') {
+                $branchId = $userId;
+            } elseif ($userRole === 'admin' && !empty($selectedSubAdminId) && $selectedSubAdminId !== 'null') {
+                $branchId = $selectedSubAdminId;
+            } else {
+                $branchId = $userId;
+            }
+
+            $file = $request->file('file') ?? $request->file('csv_file') ?? $request->file('excel_file');
+
+            if (!$file || !$file->isValid()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please select a valid CSV or Excel file to upload.'
+                ], 422);
+            }
+
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($extension, ['csv', 'txt', 'xlsx', 'xls'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid file format. Please upload a .csv, .xlsx, or .xls file.'
+                ], 422);
+            }
+
+            $rows = [];
+            $path = $file->getRealPath();
+
+            if (in_array($extension, ['xlsx', 'xls'])) {
+                $reader = IOFactory::createReaderForFile($path);
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($path);
+                $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
+            } else {
+                // CSV or text file
+                if (($handle = fopen($path, 'r')) !== false) {
+                    while (($data = fgetcsv($handle, 10000, ',')) !== false) {
+                        $rows[] = $data;
+                    }
+                    fclose($handle);
+                }
+            }
+
+            if (empty($rows)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'The uploaded file is empty.'
+                ], 422);
+            }
+
+            // Clean UTF-8 BOM if present on the very first cell
+            if (isset($rows[0][0])) {
+                $rows[0][0] = preg_replace('/^\xEF\xBB\xBF/', '', (string)$rows[0][0]);
+            }
+
+            // Detect header row dynamically
+            $firstRow = $rows[0];
+            $hasHeader = false;
+            $nameColIdx = 0;
+            $priceColIdx = 1;
+
+            $nameKeywords = ['service name', 'servicename', 'service', 'name', 'labour service', 'labour', 'item', 'item name', 'particular', 'particulars', 'title', 'description'];
+            $priceKeywords = ['price', 'amount', 'rate', 'cost', 'charge', 'charges', 'service price', 'service rate', 'service_price'];
+
+            foreach ($firstRow as $idx => $cell) {
+                $cellClean = strtolower(trim((string)$cell));
+                if (in_array($cellClean, $nameKeywords)) {
+                    $nameColIdx = $idx;
+                    $hasHeader = true;
+                }
+                if (in_array($cellClean, $priceKeywords)) {
+                    $priceColIdx = $idx;
+                    $hasHeader = true;
+                }
+            }
+
+            if ($hasHeader) {
+                array_shift($rows);
+            }
+
+            $imported = 0;
+            $updated = 0;
+            $skipped = 0;
+
+            foreach ($rows as $row) {
+                // Skip if entire row is empty
+                $nonEmpty = array_filter($row, fn($c) => trim((string)$c) !== '');
+                if (empty($nonEmpty)) {
+                    continue;
+                }
+
+                $name = isset($row[$nameColIdx]) ? trim((string)$row[$nameColIdx]) : '';
+                $priceRaw = isset($row[$priceColIdx]) ? trim((string)$row[$priceColIdx]) : '0';
+
+                if ($name === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                // Sanitize price: strip currency symbols, commas, whitespace
+                $priceClean = preg_replace('/[^\d.]/', '', $priceRaw);
+                if ($priceClean === '' || !is_numeric($priceClean)) {
+                    $price = 0.00;
+                } else {
+                    $price = (float)$priceClean;
+                }
+
+                // Check if labour service already exists for this branch
+                $existing = LabourService::where('branch_id', $branchId)
+                    ->where('name', $name)
+                    ->first();
+
+                if ($existing) {
+                    $existing->price = $price;
+                    $existing->is_deleted = 0; // Restore if deleted
+                    $existing->save();
+                    $updated++;
+                } else {
+                    LabourService::create([
+                        'name' => $name,
+                        'price' => $price,
+                        'branch_id' => $branchId,
+                        'is_deleted' => 0,
+                    ]);
+                    $imported++;
+                }
+            }
+
+            $totalProcessed = $imported + $updated;
+            if ($totalProcessed === 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No valid labour service data found in the uploaded file.',
+                    'imported' => 0,
+                    'updated' => 0,
+                    'skipped' => $skipped,
+                ], 422);
+            }
+
+            $messageParts = [];
+            if ($imported > 0) {
+                $messageParts[] = "{$imported} new labour service(s) imported";
+            }
+            if ($updated > 0) {
+                $messageParts[] = "{$updated} existing service(s) updated";
+            }
+            if ($skipped > 0) {
+                $messageParts[] = "{$skipped} blank row(s) skipped";
+            }
+            $message = implode(', ', $messageParts) . ' successfully.';
+
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+                'imported' => $imported,
+                'updated' => $updated,
+                'skipped' => $skipped,
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error importing file: ' . $e->getMessage()
             ], 500);
         }
     }
