@@ -356,6 +356,19 @@
             padding: 0;
             top: 7px !important;
         }
+
+        .page-header .page-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+
+        .page-header .page-btn .btn-added {
+            display: inline-flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+            margin: 0 !important;
+        }
     </style>
     @if (session('error'))
         <div class="alert alert-danger" id="error-message">
@@ -378,9 +391,9 @@
             <div class="page-title">
                 <h4>All Labour Services</h4>
             </div>
-            <div class="page-btn">
+            <div class="page-btn d-flex align-items-center flex-wrap gap-2">
                 @if (app('hasPermission')(20, 'add'))
-                    <a href="{{ route('labour.import') }}" class="btn btn-sm btn-added me-2" style="background-color: #ff9f43; border-color: #ff9f43;">
+                    <a href="{{ route('labour.import') }}" class="btn btn-sm btn-added" style="background-color: #ff9f43; border-color: #ff9f43;">
                         <i class="fas fa-file-import me-1"></i>Import Labour Services
                     </a>
                     <a href="#" class="btn btn-sm btn-added" data-bs-toggle="modal" data-bs-target="#addServiceModal">
