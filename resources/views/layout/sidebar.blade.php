@@ -150,9 +150,9 @@
                     $canMyBranch = in_array($role, ['admin', 'sub-admin']) && tenant_has_module(['My Branch', 'Branch', 'Branches']);
                     $canShopSettings = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings']) && tenant_has_sub_module('Shop Settings', 'Shop Settings');
                     $canWhatsAppConfig = app('hasPermission')(14, 'view') && tenant_has_module(['Shop Settings', 'Settings', 'WhatsApp Configuration']);
-                    $canTaxRates = tenant_has_module(['Tax Rates', 'Settings']) && tenant_has_sub_module('Tax Rates', 'Tax Rates');
-                    $canDepartments = tenant_has_module(['Departments', 'Settings']) && tenant_has_sub_module('Departments', 'Departments');
-                    $canDesignations = tenant_has_module(['Designations', 'Settings']) && tenant_has_sub_module('Designations', 'Designations');
+                    $canTaxRates = app('hasPermission')(14, 'view') && tenant_has_module(['Tax Rates', 'Settings']) && tenant_has_sub_module('Tax Rates', 'Tax Rates');
+                    $canDepartments = app('hasPermission')(14, 'view') && tenant_has_module(['Departments', 'Settings']) && tenant_has_sub_module('Departments', 'Departments');
+                    $canDesignations = app('hasPermission')(14, 'view') && tenant_has_module(['Designations', 'Settings']) && tenant_has_sub_module('Designations', 'Designations');
 
                     $showSettingsSection = tenant_has_module(['Settings', 'My Plan Details', 'My Branch', 'Branch', 'Branches', 'Shop Settings', 'WhatsApp Configuration', 'Tax Rates', 'Departments', 'Designations']) && (
                         $canMyPlanDetails || $canMyBranch || $canShopSettings || $canWhatsAppConfig || $canTaxRates || $canDepartments || $canDesignations

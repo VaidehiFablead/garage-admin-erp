@@ -94,6 +94,11 @@ class AppServiceProvider extends ServiceProvider
                     return true;
                 }
 
+                // If user is configured without permissions
+                if (isset($user->haspermission) && (int) $user->haspermission === 0) {
+                    return false;
+                }
+
                 // Map UI action names to DB column names
                 $actionMap = [
                     'list'   => 'view',

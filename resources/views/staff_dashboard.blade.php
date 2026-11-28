@@ -12,8 +12,12 @@
                     <p class="text-muted mb-0">Staff activity for {{ $monthName }}.</p>
                 </div>
                 <div>
-                    <a href="{{ route('job_card.index') }}" class="btn btn-sm btn-primary me-2">View Job Cards</a>
-                    <a href="{{ route('daily_data.index') }}" class="btn btn-sm btn-secondary">View Daily Data</a>
+                    @if (app('hasPermission')(16, 'view'))
+                        <a href="{{ route('job_card.index') }}" class="btn btn-sm btn-primary me-2">View Job Cards</a>
+                    @endif
+                    @if (app('hasPermission')(24, 'view'))
+                        <a href="{{ route('daily_data.index') }}" class="btn btn-sm btn-secondary">View Daily Data</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -66,7 +70,9 @@
             </div>
         </div>
 
+        @if (app('hasPermission')(16, 'view') || app('hasPermission')(24, 'view'))
         <div class="row gx-3 gy-3 mt-3">
+            @if (app('hasPermission')(16, 'view'))
             <div class="col-lg-3 col-sm-6">
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -76,6 +82,8 @@
                     </div>
                 </div>
             </div>
+            @endif
+            @if (app('hasPermission')(24, 'view'))
             <div class="col-lg-3 col-sm-6">
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -85,10 +93,12 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
+        @endif
 
         <div class="row mt-4">
-            @if ($recentJobCards->isNotEmpty())
+            @if ($recentJobCards->isNotEmpty() && app('hasPermission')(16, 'view'))
                 <div class="col-lg-6">
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -125,7 +135,7 @@
                 </div>
             @endif
 
-            @if ($recentDailyData->isNotEmpty())
+            @if ($recentDailyData->isNotEmpty() && app('hasPermission')(24, 'view'))
                 <div class="col-lg-6">
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
