@@ -369,10 +369,9 @@
             <thead>
                 <tr>
                     <th style="width: 6%;" class="text-center">#</th>
-                    <th style="width: 48%;">Service / Labour Description</th>
-                    <th style="width: 22%;">Technician Check</th>
-                    <th style="width: 12%;" class="text-right">Rate</th>
-                    <th style="width: 12%;" class="text-right">Amount</th>
+                    <th style="width: 46%;">Service / Labour Description</th>
+                    <th style="width: 24%;">Technician Check</th>
+                    <th style="width: 24%;">Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -381,12 +380,11 @@
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td>{{ $labour['name'] ?? '--' }}</td>
                         <td><span class="checkbox-box"></span> Done &nbsp;&nbsp; <span class="checkbox-box"></span> Pending</td>
-                        <td class="text-right">{{ $currency }} {{ number_format((float) ($labour['price'] ?? 0), 2) }}</td>
-                        <td class="text-right">{{ $currency }} {{ number_format((float) ($labour['total'] ?? ($labour['price'] ?? 0)), 2) }}</td>
+                        <td>{{ $labour['remark'] ?? $labour['remarks'] ?? $labour['note'] ?? '' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center" style="color: #64748b;">No labour services listed.</td>
+                        <td colspan="4" class="text-center" style="color: #64748b;">No labour services listed.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -401,8 +399,7 @@
                     <th style="width: 42%;">Part Name</th>
                     <th style="width: 8%;" class="text-center">Qty</th>
                     <th style="width: 20%;">Issued / Fitted</th>
-                    <th style="width: 12%;" class="text-right">Rate</th>
-                    <th style="width: 12%;" class="text-right">Amount</th>
+                    <th style="width: 24%;">Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -412,12 +409,11 @@
                         <td>{{ $part['name'] ?? '--' }}</td>
                         <td class="text-center">{{ $part['qty'] ?? 1 }}</td>
                         <td><span class="checkbox-box"></span> Issued &nbsp; <span class="checkbox-box"></span> Fitted</td>
-                        <td class="text-right">{{ $currency }} {{ number_format((float) ($part['price'] ?? 0), 2) }}</td>
-                        <td class="text-right">{{ $currency }} {{ number_format((float) ($part['total'] ?? (($part['price'] ?? 0) * ($part['qty'] ?? 1))), 2) }}</td>
+                        <td>{{ $part['remark'] ?? $part['remarks'] ?? $part['note'] ?? '' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center" style="color: #64748b;">No parts listed.</td>
+                        <td colspan="5" class="text-center" style="color: #64748b;">No parts listed.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -465,18 +461,8 @@
             {{-- Cost & Payment Summary --}}
         <table class="summary-grid">
             <tr>
-                <td style="width: 52%; border-right: 1px solid #cbd5e1;">
-                    <div><strong>Payment Mode:</strong> {{ $paymentModeLabel }} ({{ $paymentTypeLabel }})</div>
-                    <div><strong>Paid Amount:</strong> {{ $currency }} {{ number_format($paidAmount, 2) }}</div>
-                    <div><strong>Remaining / Balance:</strong> {{ $currency }} {{ number_format($remainingAmount, 2) }}</div>
-                    @if (!empty($jobCard->cash_amount) || !empty($jobCard->online_amount))
-                        <div style="font-size: 9.5px; color: #475569; margin-top: 2px;">
-                            Cash: {{ $currency }} {{ number_format((float) ($jobCard->cash_amount ?? 0), 2) }} |
-                            Online: {{ $currency }} {{ number_format((float) ($jobCard->online_amount ?? 0), 2) }}
-                        </div>
-                    @endif
-                </td>
-                <td style="width: 48%; text-align: right;">
+                <td style="width: 50%;"></td>
+                <td style="width: 50%; text-align: right;">
                     <div>
                         <strong>Total Labour:</strong> {{ $currency }} {{ number_format((float) ($jobCard->total_labour ?? 0), 2) }}
                         @if (!empty($labourDiscount['amount']) && (float) $labourDiscount['amount'] > 0)

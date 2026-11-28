@@ -127,7 +127,7 @@
                             <td>{{ $customer->email ?? 'N/A' }}</td>
                             <td class="text-center">{{ optional($customer->details)->country ?? 'N/A' }}</td>
                             <td class="text-center">{{ optional($customer->details)->city ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $customer->gst_number ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $customer->gst_number ?? $customer->gst_num ?? 'N/A' }}</td>
                             <td class="text-center">{{ $customer->created_at ? \Carbon\Carbon::parse($customer->created_at)->format('d-M-Y') : 'N/A' }}</td>
                         </tr>
                     @empty

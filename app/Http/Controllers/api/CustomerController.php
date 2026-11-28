@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Order;
 use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -68,7 +69,17 @@ class CustomerController extends Controller
         $perPage = $request->input('per_page', 10);
         $search  = $request->input('search', '');
 
-        $query = User::select('id', 'name', 'email', 'phone', 'gst_num', 'profile_image')
+        $gstColumn = Schema::hasColumn('users', 'gst_num')
+            ? 'gst_num'
+            : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+        $selectCols = ['id', 'name', 'email', 'phone', 'profile_image'];
+        if ($gstColumn) {
+            $selectCols[] = $gstColumn . ' as gst_num';
+            $selectCols[] = $gstColumn . ' as gst_number';
+        }
+
+        $query = User::select($selectCols)
             ->where('role', 'customer')
             ->where('isDeleted', 0)
             ->with('details:country,user_id,city');
@@ -102,12 +113,14 @@ class CustomerController extends Controller
 
         // ✅ Search functionality
         if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search, $gstColumn) {
                 $q->where('name', 'LIKE', "%{$search}%")
                 ->orWhere('email', 'LIKE', "%{$search}%")
-                ->orWhere('phone', 'LIKE', "%{$search}%")
-                ->orWhere('gst_num', 'LIKE', "%{$search}%")
-                ->orWhereHas('details', function ($subQ) use ($search) {
+                ->orWhere('phone', 'LIKE', "%{$search}%");
+                if ($gstColumn) {
+                    $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                }
+                $q->orWhereHas('details', function ($subQ) use ($search) {
                     $subQ->where('country', 'LIKE', "%{$search}%")
                         ->orWhere('city', 'LIKE', "%{$search}%");
                 });
@@ -427,22 +440,34 @@ class CustomerController extends Controller
 
             $search = $request->get('search', '');
 
-            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+            $gstColumn = Schema::hasColumn('users', 'gst_num')
+                ? 'gst_num'
+                : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+            $selectCols = ['id', 'name', 'email', 'phone', 'profile_image', 'created_at'];
+            if ($gstColumn) {
+                $selectCols[] = $gstColumn . ' as gst_number';
+                $selectCols[] = $gstColumn . ' as gst_num';
+            }
+
+            $query = User::select($selectCols)
                 ->where('role', 'customer')
                 ->where('isDeleted', 0)
                 ->where('branch_id', $userBranchId)
                 ->with('details:country,user_id,city,address');
 
             if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search, $gstColumn) {
                     $q->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%")
-                        ->orWhere('gst_number', 'LIKE', "%{$search}%")
-                        ->orWhereHas('details', function ($subQ) use ($search) {
-                            $subQ->where('country', 'LIKE', "%{$search}%")
-                                ->orWhere('city', 'LIKE', "%{$search}%");
-                        });
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                    if ($gstColumn) {
+                        $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                    }
+                    $q->orWhereHas('details', function ($subQ) use ($search) {
+                        $subQ->where('country', 'LIKE', "%{$search}%")
+                            ->orWhere('city', 'LIKE', "%{$search}%");
+                    });
                 });
             }
 
@@ -546,22 +571,34 @@ class CustomerController extends Controller
 
             $search = $request->get('search', '');
 
-            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+            $gstColumn = Schema::hasColumn('users', 'gst_num')
+                ? 'gst_num'
+                : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+            $selectCols = ['id', 'name', 'email', 'phone', 'profile_image', 'created_at'];
+            if ($gstColumn) {
+                $selectCols[] = $gstColumn . ' as gst_number';
+                $selectCols[] = $gstColumn . ' as gst_num';
+            }
+
+            $query = User::select($selectCols)
                 ->where('role', 'customer')
                 ->where('isDeleted', 0)
                 ->where('branch_id', $userBranchId)
                 ->with('details:country,user_id,city,address');
 
             if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search, $gstColumn) {
                     $q->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%")
-                        ->orWhere('gst_number', 'LIKE', "%{$search}%")
-                        ->orWhereHas('details', function ($subQ) use ($search) {
-                            $subQ->where('country', 'LIKE', "%{$search}%")
-                                ->orWhere('city', 'LIKE', "%{$search}%");
-                        });
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                    if ($gstColumn) {
+                        $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                    }
+                    $q->orWhereHas('details', function ($subQ) use ($search) {
+                        $subQ->where('country', 'LIKE', "%{$search}%")
+                            ->orWhere('city', 'LIKE', "%{$search}%");
+                    });
                 });
             }
 
