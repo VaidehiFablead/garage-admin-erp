@@ -77,7 +77,7 @@
     <footer style="text-align: center; padding: 10px 0; background-color: #f4f4f4; height: 50px;">
         <h1 style="font-size: 14px; font-weight: 600;">© <?= date('Y') ?> Copyright - Fablead Developers Technolab</h1>
     </footer>
-    @if (tenant_has_module(['Appointment', 'CRM']))
+    @if (tenant_has_module(['Appointment', 'CRM']) && strtolower(auth()->user()->role ?? '') !== 'staff')
         @include('partials.todayAppointmentsModal')
     @endif
     @include('layout.footer')

@@ -24,12 +24,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
     $(document).ready(function() {
-        if (sessionStorage.getItem("showAppointments") === "1") {
-            if ($('#todayAppointmentsModal').length) { // ✅ check exists
-                $('#todayAppointmentsModal').modal('show');
-            }
+        @if (strtolower(auth()->user()->role ?? '') === 'staff')
             sessionStorage.removeItem("showAppointments");
-        }
+        @else
+            if (sessionStorage.getItem("showAppointments") === "1") {
+                if ($('#todayAppointmentsModal').length) { // ✅ check exists
+                    $('#todayAppointmentsModal').modal('show');
+                }
+                sessionStorage.removeItem("showAppointments");
+            }
+        @endif
     });
 </script>
 

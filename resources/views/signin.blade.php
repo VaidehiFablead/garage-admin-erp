@@ -817,8 +817,12 @@
                                 localStorage.setItem('selectedSubAdminId', selectedId);
                             }
 
-                            // Store flag for one-time popup
-                            sessionStorage.setItem("showAppointments", "1");
+                            // Store flag for one-time popup only if enabled for role
+                            if (response.showAppointments) {
+                                sessionStorage.setItem("showAppointments", "1");
+                            } else {
+                                sessionStorage.removeItem("showAppointments");
+                            }
 
                             window.location.href = response.redirect || "/dashboard";
                         } else if (response.error) {
