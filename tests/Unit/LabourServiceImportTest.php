@@ -191,4 +191,30 @@ class LabourServiceImportTest extends TestCase
 
         $this->assertEquals('labour_service.import_labour', $view->name());
     }
+
+    public function test_export_labour_services_api()
+    {
+        $user = User::first() ?? User::factory()->create();
+        \Illuminate\Support\Facades\Auth::login($user);
+        $this->actingAs($user);
+
+        LabourService::create([
+            'name' => 'Export Unit Test Service',
+            'price' => 750.00,
+            'branch_id' => $user->id,
+            'is_deleted' => 0,
+        ]);
+
+        $response = $this->getJson("/api/export-labour-services?selectedSubAdminId={$user->id}");
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => true,
+        ]);
+
+        $this->assertNotNull($response->json('file_url'));
+
+        // Clean up
+        LabourService::where('name', 'Export Unit Test Service')->delete();
+    }
 }

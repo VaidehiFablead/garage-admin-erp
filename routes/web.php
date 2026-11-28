@@ -144,6 +144,7 @@ Route::middleware(['check.license'])->group(function () {
         Route::get('/add-labour', [LabourServiceController::class, 'add_labour'])->name('labour.add');
         Route::get('/edit-labour/{id}', [LabourServiceController::class, 'edit_labour'])->name('labour.edit');
         Route::get('/import-labour', [LabourServiceController::class, 'import_labour'])->name('labour.import');
+        Route::get('/labour/import/sample-file', [LabourServiceController::class, 'downloadSampleExcel'])->name('labour.import.sample');
         Route::get('/labour-sample-csv', [LabourServiceController::class, 'downloadSampleCsv'])->name('labour.sample.csv');
         Route::get('/labour-sample-excel', [LabourServiceController::class, 'downloadSampleExcel'])->name('labour.sample.excel');
 

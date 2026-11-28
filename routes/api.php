@@ -150,6 +150,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::delete('/deleteservice/{id}', [LabourServiceController::class, 'deleteService']);
     Route::get('/getService/{id}', [LabourServiceController::class, 'getService']);
     Route::post('/importLabourServices', [LabourServiceController::class, 'importLabourServices'])->name('importLabourServices');
+    Route::get('/export-labour-services', [LabourServiceController::class, 'export_labour_services'])->name('exportLabourServices');
 
     // Autocar Categorys
     Route::get('/getAllCategories', [AutoCarCategoryController::class, 'getAllCategories']);
