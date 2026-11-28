@@ -18,7 +18,12 @@ use App\Models\PaymentStore;
 use App\Models\UserDetail;
 use App\Models\TaxRate;
 use App\Models\ProductInventory;
+use App\Models\WhatsAppMessageTemplate;
+use App\Services\PersonalWhatsAppService;
+use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Validator;
@@ -159,6 +164,14 @@ class JobCardController extends Controller
             'remark' => $request->input('remark', $jobCard->remark),
             'is_invoice' => 1,
         ]);
+
+        try {
+            $this->sendJobCardWhatsApp($jobCard->fresh(), true, true);
+        } catch (\Throwable $waEx) {
+            Log::warning('JobCard invoice WhatsApp send failed (non-blocking): ' . $waEx->getMessage(), [
+                'job_card_id' => $jobCard->id,
+            ]);
+        }
 
         return response()->json([
             'status' => true,
@@ -1004,6 +1017,16 @@ class JobCardController extends Controller
                 'isDeleted' => 0,
                 'created_at' => $yesterday,
             ]);
+        }
+
+        if ($jobCard) {
+            try {
+                $this->sendJobCardWhatsApp($jobCard, (bool) $jobCard->is_invoice, true);
+            } catch (\Throwable $waEx) {
+                Log::warning('JobCard store WhatsApp send failed (non-blocking): ' . $waEx->getMessage(), [
+                    'job_card_id' => $jobCard->id,
+                ]);
+            }
         }
 
         return response()->json([
@@ -2113,6 +2136,232 @@ class JobCardController extends Controller
                 'created_at' => $paymentDate,
                 'updated_at' => $paymentDate,
             ]);
+        }
+    }
+
+    public function resendWhatsApp(Request $request, $id)
+    {
+        $jobCard = JobCard::with('customer')->where('isDeleted', 0)->find($id);
+        if (!$jobCard) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Job Card not found.',
+            ], 404);
+        }
+
+        $asInvoice = $request->has('as_invoice')
+            ? $request->boolean('as_invoice')
+            : (bool) $jobCard->is_invoice;
+
+        $result = $this->sendJobCardWhatsApp($jobCard, $asInvoice, false);
+        if (!empty($result['success'])) {
+            return response()->json([
+                'status' => true,
+                'pdf' => $result['pdf'] ?? true,
+                'message' => $result['message'] ?? 'WhatsApp sent to the customer.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => $result['message'] ?? 'Could not send WhatsApp.',
+        ], 422);
+    }
+
+    private function sendJobCardWhatsApp(JobCard $jobCard, bool $asInvoice, bool $respectSetting = true): array
+    {
+        $jobCard->loadMissing('customer');
+        $branchId = (int) ($jobCard->subbranch_id ?: $jobCard->user_id ?: Auth::id() ?: 1);
+
+        $waSetting = Setting::select('customer_whatsapp_message', 'name')
+            ->where('branch_id', $branchId)
+            ->first();
+
+        if ($respectSetting && $waSetting) {
+            $isEnabled = !in_array((string) ($waSetting->customer_whatsapp_message ?? '1'), ['0', 'off', 'false'], true);
+            if (!$isEnabled) {
+                return ['success' => false, 'skipped' => true, 'message' => 'Customer WhatsApp is disabled in settings.'];
+            }
+        }
+
+        $rawPhone = (string) ($jobCard->mobile ?: optional($jobCard->customer)->phone ?: '');
+        $phone = preg_replace('/[^0-9]/', '', $rawPhone);
+        if ($phone === '') {
+            return ['success' => false, 'message' => 'Customer phone number is missing.'];
+        }
+
+        $invoiceMeta = $this->generateJobCardPdfForWhatsApp($jobCard, $branchId, $asInvoice);
+        $customerName = (string) (optional($jobCard->customer)->name ?: $jobCard->customer_name ?: 'Customer');
+
+        if (PersonalWhatsAppService::isPersonalSelected($branchId)) {
+            $vars = [
+                'firm_name' => $waSetting->name ?? 'Company',
+                'transaction_type' => $asInvoice ? 'Job Card Invoice' : 'Job Card',
+                'invoice_amount' => number_format((float) ($jobCard->total_subtotal_amount ?? 0), 2),
+                'transaction_balance' => number_format((float) ($jobCard->remaining_amount ?? 0), 2),
+                'invoice_no' => (string) ($jobCard->job_card_number ?? $jobCard->id),
+                'customer_name' => $customerName,
+            ];
+
+            $res = PersonalWhatsAppService::sendSaleMessage(
+                $branchId,
+                $phone,
+                $vars,
+                is_array($invoiceMeta) ? $invoiceMeta : null
+            );
+
+            $pdfOk = !empty($res['pdf']) || collect($res['results'] ?? [])->contains(fn ($r) => !empty($r['pdf']));
+            return [
+                'success' => !empty($res['success']),
+                'pdf' => $pdfOk,
+                'message' => $res['message'] ?? (!empty($res['success']) ? 'WhatsApp sent.' : 'Could not send WhatsApp.'),
+            ];
+        }
+
+        $template = WhatsAppMessageTemplate::where('branch_id', $branchId)
+            ->where('on_off', 'active')
+            ->where('isDeleted', 0)
+            ->where('status', 'APPROVED')
+            ->where(function ($q) {
+                $q->whereIn('use_for_template', ['Order invoice PDF', 'Complete order', 'Pending order', 'Subscription complete', 'Subscription pending'])
+                    ->orWhereIn('name', ['subscription_invoice_pdf', 'order_complete_notification', 'order_confirmation']);
+            })
+            ->first();
+
+        if (!$template || empty($template->name)) {
+            return [
+                'success' => false,
+                'message' => 'No WhatsApp channel is ready. Connect Personal WhatsApp or save an approved API template.',
+            ];
+        }
+
+        $fileUrl = (string) data_get($invoiceMeta, 'file_url', '');
+        $fileName = (string) data_get($invoiceMeta, 'file_name', 'jobcard.pdf');
+        $extra = [];
+        if ($fileUrl !== '') {
+            $extra[] = [
+                'type' => 'header',
+                'parameters' => [[
+                    'type' => 'document',
+                    'document' => [
+                        'link' => $fileUrl,
+                        'filename' => $fileName,
+                    ],
+                ]],
+            ];
+        }
+
+        $res = WhatsAppService::sendTemplateMessage(
+            $branchId,
+            $phone,
+            trim($template->name),
+            [
+                $customerName,
+                (string) ($jobCard->job_card_number ?? $jobCard->id),
+                number_format((float) ($jobCard->total_subtotal_amount ?? 0), 2),
+            ],
+            $template->language ?: 'en',
+            $extra
+        );
+
+        return [
+            'success' => !empty($res['success']),
+            'pdf' => $fileUrl !== '',
+            'message' => $res['message'] ?? (!empty($res['success']) ? 'WhatsApp sent.' : 'Could not send WhatsApp.'),
+        ];
+    }
+
+    private function generateJobCardPdfForWhatsApp(JobCard $jobCard, int $branchId, bool $asInvoice): ?array
+    {
+        try {
+            $setting = Setting::where('branch_id', $branchId)->first()
+                ?? Setting::where('branch_id', 1)->first()
+                ?? Setting::first();
+
+            $jobCard->loadMissing('customer');
+            $modelId = json_decode($jobCard->model, true);
+            $model = AutoCarModel::find($modelId);
+            $model_name = $model ? $model->model_name : '--';
+
+            if ($asInvoice) {
+                $labourIds = json_decode($jobCard->labour_details, true);
+                $labourData = [];
+                if ($labourIds && is_array($labourIds)) {
+                    $ids = array_map(fn ($item) => $item['id'], $labourIds);
+                    $labourTableData = LabourService::whereIn('id', $ids)->get()->keyBy('id');
+                    foreach ($labourIds as $key => $item) {
+                        $labourData[$key] = [
+                            'id' => $item['id'],
+                            'name' => $labourTableData[$item['id']]->name ?? ' -- ',
+                            'price' => $item['price'],
+                            'total' => $item['total'],
+                        ];
+                    }
+                }
+                $labourGst = [];
+                $partsData = json_decode($jobCard->parts_details, true) ?? [];
+                $partsGst = json_decode($jobCard->parts_gst, true) ?? [];
+
+                $pdf = Pdf::loadView('job-card.invoice_pdf', compact(
+                    'jobCard', 'labourData', 'partsData', 'labourGst', 'partsGst', 'setting', 'model_name'
+                ))->setPaper('A4', 'portrait')->setOptions(['defaultFont' => 'sans-serif']);
+                $prefix = 'jobcard_invoice_';
+            } else {
+                $labourDetails = json_decode($jobCard->labour_details, true) ?? [];
+                $labourIds = collect($labourDetails)->pluck('id')->filter()->all();
+                $labourMap = LabourService::whereIn('id', $labourIds)->get()->keyBy('id');
+                foreach ($labourDetails as $key => $labour) {
+                    $labourId = $labour['id'] ?? null;
+                    $labourDetails[$key]['name'] = $labourId && isset($labourMap[$labourId])
+                        ? $labourMap[$labourId]->name
+                        : 'N/A';
+                }
+                $partsDetails = json_decode($jobCard->parts_details, true) ?? [];
+                $category = is_numeric($jobCard->category) ? AutoCarCategory::find($jobCard->category) : null;
+                $category_name = $category ? ($category->category_name ?? $category->name ?? '--') : ($jobCard->category ?: '--');
+                $technician = is_numeric($jobCard->technician) ? User::find($jobCard->technician) : null;
+                $technician_name = $technician ? $technician->name : ($jobCard->technician ?: '--');
+
+                $pdf = Pdf::loadView('job-card.job_card_print_pdf', compact(
+                    'jobCard', 'labourDetails', 'partsDetails', 'setting', 'model_name', 'category_name', 'technician_name'
+                ))->setPaper('A4', 'portrait')->setOptions(['defaultFont' => 'sans-serif']);
+                $prefix = 'jobcard_';
+            }
+
+            Storage::disk('public')->makeDirectory('sales-invoices');
+            $fileName = $prefix . $jobCard->id . '_' . now()->format('Ymd_His') . '.pdf';
+            $relativePath = 'sales-invoices/' . $fileName;
+            $pdfBytes = $pdf->output();
+            Storage::disk('public')->put($relativePath, $pdfBytes);
+
+            $waDir = public_path('wa-invoices');
+            if (!is_dir($waDir)) {
+                @mkdir($waDir, 0775, true);
+            }
+            @file_put_contents($waDir . DIRECTORY_SEPARATOR . $fileName, $pdfBytes);
+
+            $fileUrl = asset('storage/' . $relativePath);
+            try {
+                $host = request() ? (string) request()->getHost() : '';
+                if ($host !== '' && !in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                    $fileUrl = request()->getSchemeAndHttpHost() . '/wa-invoices/' . rawurlencode($fileName);
+                }
+            } catch (\Throwable $e) {
+            }
+
+            return [
+                'status' => true,
+                'file_url' => $fileUrl,
+                'file_name' => $fileName,
+                'relative_path' => $relativePath,
+                'local_path' => Storage::disk('public')->path($relativePath),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('JobCard PDF generation for WhatsApp failed', [
+                'job_card_id' => $jobCard->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
         }
     }
 }
