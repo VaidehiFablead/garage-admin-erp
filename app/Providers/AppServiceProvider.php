@@ -81,41 +81,64 @@ class AppServiceProvider extends ServiceProvider
         //     };
         // });
         app()->singleton('hasPermission', function () {
-    return function ($moduleId, $action) {
+            return function ($moduleId, $action) {
 
-        $user = Auth::user();
+                $user = Auth::user();
 
-        if (!$user) {
-            return false;
-        }
+                if (!$user) {
+                    return false;
+                }
 
-        // Admin and Sub Admin have all permissions
-        if ($user->role == 'admin' || $user->role_id == 1 || $user->role == 'sub-admin') {
-            return true;
-        }
+                // Admin and Sub Admin have all permissions
+                if (in_array(strtolower($user->role ?? ''), ['admin', 'sub-admin']) || ($user->role_id ?? null) == 1) {
+                    return true;
+                }
 
-        // Map UI action names to DB column names
-        $actionMap = [
-            'list'   => 'view',
-            'view'   => 'view',
-            'insert' => 'add',
-            'add'    => 'add',
-            'edit'   => 'edit',
-            'delete' => 'delete',
-        ];
+                // Map UI action names to DB column names
+                $actionMap = [
+                    'list'   => 'view',
+                    'view'   => 'view',
+                    'insert' => 'add',
+                    'add'    => 'add',
+                    'edit'   => 'edit',
+                    'delete' => 'delete',
+                ];
 
-        $column = $actionMap[$action] ?? null;
+                $column = $actionMap[$action] ?? null;
 
-        if (!$column) {
-            return false;
-        }
+                if (!$column) {
+                    return false;
+                }
 
-        return UserPermission::where('user_id', $user->id)
-            ->where('module_id', $moduleId)
-            ->where($column, 1)
-            ->exists();
-    };
-});
+                // Fallback alias mapping between legacy IDs and Seeder IDs
+                $aliases = [
+                    4  => [4, 9],       // Customers
+                    9  => [4, 9, 26],   // Customers / Attendance legacy
+                    5  => [5, 10],      // Vendors
+                    10 => [5, 10, 29],  // Vendors / Payroll legacy
+                    6  => [5, 6],       // Expenses
+                    11 => [11, 28],     // Leave
+                    12 => [12, 17],     // Appointments
+                    13 => [13, 16, 42], // Account Ledger
+                    15 => [15, 17, 41], // Inventory
+                    16 => [16, 2],      // Job Cards
+                    24 => [24, 2],      // Daily Register
+                    25 => [25, 48],     // Credit Notes
+                    26 => [26, 9, 48],  // Debit Notes / Attendance
+                    28 => [11, 28],     // Leave
+                    29 => [10, 29],     // Payroll
+                    30 => [20, 30],     // GST Reports
+                    42 => [13, 42],     // Account Ledger
+                ];
+
+                $checkIds = isset($aliases[$moduleId]) ? $aliases[$moduleId] : [$moduleId];
+
+                return UserPermission::where('user_id', $user->id)
+                    ->whereIn('module_id', $checkIds)
+                    ->where($column, 1)
+                    ->exists();
+            };
+        });
 
         // ✅ Add global data for Today Appointments Modal
         View::composer('partials.todayAppointmentsModal', function ($view) {

@@ -48,6 +48,11 @@
                                       </div>
                                       <hr>
                                       <div class="row">
+                                          <div class="col-lg-3 col-md-4 label">Username</div>
+                                          <div class="col-lg-9 col-md-8"><span class="profile-username"></span></div>
+                                      </div>
+                                      <hr>
+                                      <div class="row">
                                           <div class="col-lg-3 col-md-4 label">Role</div>
                                           <div class="col-lg-9 col-md-8"><span class="profile-role"></span></div>
                                       </div>
@@ -128,6 +133,7 @@ $(document).ready(function() {
         success: function(res) {
 
             $('.profile-name').text(res.name ?? 'N/A');
+            $('.profile-username').text(res.username ? '@' + res.username : 'N/A');
             $('.profile-role').text(res.role ?? 'N/A');
             $('.profile-email').text(res.email ?? 'N/A');
             $('.profile-phone').text(res.phone ?? 'N/A');

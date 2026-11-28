@@ -162,7 +162,7 @@
                 <!-- Dashboard -->
                 @if ($showDashboard)
                     <li class="menu-dashboard">
-                        @if (in_array($role, ['admin', 'sub-admin']))
+                        @if (in_array(strtolower($role ?? ''), ['admin', 'sub-admin']) || app('hasPermission')(7, 'view'))
                             <a href="{{ route('auth.dashboard') }}">
                                 <i class="fa fa-tachometer-alt"></i>
                                 <span>Dashboard</span>
