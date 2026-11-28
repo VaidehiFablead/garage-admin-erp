@@ -347,18 +347,6 @@
                             🧩 Layout Setting
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="bank-tab" data-toggle="tab" data-bs-toggle="tab" href="#bank-settings"
-                            role="tab" aria-controls="bank-settings" aria-selected="false">
-                            Bank Details
-                        </a>
-                    </li>
-                    <!-- <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="dashboard-tab" data-toggle="tab" href="#dashboard-settings"
-                            role="tab" aria-controls="dashboard-settings" aria-selected="false">
-                            Dashboard
-                        </a>
-                    </li> -->
                 </ul>
 
                 <!-- Tab Content -->
@@ -1392,25 +1380,6 @@
                         </div>
                     </div>
 
-                    <!-- ================= BANK DETAILS TAB ================= -->
-                    <div class="tab-pane fade" id="bank-settings" role="tabpanel" aria-labelledby="bank-tab">
-                        <ul class="nav nav-pills mb-4" id="bank-gst-pills" role="tablist">
-                            <li class="nav-item w-50" role="presentation">
-                                <button class="nav-link active w-100" id="with-gst-tab" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#with-gst" href="#with-gst" type="button" role="tab" aria-controls="with-gst" aria-selected="true">With GST</button>
-                            </li>
-                            <li class="nav-item w-50" role="presentation">
-                                <button class="nav-link w-100" id="without-gst-tab" data-bs-toggle="pill" data-toggle="pill" data-bs-target="#without-gst" href="#without-gst" type="button" role="tab" aria-controls="without-gst" aria-selected="false">Without GST</button>
-                            </li>
-                        </ul>
-                        <style>
-                            #bank-gst-pills {
-                                max-width: 400px;
-                                background-color: #f8f9fa;
-                                border: 1px solid #e9ecef;
-                                border-radius: 50px;
-                                padding: 5px;
-                                display: flex;
-                            }
                     <!-- ================= DELIVERY TERMS TAB ================= -->
                     <div class="tab-pane fade" id="delivery-terms" role="tabpanel" aria-labelledby="terms-tab">
                         <div class="row">
@@ -1682,28 +1651,24 @@
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>Bank Name</label>
-                                            <input type="text" id="bank_name" class="form-control" placeholder="Enter Bank Name">
                                             <input type="text" id="bank_tab_name" class="form-control" placeholder="Enter Bank Name">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>Branch</label>
-                                            <input type="text" id="branch" class="form-control" placeholder="Enter Branch">
                                             <input type="text" id="bank_tab_branch" class="form-control" placeholder="Enter Branch">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>A/C No.</label>
-                                            <input type="number" id="ac_no" class="form-control" placeholder="Enter A/C No.">
                                             <input type="number" id="bank_tab_ac_no" class="form-control" placeholder="Enter A/C No.">
                                         </div>
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-6">
                                         <div class="form-group">
                                             <label>IFSC Code</label>
-                                            <input type="text" id="ifsc_code" class="form-control" placeholder="Enter IFSC Code">
                                             <input type="text" id="bank_tab_ifsc_code" class="form-control" placeholder="Enter IFSC Code">
                                         </div>
                                     </div>
@@ -1711,20 +1676,9 @@
                                         <div class="form-group">
                                             <label>QR (Upload Pic)</label>
                                             <div class="image-upload">
-                                                <input type="file" id="qr_code" accept="image/*">
-                                                <div class="image-uploads">
-                                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}"
-                                                        alt="img">
-                                                    <h4>Drag and drop a file to upload</h4>
-                                                </div>
-                                            </div>
-                                            <div class="mt-2" style="position: relative; display: inline-block;">
-                                                <img id="qr_preview" src="" alt="QR Preview" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
-                                                <button type="button" id="remove_qr_btn" class="btn btn-sm btn-danger" onclick="removeImagePreview('qr_code')" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
-                                                <input type="hidden" id="remove_qr_code" value="0">
                                                 <input type="file" id="bank_tab_qr_code" accept="image/*">
                                                 <div class="image-uploads">
-                                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}" alt="img">
+                                                    <img src="{{ image_path('admin/assets/img/icons/upload.svg') }}" alt="img">
                                                     <h4>Drag and drop a file to upload</h4>
                                                 </div>
                                             </div>
@@ -1778,12 +1732,6 @@
                                                 <img id="qr_preview_without_gst" src="" alt="QR Preview Without GST" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                                 <button type="button" id="remove_qr_without_gst_btn" class="btn btn-sm btn-danger" onclick="removeImagePreviewWithoutGst()" style="display:none; position: absolute; top: -10px; right: -10px; border-radius: 50%; padding: 0px 5px; font-size: 10px; line-height: 1;">&times;</button>
                                                 <input type="hidden" id="remove_qr_code_without_gst" value="0">
-                                                    <img src="{{ env('ImagePath') . 'admin/assets/img/icons/upload.svg' }}" alt="img">
-                                                    <h4>Drag and drop a file to upload</h4>
-                                                </div>
-                                            </div>
-                                            <div class="mt-2">
-                                                <img id="qr_preview_without_gst" src="" alt="QR Preview Without GST" style="max-width: 100px; max-height: 100px; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; display: none;">
                                             </div>
                                         </div>
                                     </div>
