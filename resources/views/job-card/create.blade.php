@@ -36,6 +36,44 @@
             border-radius: 8px 8px 0 0;
         }
 
+        /* Clean single-line dropdown appearance for Labour & Items Select2 (matches Model/Make) */
+        #labourSelect + .select2-container .select2-selection--multiple,
+        #partsSelect + .select2-container .select2-selection--multiple {
+            min-height: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 0 28px 0 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: #fff;
+            overflow: hidden;
+        }
+
+        #labourSelect + .select2-container .select2-selection__rendered,
+        #partsSelect + .select2-container .select2-selection__rendered {
+            display: flex !important;
+            align-items: center;
+            width: 100%;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #labourSelect + .select2-container .select2-selection__choice,
+        #partsSelect + .select2-container .select2-selection__choice {
+            display: none !important;
+        }
+
+        #labourSelect + .select2-container .select2-search--inline,
+        #partsSelect + .select2-container .select2-search--inline,
+        #labourSelect + .select2-container .select2-search__field,
+        #partsSelect + .select2-container .select2-search__field {
+            width: 100% !important;
+            margin: 0 !important;
+            height: 26px !important;
+            line-height: 26px !important;
+        }
+
         .nav-tabs {
             border-bottom: none;
             background-color: #f1f1f1;
@@ -1206,7 +1244,7 @@
                     </div>
                     <div class="modal-footer">
                         <button id="partsSubmitBtn" type="submit" class="btn btn-submit">Save Part</button>
-                        <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-cancel" id="closed_parts" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </form>
@@ -1255,6 +1293,14 @@
                 width: '100%',
                 tags: true,
                 tokenSeparators: [',']
+            });
+
+            // Model/Make - allow searching and quick-adding new model on Enter
+            $('#model_make').select2({
+                placeholder: "Select or Add Model/Make",
+                allowClear: true,
+                width: '100%',
+                tags: true
             });
         });
     </script>
@@ -1482,7 +1528,8 @@ $('.btn-cancel').on('click', function() {
     <script>
         $(document).ready(function () {
             $('#labourSelect').select2({
-            placeholder: "Select Labour Service",
+                placeholder: "Select or Add Labour Service",
+                tags: true,
             }).on('select2:select', function (e) {
                 let element = e.params.data.element;
                 let $element = $(element);
@@ -1772,15 +1819,16 @@ $('.btn-cancel').on('click', function() {
 
         $(document).ready(function () {
             $('#partsSelect').select2({
-                placeholder: "Search Parts",
-                minimumInputLength: 1,
+                placeholder: "Search or Add Parts",
+                minimumInputLength: 0,
+                tags: true,
                 ajax: {
                     url: "{{ route('get.parts') }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
                         return {
-                            q: params.term,
+                            q: params.term || '',
                             page: params.page || 1
                         };
                     },
@@ -2183,6 +2231,20 @@ $('.btn-cancel').on('click', function() {
                         $('#partsSubmitBtn').prop('disabled', false);
                     }
                 });
+            });
+
+            // Cancel / Close handler for partsModal
+            $('#closed_parts').on('click', function () {
+                partsModal.hide();
+                if (partsModalOpen && currentCustomPart) {
+                    const opt = $('#partsSelect option[value="' + currentCustomPart + '"]');
+                    if (opt.length) {
+                        opt.remove();
+                        $('#partsSelect').trigger('change');
+                    }
+                }
+                partsModalOpen = false;
+                currentCustomPart = null;
             });
 
             // Quantity +/- buttons for modal qty input (if exists)
