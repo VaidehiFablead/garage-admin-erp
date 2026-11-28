@@ -125,7 +125,7 @@
                             <td><strong>{{ $vendor->name ?? 'N/A' }}</strong></td>
                             <td>{{ $vendor->email ?? 'N/A' }}</td>
                             <td class="text-center">{{ $vendor->phone ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $vendor->gst_number ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $vendor->gst_number ?? $vendor->gst_num ?? 'N/A' }}</td>
                             <td class="text-center">{{ optional($vendor->details)->country ?? 'N/A' }}</td>
                             <td class="text-center">{{ optional($vendor->details)->city ?? 'N/A' }}</td>
                             <td class="text-center">{{ $vendor->created_at ? \Carbon\Carbon::parse($vendor->created_at)->format('d-M-Y') : 'N/A' }}</td>

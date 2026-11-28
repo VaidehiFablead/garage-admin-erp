@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use App\Services\ApiKeyService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -283,7 +284,17 @@ class SupplierController extends Controller
         $perPage = $request->get('per_page', 10); // default 10
         $search = $request->get('search', '');
 
-        $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_num')
+        $gstColumn = Schema::hasColumn('users', 'gst_num')
+            ? 'gst_num'
+            : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+        $selectCols = ['id', 'name', 'email', 'phone', 'profile_image'];
+        if ($gstColumn) {
+            $selectCols[] = $gstColumn . ' as gst_num';
+            $selectCols[] = $gstColumn . ' as gst_number';
+        }
+
+        $query = User::select($selectCols)
             ->where('role', 'vendor')
             ->where('isDeleted', 0)
             ->where('branch_id', $userBranchId)
@@ -291,11 +302,13 @@ class SupplierController extends Controller
 
         // Apply search if provided
         if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search, $gstColumn) {
                 $q->where('name', 'LIKE', "%{$search}%")
                 ->orWhere('email', 'LIKE', "%{$search}%")
-                ->orWhere('phone', 'LIKE', "%{$search}%")
-                ->orWhere('gst_num', 'LIKE', "%{$search}%");
+                ->orWhere('phone', 'LIKE', "%{$search}%");
+                if ($gstColumn) {
+                    $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                }
             });
         }
 
@@ -573,18 +586,30 @@ class SupplierController extends Controller
 
             $search = $request->get('search', '');
 
-            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+            $gstColumn = Schema::hasColumn('users', 'gst_num')
+                ? 'gst_num'
+                : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+            $selectCols = ['id', 'name', 'email', 'phone', 'profile_image', 'created_at'];
+            if ($gstColumn) {
+                $selectCols[] = $gstColumn . ' as gst_number';
+                $selectCols[] = $gstColumn . ' as gst_num';
+            }
+
+            $query = User::select($selectCols)
                 ->where('role', 'vendor')
                 ->where('isDeleted', 0)
                 ->where('branch_id', $userBranchId)
                 ->with('details:country,user_id,city,address');
 
             if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search, $gstColumn) {
                     $q->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%")
-                        ->orWhere('gst_number', 'LIKE', "%{$search}%");
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                    if ($gstColumn) {
+                        $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                    }
                 });
             }
 
@@ -688,18 +713,30 @@ class SupplierController extends Controller
 
             $search = $request->get('search', '');
 
-            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+            $gstColumn = Schema::hasColumn('users', 'gst_num')
+                ? 'gst_num'
+                : (Schema::hasColumn('users', 'gst_number') ? 'gst_number' : null);
+
+            $selectCols = ['id', 'name', 'email', 'phone', 'profile_image', 'created_at'];
+            if ($gstColumn) {
+                $selectCols[] = $gstColumn . ' as gst_number';
+                $selectCols[] = $gstColumn . ' as gst_num';
+            }
+
+            $query = User::select($selectCols)
                 ->where('role', 'vendor')
                 ->where('isDeleted', 0)
                 ->where('branch_id', $userBranchId)
                 ->with('details:country,user_id,city,address');
 
             if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search, $gstColumn) {
                     $q->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%")
-                        ->orWhere('gst_number', 'LIKE', "%{$search}%");
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                    if ($gstColumn) {
+                        $q->orWhere($gstColumn, 'LIKE', "%{$search}%");
+                    }
                 });
             }
 
