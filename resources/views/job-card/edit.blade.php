@@ -1026,8 +1026,6 @@
                         @endforeach
                     @endif
 
-                    @include('job-card.partials.payment_details')
-
                     <hr>
                     {{-- Submit --}}
                     <div class="text-end">
@@ -1314,10 +1312,6 @@
             if (totalLabour <= 0 && totalParts <= 0) {
                 isValid = false;
                 $('#total_parts').after('<div class="text-danger" style="color:red;">Either Total labour or Total parts must be greater than 0.</div>');
-                return false;
-            }
-
-            if (typeof window.validateJcPaymentBeforeSubmit === 'function' && !window.validateJcPaymentBeforeSubmit()) {
                 return false;
             }
 
@@ -2543,7 +2537,6 @@ $(document).ready(function () {
             // Update both summary and hidden total
             $('#grand_total_summary').val(grandTotalFormatted);
             $('#grand_total_form').val(grandTotalFormatted);
-            $('#payable_amount').val(grandTotalFormatted).trigger('input');
 
             // EMI auto-fill
             if ($('#paid_by').val() === 'EMI') {

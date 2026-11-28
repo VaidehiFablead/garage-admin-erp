@@ -126,6 +126,76 @@
                 width: 100% !important;
             }
         }
+
+        .jc-action-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .jc-action-icon-btn {
+            width: 32px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #334155;
+            padding: 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .jc-action-icon-btn:hover,
+        .jc-action-icon-btn:focus {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .jc-action-dropdown {
+            display: none;
+            position: fixed;
+            min-width: 190px;
+            padding: 6px 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.14);
+            list-style: none;
+            margin: 0;
+            z-index: 9999;
+        }
+
+        .jc-action-dropdown.show {
+            display: block;
+        }
+
+        .jc-action-dropdown .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            font-size: 13.5px;
+            color: #334155;
+        }
+
+        .jc-action-dropdown .dropdown-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .jc-action-dropdown .dropdown-item i {
+            width: 16px;
+            text-align: center;
+            color: #475569;
+        }
+
+        .jc-action-dropdown .dropdown-item.text-danger,
+        .jc-action-dropdown .dropdown-item.text-danger i {
+            color: #ef4444 !important;
+        }
     </style>
     <div class="content">
         <div class="page-header">
@@ -299,6 +369,7 @@
                                 <th class="mobile-hide">Total Labour</th>
                                 <th class="mobile-hide">Total Parts</th>
                                 <th class="mobile-hide">Grand Total</th>
+                                <th class="mobile-hide text-center">Payment Status</th>
                                 <th class="text-center mobile-hide">Action</th>
                             </tr>
                         </thead>
@@ -547,6 +618,20 @@
 
 
 
+                        <!-- Payment Date -->
+                        <div class="mb-3">
+                            <label for="paymentDateInput" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="paymentDateInput" name="payment_date"
+                                value="{{ date('Y-m-d') }}">
+                        </div>
+
+                        <!-- Remark -->
+                        <div class="mb-3">
+                            <label for="paymentRemarkInput" class="form-label">Remark</label>
+                            <input type="text" class="form-control" id="paymentRemarkInput" name="remark"
+                                placeholder="Enter remark">
+                        </div>
+
                         <!-- Cleaned Hidden Inputs (no duplicate name attributes) -->
                         <input type="hidden" id="paymentJobCardId" name="job_card_id">
                         <input type="hidden" id="remainingAmountHidden" name="remaining_amount">
@@ -661,58 +746,113 @@
                 }
 
                 function buildActionButtons(jobCard, mobile = false) {
-                    let buttons = '';
-                    const linkClass = mobile ? 'btn btn-sm' : 'me-3';
-                    const deleteClass = mobile ? 'btn btn-sm delete-jobcard-btn' : 'delete-jobcard-btn mt-2';
-                    const deleteStyle = mobile ? '' : 'style="border: none; background: none; padding: 0;"';
+                    const printUrl = activeDocTab === 'jobcard'
+                        ? `/job-card/${jobCard.id}/job-card-print`
+                        : `/job-card/${jobCard.id}/download-pdf-view`;
+                    const printTitle = activeDocTab === 'jobcard' ? 'Print Job Card' : 'Print Invoice';
+                    const viewUrl = activeDocTab === 'jobcard'
+                        ? `/job-card/${jobCard.id}/job-card-print`
+                        : `/job-card/${jobCard.id}/view-pdf`;
 
-                    // if (jobCard.quotation_status === 'quotation') {
-                    //     buttons += `
-            //         <button class="btn btn-success btn-sm convert-to-sales-btn" data-id="${jobCard.id}">
-            //             Convert to JobCard
-            //         </button>
-            //     `;
-                    // }
+                    let menuItems = '';
+                    const remainingAmountNum = parseFloat(jobCard.remaining_amount ?? jobCard.grand_total) || 0;
 
-                    if (canEdit) {
-                        buttons += `
-                            <a class="${linkClass}" href="/job-cards/${jobCard.id}/edit" title="Edit">
-                                <i class="fas fa-edit" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                            </a>
+                    if ((canView || canEdit) && remainingAmountNum > 0) {
+                        menuItems += `
+                            <li>
+                                <button type="button" class="dropdown-item make-payment-btn"
+                                    data-id="${jobCard.id}"
+                                    data-method="${escapeHtml(jobCard.payment_method || 'pending')}"
+                                    data-total-amount="${jobCard.grand_total}"
+                                    data-remaining-amount="${jobCard.remaining_amount ?? jobCard.grand_total}"
+                                    data-emi-duration="${jobCard.emi_duration || 0}"
+                                    data-remaining-emi-months="${jobCard.emi_duration || 0}">
+                                    <i class="fas fa-wallet"></i> Pay
+                                </button>
+                            </li>
                         `;
                     }
 
                     if (canView) {
-                        if (activeDocTab === 'jobcard') {
-                            buttons += `
-                                <a class="${linkClass}" href="/job-card/${jobCard.id}/job-card-print" target="_blank" title="Print Job Card">
-                                    <i class="fas fa-print" style="${mobile ? '' : 'font-size: 20px;'}"></i>
+                        menuItems += `
+                            <li>
+                                <a class="dropdown-item" href="${viewUrl}" ${activeDocTab === 'jobcard' ? 'target="_blank"' : ''}>
+                                    <i class="fas fa-eye"></i> View
                                 </a>
-                                <a class="${mobile ? 'btn btn-sm' : 'me-3 mt-2'}" href="/job-card/${jobCard.id}/job-card-print" target="_blank" title="View Job Card">
-                                    <i class="fas fa-eye" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                                </a>
-                            `;
-                        } else {
-                            buttons += `
-                                <a class="${linkClass}" href="/job-card/${jobCard.id}/download-pdf" title="Download Invoice PDF">
-                                    <i class="fas fa-download" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                                </a>
-                                <a class="${mobile ? 'btn btn-sm' : 'me-3 mt-2'}" href="/job-card/${jobCard.id}/view-pdf" title="View Invoice">
-                                    <i class="fas fa-eye" style="${mobile ? '' : 'font-size: 20px;'}"></i>
-                                </a>
-                            `;
-                        }
-                    }
-
-                    if (canDelete) {
-                        buttons += `
-                            <button class="${deleteClass}" data-id="${jobCard.id}" ${deleteStyle}>
-                                <i class="fas fa-trash-alt" style="${mobile ? 'color: red;' : 'font-size: 20px; color: red;'}"></i>
-                            </button>
+                            </li>
                         `;
                     }
 
-                    return buttons;
+                    if (canEdit) {
+                        menuItems += `
+                            <li>
+                                <a class="dropdown-item" href="/job-cards/${jobCard.id}/edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </li>
+                        `;
+                    }
+
+                    if (canView) {
+                        menuItems += `
+                            <li>
+                                <a class="dropdown-item" href="/job-card/${jobCard.id}/download-pdf">
+                                    <i class="fas fa-file-invoice"></i> Download Invoice PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
+                                    data-pdf-url="/job-card/${jobCard.id}/download-pdf-view"
+                                    data-details-url="/job-card/${jobCard.id}/view-pdf"
+                                    data-title="Bill Generated">
+                                    <i class="fas fa-print"></i> Print Invoice
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item jc-open-print-modal" href="javascript:void(0);"
+                                    data-pdf-url="/job-card/${jobCard.id}/job-card-print"
+                                    data-details-url="/job-card/${jobCard.id}/job-card-print"
+                                    data-title="Job Card Print">
+                                    <i class="fas fa-clipboard-list"></i> Print Job Card
+                                </a>
+                            </li>
+                        `;
+                    }
+
+                    if (canDelete) {
+                        menuItems += `
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger delete-jobcard-btn" data-id="${jobCard.id}">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </li>
+                        `;
+                    }
+
+                    return `
+                        <div class="jc-action-group">
+                            ${canView ? `
+                                <button type="button" class="jc-action-icon-btn jc-open-print-modal"
+                                    data-pdf-url="${printUrl}"
+                                    data-details-url="${viewUrl}"
+                                    data-title="${activeDocTab === 'jobcard' ? 'Job Card Print' : 'Bill Generated'}"
+                                    title="${printTitle}">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            ` : ''}
+                            ${menuItems ? `
+                                <div class="d-inline-block jc-dropdown-wrap">
+                                    <button type="button" class="jc-action-icon-btn jc-dots-toggle" aria-expanded="false" title="More Actions">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <ul class="jc-action-dropdown">
+                                        ${menuItems}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
                 }
                 $(document).on('click', '.convert-to-jobcard-btn', function() {
 
@@ -783,6 +923,14 @@
                                 </button>
                             `;
                         }
+                        const grandTotalNum = parseFloat(jobCard.grand_total) || 0;
+                        const remainingNum = parseFloat(jobCard.remaining_amount ?? jobCard.grand_total) || 0;
+                        let paymentStatusBadge = '<span class="badge" style="background-color:#ef4444; color:#fff; padding:5px 10px; border-radius:6px; font-weight:600;">Pending</span>';
+                        if (remainingNum <= 0) {
+                            paymentStatusBadge = '<span class="badge" style="background-color:#22c55e; color:#fff; padding:5px 10px; border-radius:6px; font-weight:600;">Completed</span>';
+                        } else if (remainingNum > 0 && remainingNum < grandTotalNum) {
+                            paymentStatusBadge = '<span class="badge" style="background-color:#f59e0b; color:#fff; padding:5px 10px; border-radius:6px; font-weight:600;">Partially</span>';
+                        }
                         tableRows += `
                             <tr class="main-row">
                                 <td>${escapeHtml(jobCard.job_card_number || '-')}</td>
@@ -795,6 +943,7 @@
                                 <td class="mobile-hide">${escapeHtml(jobCard.total_labour || '0.00')}</td>
                                 <td class="mobile-hide">${escapeHtml(jobCard.total_parts || '0.00')}</td>
                                 <td class="mobile-hide">${escapeHtml(jobCard.grand_total || '0.00')}</td>
+                                <td class="mobile-hide text-center">${paymentStatusBadge}</td>
                                 <td class="text-center mobile-hide">${quotationBadge}${actionButtons}</td>
                             </tr>
                             <tr class="detail-row mobile-show">
@@ -806,6 +955,7 @@
                                         <div class="mb-2"><strong>Labour:</strong> ₹${escapeHtml(jobCard.total_labour || '0.00')}</div>
                                         <div class="mb-2"><strong>Parts:</strong> ₹${escapeHtml(jobCard.total_parts || '0.00')}</div>
                                         <div class="mb-2"><strong>Grand Total:</strong> ₹${escapeHtml(jobCard.grand_total || '0.00')}</div>
+                                        <div class="mb-2"><strong>Payment Status:</strong> ${paymentStatusBadge}</div>
                                         <div class="mb-2">${quotationBadge}</div>
                                         <td class="mobile-hide">
   
@@ -820,7 +970,7 @@
                     });
 
                     if (!tableRows) {
-                        tableRows = '<tr><td colspan="9" class="text-center">No job cards found.</td></tr>';
+                        tableRows = '<tr><td colspan="10" class="text-center">No job cards found.</td></tr>';
                     }
 
                     $("#job-card-tbody").html(tableRows);
@@ -828,6 +978,45 @@
 
                 let activeDocTab = 'invoice';
                 let lastFetchedRows = [];
+
+                $(document).on('click', '.jc-dots-toggle', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const $btn = $(this);
+                    const $menu = $btn.siblings('.jc-action-dropdown');
+                    const isOpen = $menu.hasClass('show');
+
+                    $('.jc-action-dropdown.show').removeClass('show');
+                    if (isOpen) {
+                        return;
+                    }
+
+                    const rect = this.getBoundingClientRect();
+                    $menu.addClass('show');
+                    const menuWidth = $menu.outerWidth() || 190;
+                    const menuHeight = $menu.outerHeight() || 220;
+
+                    let left = rect.right - menuWidth;
+                    if (left < 8) left = 8;
+
+                    let top = rect.bottom + 6;
+                    if (top + menuHeight > window.innerHeight - 8) {
+                        top = Math.max(8, rect.top - menuHeight - 6);
+                    }
+
+                    $menu.css({ top: top + 'px', left: left + 'px' });
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('.jc-dropdown-wrap').length) {
+                        $('.jc-action-dropdown.show').removeClass('show');
+                    }
+                });
+
+                $(window).on('scroll resize', function() {
+                    $('.jc-action-dropdown.show').removeClass('show');
+                });
 
                 $(document).on('click', '.doc-tab-btn', function() {
                     activeDocTab = $(this).data('tab') || 'invoice';
@@ -1066,59 +1255,43 @@
                     console.log('----------------------------');
                 });
 
-                $('.make-payment-btn').on('click', function() {
+                $(document).on('click', '.make-payment-btn', function() {
+                    $('.jc-action-dropdown.show').removeClass('show');
+
                     var jobCardId = $(this).data('id');
-                    var method = $(this).data('method');
+                    var method = String($(this).data('method') || 'pending');
                     var totalAmount = parseFloat($(this).data('total-amount')) || 0;
                     var remainingAmount = parseFloat($(this).data('remaining-amount')) || 0;
                     var emiDuration = parseInt($(this).data('emi-duration')) || 0;
                     var remainingEmiMonths = parseInt($(this).data('remaining-emi-months')) || 0;
 
-                    // Calculate EMI per month
                     var monthlyEMI = emiDuration > 0 ? (totalAmount / emiDuration).toFixed(2) : '0.00';
 
-                    // Reset form
-                    $('#fullyAmountDiv, #emiMonthDiv, #emiMonthError').addClass('d-none');
-                    $('#amount').val('');
-                    $('#emiMonthInput').val('');
-                    $('#emiTotalCalculated').val('');
-                    $('#emiTotalCalculatedDiv').addClass('d-none');
+                    // Reset and hide all conditional sections initially so only Select Payment Method is shown
+                    $('#paymentHistoryBox').addClass('d-none');
+                    $('#paidTypeDiv, #paidTypeDiv1, #onlineTypeDiv, #cashOnlineTypeDiv, #upiAmountDiv, #partialPaidFields, #fullyPaidFields, #fullyCashOnlineFields, #partialCashOnlineFields, #paymentTypeDiv, #paymentTypeDiv1, #emiMonthDiv, #emiTotalCalculatedDiv, #fullyAmountDiv, #emiMonthDivNew, #emiTotalCalculatedDivNew')
+                        .addClass('d-none');
+                    $('#paymentMethodError, #paidTypeError, #onlineTypeError, #cashOnlineTypeError, #partialAmountError, #cashAmountError, #upiAmountError, #cashOnlineFullAmountError, #upiOnlineFullAmountError, #cashOnlinePartialAmountError, #upiOnlinePartialAmountError, #emiMonthError, #emiMonthErrorNew, #emiMonthErrornew, #amountError')
+                        .text('');
+                    $('#emiMonthError, #emiMonthErrorNew').addClass('d-none');
+
+                    $('#makePaymentForm')[0].reset();
+                    $('#paymentMethodDiv').removeClass('d-none');
+                    $('#paymentMethodSelect').val('');
 
                     // Set values in modal
                     $('#paymentJobCardId').val(jobCardId);
                     $('#remainingAmountDisplay').text(remainingAmount.toFixed(2));
-                    $('#remainingAmountInput').val(remainingAmount.toFixed(2));
+                    $('#remainingAmountHidden').val(remainingAmount.toFixed(2));
                     $('#emiMonthly').text(monthlyEMI);
                     $('#emiDuration').text(remainingEmiMonths);
                     $('#emiTotal').text(totalAmount.toFixed(2));
                     window.currentRemainingAmount = remainingAmount;
 
                     $('#emiMonthInput').attr('max', remainingEmiMonths);
+                    $('#emiMonthlyRow, #emiDurationRow').toggleClass('d-none', method.toLowerCase() !== 'emi');
 
-                    // Show/hide sections based on method
-                    if (method.toLowerCase() === 'cash' || method === 'Cash_online' || method === 'Online' ||
-                        method.toLowerCase() === 'pending') {
-                        $('#paymentTypeDiv').addClass('d-none'); // Hide Paid Type dropdown
-                        $('#paymentMethodDiv').removeClass('d-none'); // Show Payment Method dropdown
-                        $('#paymentMethodSelect').val('');
-                        $('#amount').val('').prop('readonly', false); // Enable editing amount for cash
-
-                        // Hide EMI monthly & duration in summary box
-                        $('#emiMonthlyRow, #emiDurationRow').addClass('d-none');
-                    } else {
-                        console.log('asd');
-
-                        $('#paymentTypeDiv').removeClass('d-none'); // Show Paid Type dropdown
-                        $('#paymentMethodDiv').addClass('d-none'); // Hide Payment Method dropdown
-                        $('#emiMonthDivNew').addClass('d-none'); // Hide Payment Method dropdown
-                        $('#emiTotalCalculatedDivNew').addClass('d-none'); // Hide Payment Method dropdown
-                        // $('#paymentMethodSelect').val('');
-                        $('#amount').val(remainingAmount.toFixed(2)).prop('readonly',
-                            true); // Lock amount for online etc.
-
-                        // Show EMI monthly & duration in summary box
-                        $('#emiMonthlyRow, #emiDurationRow').removeClass('d-none');
-                    }
+                    $('#makePaymentModal').modal('show');
 
                     $('#paymentMethodSelect').off('change').on('change', function() {
                         const selectedPaymentMethod = $(this).val().toLowerCase();
@@ -1553,9 +1726,8 @@
 
                 // return false;
 
-                // If form is valid, you can submit it
-                if (isValid) {
-                    this.submit(); // submit the form
+                if (!isValid) {
+                    return false;
                 }
 
                 let selectedPaymentType = $('#paymentType').val();
@@ -1706,5 +1878,175 @@
                         .css('color', '#ff9f43'); // Orange
                 }
             });
+        </script>
+
+        {{-- Bill Generated / Print Preview Modal --}}
+        <div class="modal fade" id="billPrintModal" tabindex="-1" aria-labelledby="billPrintModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 860px;">
+                <div class="modal-content" style="border-radius: 14px; overflow: hidden; border: none; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);">
+                    <div class="modal-header border-0 pb-2 pt-3 px-4" style="background: #ffffff;">
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="billPrintModalTitle" style="font-size: 18px; color: #0f172a;">
+                                Bill Generated
+                            </h5>
+                            <div style="font-size: 12.5px; color: #64748b; margin-top: 2px;">
+                                Press <kbd style="background:#0f172a; color:#fff; padding:1px 6px; border-radius:4px; font-size:11px;">F10</kbd> or Print Bill
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close"
+                            style="background: none; border: none; color: #ef4444; font-size: 20px; font-weight: 700; cursor: pointer; line-height: 1;">
+                            &times;
+                        </button>
+                    </div>
+
+                    <div class="modal-body pt-0 px-4 pb-3" style="background: #ffffff;">
+                        <div style="border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #525659;">
+                            <iframe id="billPrintIframe" src="about:blank"
+                                style="width: 100%; height: 420px; border: none; display: block;"></iframe>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 13px;">
+                            <div>
+                                <strong style="color: #0f172a;">Bill &mdash; <span id="billPrinterLabel">This device</span></strong>
+                                <span class="ms-2" style="color: #16a34a; font-weight: 500;" id="billPrinterModeBadge">Browser print</span>
+                            </div>
+                            <button type="button" id="togglePrinterSettingsBtn"
+                                style="background: none; border: none; color: #475569; font-size: 13px; font-weight: 500; cursor: pointer;">
+                                <i class="fas fa-cog me-1"></i> Printer settings
+                            </button>
+                        </div>
+
+                        <div id="printerSettingsPanel" class="mt-2 p-3 d-none"
+                            style="border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc;">
+                            <label class="form-label mb-1" style="font-size: 12px; color: #64748b; font-weight: 600;">
+                                Bill printer
+                            </label>
+                            <div class="d-flex align-items-center gap-2">
+                                <select id="billPrinterSelect" class="form-select form-select-sm" style="flex: 1;">
+                                    <option value="browser">This device</option>
+                                    <option value="thermal">Thermal Printer (80mm)</option>
+                                </select>
+                                <button type="button" id="refreshPrinterBtn" class="btn btn-sm btn-outline-secondary"
+                                    style="width: 38px; height: 32px; background: #fff;" title="Refresh printers">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm"
+                                    style="width: 38px; height: 32px; border: 1px solid #fdba74; color: #f97316; background: #fff;"
+                                    title="Device print">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2 d-flex align-items-center gap-3" style="font-size: 12px;">
+                                <label class="mb-0 d-inline-flex align-items-center gap-1" style="cursor: pointer; color: #334155;">
+                                    <input type="checkbox" id="billAutoCutCheckbox"> Auto cut
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0 pb-3 px-4 d-flex justify-content-end gap-2" style="background: #ffffff;">
+                        <button type="button" class="btn px-4" data-bs-dismiss="modal"
+                            style="background: #f1f5f9; color: #0f172a; font-weight: 600; border-radius: 8px; height: 40px;">
+                            Close
+                        </button>
+                        <a id="billDetailsLink" href="#" target="_blank" class="btn px-4 d-inline-flex align-items-center"
+                            style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600; border-radius: 8px; height: 40px;">
+                            Details
+                        </a>
+                        <button type="button" id="confirmPrintBillBtn" class="btn px-4 d-inline-flex align-items-center gap-2"
+                            style="background: #ff9f43; color: #ffffff; font-weight: 600; border-radius: 8px; height: 40px; border: none;">
+                            <i class="fas fa-print"></i> Print Bill (F10)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function() {
+                let currentPrintPdfUrl = '';
+
+                function triggerModalPrint() {
+                    if (!currentPrintPdfUrl) return;
+
+                    // Open the full A4 PDF in a print window so Chrome prints the PDF itself
+                    // at full A4 size instead of clipping the narrow iframe viewport.
+                    const printWin = window.open(currentPrintPdfUrl, '_blank');
+                    if (printWin) {
+                        printWin.focus();
+                        printWin.addEventListener('load', function() {
+                            try {
+                                printWin.print();
+                            } catch (e) {}
+                        }, { once: true });
+                        return;
+                    }
+
+                    // Fallback if popup is blocked
+                    const iframe = document.getElementById('billPrintIframe');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    }
+                }
+
+                $(document).on('click', '.jc-open-print-modal', function(e) {
+                    e.preventDefault();
+                    $('.jc-action-dropdown.show').removeClass('show');
+
+                    const pdfUrl = $(this).data('pdf-url');
+                    const detailsUrl = $(this).data('details-url') || pdfUrl;
+                    const title = $(this).data('title') || 'Bill Generated';
+
+                    currentPrintPdfUrl = pdfUrl;
+                    $('#billPrintModalTitle').text(title);
+                    $('#billDetailsLink').attr('href', detailsUrl);
+                    $('#billPrintIframe').attr('src', pdfUrl + '#view=FitH');
+                    $('#billPrintModal').modal('show');
+                });
+
+                $('#billPrintModal').on('hidden.bs.modal', function() {
+                    $('#billPrintIframe').attr('src', 'about:blank');
+                    currentPrintPdfUrl = '';
+                });
+
+                $('#togglePrinterSettingsBtn').on('click', function() {
+                    const $panel = $('#printerSettingsPanel');
+                    $panel.toggleClass('d-none');
+                    if ($panel.hasClass('d-none')) {
+                        $(this).html('<i class="fas fa-cog me-1"></i> Printer settings');
+                    } else {
+                        $(this).html('&times; Hide settings');
+                    }
+                });
+
+                $('#billPrinterSelect').on('change', function() {
+                    const val = $(this).val();
+                    if (val === 'thermal') {
+                        $('#billPrinterLabel').text('Thermal Printer (80mm)');
+                        $('#billPrinterModeBadge').text('Direct / Browser print');
+                    } else {
+                        $('#billPrinterLabel').text('This device');
+                        $('#billPrinterModeBadge').text('Browser print');
+                    }
+                });
+
+                $('#refreshPrinterBtn').on('click', function() {
+                    const $icon = $(this).find('i');
+                    $icon.addClass('fa-spin');
+                    setTimeout(() => $icon.removeClass('fa-spin'), 500);
+                });
+
+                $('#confirmPrintBillBtn').on('click', function() {
+                    triggerModalPrint();
+                });
+
+                $(document).on('keydown', function(e) {
+                    if (e.key === 'F10' && $('#billPrintModal').hasClass('show')) {
+                        e.preventDefault();
+                        triggerModalPrint();
+                    }
+                });
+            })();
         </script>
     @endsection
