@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class CustomerController extends Controller
 {
@@ -392,5 +398,207 @@ class CustomerController extends Controller
             'country' => $user->userDetail->country ?? 'N/A',
             'permissions' => $permissions,
         ]);
+    }
+
+    public function export_customer_excel(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userBranchId = $user->id;
+            if ($user->role === 'staff' && $user->branch_id) {
+                $userBranchId = $user->branch_id;
+            } elseif (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId !== 'null') {
+                $userBranchId = $request->selectedSubAdminId;
+            } else {
+                $userBranchId = $user->id;
+            }
+
+            $search = $request->get('search', '');
+
+            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+                ->where('role', 'customer')
+                ->where('isDeleted', 0)
+                ->where('branch_id', $userBranchId)
+                ->with('details:country,user_id,city,address');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%")
+                        ->orWhere('gst_number', 'LIKE', "%{$search}%")
+                        ->orWhereHas('details', function ($subQ) use ($search) {
+                            $subQ->where('country', 'LIKE', "%{$search}%")
+                                ->orWhere('city', 'LIKE', "%{$search}%");
+                        });
+                });
+            }
+
+            $customers = $query->orderBy('id', 'desc')->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet       = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Customers');
+
+            $headers = [
+                'A1' => 'Sr No',
+                'B1' => 'Customer Name',
+                'C1' => 'Phone',
+                'D1' => 'Email',
+                'E1' => 'Country',
+                'F1' => 'City',
+                'G1' => 'Address',
+                'H1' => 'GST Number',
+                'I1' => 'Created At',
+            ];
+
+            foreach ($headers as $cell => $text) {
+                $sheet->setCellValue($cell, $text);
+            }
+            $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+
+            $row = 2;
+            foreach ($customers as $index => $customer) {
+                $country = $customer->details->country ?? '-';
+                $city    = $customer->details->city ?? '-';
+                $address = $customer->details->address ?? '-';
+                $gstNum  = $customer->gst_number ?? 'N/A';
+                $created = $customer->created_at ? Carbon::parse($customer->created_at)->format('d-M-Y') : '-';
+
+                $sheet->setCellValue("A{$row}", $index + 1);
+                $sheet->setCellValue("B{$row}", $customer->name ?? '-');
+                $sheet->setCellValueExplicit("C{$row}", (string) ($customer->phone ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValue("D{$row}", $customer->email ?? '-');
+                $sheet->setCellValue("E{$row}", $country);
+                $sheet->setCellValue("F{$row}", $city);
+                $sheet->setCellValue("G{$row}", $address);
+                $sheet->setCellValue("H{$row}", $gstNum);
+                $sheet->setCellValue("I{$row}", $created);
+
+                $row++;
+            }
+
+            foreach (range('A', 'I') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $fileName     = 'Customers_' . now()->format('Ymd_His') . '.xlsx';
+            $folder       = 'customer-exports';
+            $relativePath = "{$folder}/{$fileName}";
+
+            Storage::disk('public')->makeDirectory($folder);
+            $writer = new Xlsx($spreadsheet);
+            $writer->save(storage_path("app/public/{$relativePath}"));
+
+            $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+            return response()->json([
+                'status'    => true,
+                'message'   => 'Customer Excel exported successfully.',
+                'file_url'  => $fileUrl,
+                'file_name' => $fileName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('export_customer_excel error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to export Customer Excel: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function export_customer_pdf(Request $request)
+    {
+        try {
+            $user = null;
+            try {
+                $user = Auth::guard('api')->user();
+            } catch (\Throwable $e) {
+                $user = null;
+            }
+            if (!$user) {
+                $user = Auth::guard('web')->user() ?? auth()->user();
+            }
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            $userBranchId = $user->id;
+            if ($user->role === 'staff' && $user->branch_id) {
+                $userBranchId = $user->branch_id;
+            } elseif (!empty($request->selectedSubAdminId) && $request->selectedSubAdminId !== 'null') {
+                $userBranchId = $request->selectedSubAdminId;
+            } else {
+                $userBranchId = $user->id;
+            }
+
+            $search = $request->get('search', '');
+
+            $query = User::select('id', 'name', 'email', 'phone', 'profile_image', 'gst_number', 'created_at')
+                ->where('role', 'customer')
+                ->where('isDeleted', 0)
+                ->where('branch_id', $userBranchId)
+                ->with('details:country,user_id,city,address');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%")
+                        ->orWhere('gst_number', 'LIKE', "%{$search}%")
+                        ->orWhereHas('details', function ($subQ) use ($search) {
+                            $subQ->where('country', 'LIKE', "%{$search}%")
+                                ->orWhere('city', 'LIKE', "%{$search}%");
+                        });
+                });
+            }
+
+            $customers = $query->orderBy('id', 'desc')->get();
+
+            $settings = DB::table('settings')
+                ->where('branch_id', $userBranchId)
+                ->first();
+
+            $pdf = Pdf::loadView('customer.customer_pdf', [
+                'customers' => $customers,
+                'settings'  => $settings,
+                'userName'  => $user->name ?? 'N/A',
+                'gstNum'    => $user->gst_number ?? 'N/A',
+            ])->setPaper('A4', 'landscape');
+
+            $fileName     = 'Customers_' . now()->format('Ymd_His') . '.pdf';
+            $folder       = 'customer-exports';
+            $relativePath = "{$folder}/{$fileName}";
+
+            Storage::disk('public')->makeDirectory($folder);
+            Storage::disk('public')->put($relativePath, $pdf->output());
+
+            $fileUrl = asset(env('ImagePath') . 'storage/' . $relativePath);
+
+            return response()->json([
+                'status'    => true,
+                'message'   => 'Customer PDF generated successfully.',
+                'file_url'  => $fileUrl,
+                'file_name' => $fileName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('export_customer_pdf error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to export Customer PDF: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

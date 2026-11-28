@@ -187,6 +187,19 @@
         overflow-wrap: break-word;
         white-space: normal;
     }
+
+    .page-header .page-btn {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    .page-header .page-btn .btn-added {
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+    }
 </style>
 
 <div class="content">
@@ -194,11 +207,19 @@
         <div class="page-title">
             <h4>All Customers</h4>
         </div>
-        <div class="page-btn">
+        <div class="page-btn d-flex align-items-center flex-wrap gap-2">
             @if(app('hasPermission')(4, 'add'))
             <a href="{{ route('customer.add') }}" class="btn btn-added btn-sm">
                 <img src="{{ env('ImagePath').'admin/assets/img/icons/plus.svg' }}" alt="img"> New Customer
             </a>
+            @endif
+            @if(app('hasPermission')(4, 'view'))
+            <button id="exportCustomerExcel" class="btn btn-sm text-white d-flex align-items-center gap-1" style="background-color: #28c76f; border-color: #28c76f; padding: 4px 12px; font-weight: 600; border-radius: 5px; height: 32px; font-size: 13px;">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button id="exportCustomerPdf" class="btn btn-sm text-white d-flex align-items-center gap-1" style="background-color: #ea5455; border-color: #ea5455; padding: 4px 12px; font-weight: 600; border-radius: 5px; height: 32px; font-size: 13px;">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
             @endif
         </div>
     </div>
@@ -527,6 +548,134 @@
                                 confirmButtonText: "OK"
                             });
                         },
+                    });
+                }
+            });
+        });
+
+        // ── Export Customer Excel ──
+        $('#exportCustomerExcel').click(function () {
+            const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+            let authToken = localStorage.getItem("authToken");
+            let search = $('#searchInput').val() || '';
+
+            let url = `/api/export-customer-excel?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(search)}`;
+
+            $.ajax({
+                url: url,
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken
+                },
+                beforeSend: function () {
+                    Swal.fire({
+                        title: "Exporting Excel...",
+                        text: "Please wait while we generate your file.",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function (response) {
+                    Swal.close();
+
+                    if (response.status && response.file_url) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Excel Exported!",
+                            text: "Click the button below to download your Excel file.",
+                            showConfirmButton: true,
+                            confirmButtonColor: "#28a745",
+                            confirmButtonText: "Download File"
+                        }).then(() => {
+                            let link = document.createElement('a');
+                            link.href = response.file_url;
+                            link.download = response.file_name || "Customers.xlsx";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Export Failed",
+                            text: response.message || "Failed to generate Excel file."
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    let errorMsg = "Something went wrong while exporting.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: "error",
+                        title: "Export Error",
+                        text: errorMsg
+                    });
+                }
+            });
+        });
+
+        // ── Export Customer PDF ──
+        $('#exportCustomerPdf').click(function () {
+            const selectedSubAdminId = localStorage.getItem("selectedSubAdminId");
+            let authToken = localStorage.getItem("authToken");
+            let search = $('#searchInput').val() || '';
+
+            let url = `/api/export-customer-pdf?selectedSubAdminId=${selectedSubAdminId || ''}&search=${encodeURIComponent(search)}`;
+
+            $.ajax({
+                url: url,
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken
+                },
+                beforeSend: function () {
+                    Swal.fire({
+                        title: "Generating PDF...",
+                        text: "Please wait while we generate your PDF file.",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function (response) {
+                    Swal.close();
+
+                    if (response.status && response.file_url) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "PDF Exported!",
+                            text: "Click the button below to download your PDF file.",
+                            showConfirmButton: true,
+                            confirmButtonColor: "#ea5455",
+                            confirmButtonText: "Download File"
+                        }).then(() => {
+                            let link = document.createElement('a');
+                            link.href = response.file_url;
+                            link.download = response.file_name || "Customers.pdf";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Export Failed",
+                            text: response.message || "Failed to generate PDF file."
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    let errorMsg = "Something went wrong while generating PDF.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: "error",
+                        title: "Export Error",
+                        text: errorMsg
                     });
                 }
             });
