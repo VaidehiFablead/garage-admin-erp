@@ -10,11 +10,27 @@
     $existingEmiDuration = $existingJobCard->emi_duration ?? 1;
     $existingEmiMonthly = $existingJobCard->emi_months ?? '0.00';
     $existingPayable = $existingJobCard->total_subtotal_amount ?? '0.00';
+    $isPaymentCompleted = $existingJobCard && (float) ($existingJobCard->remaining_amount ?? 0) <= 0;
 @endphp
 
 <div class="card mt-3 mb-3" style="border: 1px solid #e2e8f0; border-radius: 8px;">
     <div class="card-body p-3">
         <h6 class="mb-3 fw-bold">Payment Details</h6>
+        @if ($isPaymentCompleted)
+            <div class="alert alert-success d-flex align-items-center justify-content-between mb-0" role="alert"
+                style="border-radius: 8px; background-color: #ecfdf5; border-color: #a7f3d0; color: #065f46;">
+                <div>
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Payment Already Completed</strong>
+                    @if (!empty($existingPaymentMode))
+                        <span class="ms-2">(Mode: {{ strtoupper($existingPaymentMode) }})</span>
+                    @endif
+                </div>
+                <span class="badge" style="background-color: #22c55e; color: #fff; padding: 6px 12px; border-radius: 6px;">
+                    Paid: ₹{{ number_format(max((float) $existingPayable - $existingDiscount, 0), 2) }}
+                </span>
+            </div>
+        @else
         <div class="row">
             <div class="col-md-4 col-lg-3 col-sm-6">
                 <div class="form-group mb-2">
@@ -116,6 +132,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </div>
 
