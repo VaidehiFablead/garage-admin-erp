@@ -42,6 +42,12 @@ class EnsureDatabaseConnection
                     throw $e;
                 }
 
+                $connection = config('database.default', 'mysql');
+                $currentHost = config("database.connections.{$connection}.host");
+                if ($currentHost === '127.0.0.1' && PHP_OS_FAMILY !== 'Windows') {
+                    config(["database.connections.{$connection}.host" => 'localhost']);
+                }
+
                 DB::purge();
                 DB::reconnect();
                 usleep(150000);

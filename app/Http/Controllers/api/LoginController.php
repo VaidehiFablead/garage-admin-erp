@@ -112,17 +112,22 @@ class LoginController extends Controller
     protected function authenticateByEmailPassword(string $login, string $password): array
     {
         $cleanLogin = strtolower(trim($login));
-        $candidates = User::where(function ($q) use ($cleanLogin) {
-            if (Schema::hasColumn('users', 'username')) {
+        $candidates = collect();
+
+        try {
+            $candidates = User::where(function ($q) use ($cleanLogin) {
                 $q->whereRaw('LOWER(TRIM(username)) = ?', [$cleanLogin])
                   ->orWhereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin]);
                 if (!str_contains($cleanLogin, '_')) {
                     $q->orWhereRaw('LOWER(TRIM(username)) LIKE ?', ['%_' . $cleanLogin]);
                 }
-            } else {
-                $q->whereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin]);
-            }
-        })->orderByDesc('id')->get();
+            })->orderByDesc('id')->get();
+        } catch (\Throwable) {
+            try {
+                $candidates = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanLogin])
+                    ->orderByDesc('id')->get();
+            } catch (\Throwable) {}
+        }
 
         $inactiveMatch = null;
 
@@ -198,6 +203,57 @@ class LoginController extends Controller
             ], in_array($ex->status, [403, 404, 409, 503], true) ? $ex->status : 403);
         };
 
+        // Check if this login belongs to a local staff member
+        $localUser = null;
+        try {
+            $clean = strtolower(trim($login));
+            $localUser = User::where(function ($q) use ($clean) {
+                $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
+                  ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
+            })->where('isDeleted', 0)->first();
+        } catch (\Throwable) {
+            try {
+                $clean = strtolower(trim($login));
+                $localUser = User::whereRaw('LOWER(TRIM(email)) = ?', [$clean])
+                    ->where('isDeleted', 0)->first();
+            } catch (\Throwable) {}
+        }
+
+        if ($localUser && in_array(strtolower($localUser->role ?? ''), ['staff', 'hr'])) {
+            // Find parent admin to verify tenant plan status if possible
+            $parentAdmin = null;
+            try {
+                $parentAdmin = User::where('id', $localUser->branch_id)->where('isDeleted', 0)->first()
+                    ?? User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
+            } catch (\Throwable) {}
+
+            $candidates = array_filter([
+                $parentAdmin?->email,
+                $parentAdmin?->username,
+                $request->getHost(),
+            ]);
+
+            foreach ($candidates as $candidate) {
+                try {
+                    $tenant = (str_contains($candidate, '.') && !str_contains($candidate, '@'))
+                        ? $tenancy->resolveByHost($candidate, true)
+                        : $tenancy->resolveByEmail($candidate, true);
+                    if ($tenant && $request->hasSession()) {
+                        $request->session()->put('tenant_id', $tenant['id']);
+                        $request->session()->put('tenant', $tenant);
+                    }
+                    return null;
+                } catch (TenantResolutionException $te) {
+                    if (in_array(strtoupper((string) $te->reason), ['EXPIRED', 'INACTIVE', 'SUSPENDED'], true)) {
+                        return $buildTenantErrorResponse($te);
+                    }
+                } catch (\Throwable) {}
+            }
+
+            // Local staff is valid, allow login to proceed
+            return null;
+        }
+
         // On central host (localhost, 127.0.0.1, etc.), identify tenant directly by user credentials
         if (\App\Http\Middleware\IdentifyTenant::isCentralHost($request->getHost())) {
             if (!empty($login)) {
@@ -209,31 +265,6 @@ class LoginController extends Controller
                     }
                     return null;
                 } catch (TenantResolutionException $userTenantError) {
-                    $staffUser = User::where(function ($q) use ($login) {
-                        $clean = strtolower(trim($login));
-                        if (Schema::hasColumn('users', 'username')) {
-                            $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
-                              ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                        } else {
-                            $q->whereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                        }
-                    })->where('isDeleted', 0)->first();
-
-                    if ($staffUser && in_array(strtolower($staffUser->role ?? ''), ['staff', 'hr'])) {
-                        $parentAdmin = User::where('id', $staffUser->branch_id)->where('isDeleted', 0)->first()
-                            ?? User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
-                        if ($parentAdmin && !empty($parentAdmin->email)) {
-                            try {
-                                $tenant = $tenancy->resolveByEmail($parentAdmin->email, true);
-                                if ($request->hasSession()) {
-                                    $request->session()->put('tenant_id', $tenant['id']);
-                                    $request->session()->put('tenant', $tenant);
-                                }
-                                return null;
-                            } catch (TenantResolutionException) {}
-                        }
-                    }
-
                     return $buildTenantErrorResponse($userTenantError);
                 }
             }
@@ -254,31 +285,6 @@ class LoginController extends Controller
                     }
                     return null;
                 } catch (TenantResolutionException $userTenantError) {
-                    $staffUser = User::where(function ($q) use ($login) {
-                        $clean = strtolower(trim($login));
-                        if (Schema::hasColumn('users', 'username')) {
-                            $q->whereRaw('LOWER(TRIM(username)) = ?', [$clean])
-                              ->orWhereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                        } else {
-                            $q->whereRaw('LOWER(TRIM(email)) = ?', [$clean]);
-                        }
-                    })->where('isDeleted', 0)->first();
-
-                    if ($staffUser && in_array(strtolower($staffUser->role ?? ''), ['staff', 'hr'])) {
-                        $parentAdmin = User::where('id', $staffUser->branch_id)->where('isDeleted', 0)->first()
-                            ?? User::whereIn('role', ['admin', 'sub-admin'])->where('isDeleted', 0)->first();
-                        if ($parentAdmin && !empty($parentAdmin->email)) {
-                            try {
-                                $tenant = $tenancy->resolveByEmail($parentAdmin->email, true);
-                                if ($request->hasSession()) {
-                                    $request->session()->put('tenant_id', $tenant['id']);
-                                    $request->session()->put('tenant', $tenant);
-                                }
-                                return null;
-                            } catch (TenantResolutionException) {}
-                        }
-                    }
-
                     return $buildTenantErrorResponse($userTenantError);
                 }
             }
